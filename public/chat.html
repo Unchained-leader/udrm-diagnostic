@@ -131,6 +131,98 @@
     }
     .signed-in-as:hover { color: var(--gold); }
 
+    /* Forgot PIN link */
+    #forgot-pin-link {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 12px;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      padding: 4px 0;
+      transition: color 0.2s;
+    }
+    #forgot-pin-link:hover { color: var(--gold); }
+
+    /* Reset PIN screen */
+    #reset-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px;
+      text-align: center;
+      background: radial-gradient(ellipse at center bottom, rgba(185, 156, 79, 0.06) 0%, transparent 70%);
+    }
+    #reset-screen h2 {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    #reset-screen .subtitle {
+      font-family: 'Montserrat', sans-serif;
+      color: #666;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      margin-bottom: 28px;
+      max-width: 340px;
+      line-height: 1.5;
+    }
+    #reset-form {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #reset-form input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      background: var(--surface-raised);
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #reset-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15); }
+    #reset-form input::placeholder { color: #555; }
+    #reset-error {
+      color: #fc5454;
+      font-size: 13px;
+      min-height: 20px;
+    }
+    #reset-success {
+      color: #4ffa78;
+      font-size: 13px;
+      display: none;
+    }
+    #reset-loading {
+      display: none;
+      color: var(--gold);
+      font-size: 13px;
+    }
+    #back-to-login {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 12px;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      padding: 8px 0;
+      transition: color 0.2s;
+    }
+    #back-to-login:hover { color: var(--gold); }
+
     /* ========== CHAT CONTAINER ========== */
     #chat-container {
       display: none;
@@ -460,6 +552,25 @@
       <div id="auth-loading">Signing in...</div>
       <button class="auth-btn" id="auth-submit">Sign In</button>
       <button class="auth-btn" id="auth-toggle">First time? Create an account</button>
+      <button id="forgot-pin-link">Forgot your PIN?</button>
+    </div>
+  </div>
+
+  <!-- ========== RESET PIN SCREEN ========== -->
+  <div id="reset-screen">
+    <h2>Reset Your PIN</h2>
+    <p class="subtitle" id="reset-subtitle">Enter your email and we'll send you a 6-digit code to reset your PIN.</p>
+    <div id="reset-form">
+      <input type="email" id="reset-email" placeholder="Your email address" autocomplete="email" />
+      <div id="reset-step-code" style="display:none">
+        <input type="text" id="reset-code" placeholder="6-digit code from email" maxlength="6" pattern="\d{6}" inputmode="numeric" autocomplete="off" style="margin-bottom:12px" />
+        <input type="password" id="reset-new-pin" placeholder="New 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
+      </div>
+      <div id="reset-error"></div>
+      <div id="reset-success"></div>
+      <div id="reset-loading">Sending...</div>
+      <button class="auth-btn" id="reset-submit" style="background: var(--gold-gradient); color: #000;">Send Reset Code</button>
+      <button id="back-to-login">&larr; Back to Sign In</button>
     </div>
   </div>
 
@@ -520,6 +631,7 @@
     const API_URL = BASE_URL + "/chat";
     const AUTH_URL = BASE_URL + "/auth";
     const HISTORY_URL = BASE_URL + "/history";
+    const RESET_URL = BASE_URL + "/reset-pin";
     const WELCOME_MESSAGE = "Hey my friend \u2014 it\u2019s Mason. Welcome to your Unchained AI Coach. I built this myself and loaded it with transcripts from every program module, hundreds of hours of additional training, and dozens of hours coaching it to work the way I coach. Need help with a concept, an action step, or processing a trigger? This is a great place to do it. Just remember \u2014 this doesn\u2019t replace group coaching or the Unchained Leader community. Now, what\u2019s going on?";
     const SESSION_KEY = "unchained_session";
     const SAVE_DEBOUNCE_MS = 2000;
@@ -674,6 +786,120 @@
     }
 
     signOutBtn.addEventListener("click", signOut);
+
+    // ========== RESET PIN ==========
+    const resetScreen = document.getElementById("reset-screen");
+    const resetEmail = document.getElementById("reset-email");
+    const resetCode = document.getElementById("reset-code");
+    const resetNewPin = document.getElementById("reset-new-pin");
+    const resetSubmit = document.getElementById("reset-submit");
+    const resetError = document.getElementById("reset-error");
+    const resetSuccess = document.getElementById("reset-success");
+    const resetLoading = document.getElementById("reset-loading");
+    const resetSubtitle = document.getElementById("reset-subtitle");
+    const resetStepCode = document.getElementById("reset-step-code");
+    const forgotPinLink = document.getElementById("forgot-pin-link");
+    const backToLogin = document.getElementById("back-to-login");
+
+    let resetStep = "email"; // "email" or "code"
+
+    forgotPinLink.addEventListener("click", () => {
+      authScreen.style.display = "none";
+      resetScreen.style.display = "flex";
+      resetStep = "email";
+      resetEmail.value = "";
+      resetCode.value = "";
+      resetNewPin.value = "";
+      resetError.textContent = "";
+      resetSuccess.style.display = "none";
+      resetStepCode.style.display = "none";
+      resetSubmit.textContent = "Send Reset Code";
+      resetSubtitle.textContent = "Enter your email and we'll send you a 6-digit code to reset your PIN.";
+    });
+
+    backToLogin.addEventListener("click", () => {
+      resetScreen.style.display = "none";
+      authScreen.style.display = "flex";
+    });
+
+    resetSubmit.addEventListener("click", handleReset);
+
+    async function handleReset() {
+      resetError.textContent = "";
+      resetSuccess.style.display = "none";
+
+      const email = resetEmail.value.trim();
+      if (!email) { resetError.textContent = "Please enter your email."; return; }
+
+      resetSubmit.disabled = true;
+      resetLoading.style.display = "block";
+
+      try {
+        if (resetStep === "email") {
+          // Step 1: Request reset code
+          const res = await fetch(RESET_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "request", email }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            resetError.textContent = data.error || "Something went wrong.";
+            return;
+          }
+
+          // Move to code step
+          resetStep = "code";
+          resetStepCode.style.display = "block";
+          resetEmail.readOnly = true;
+          resetEmail.style.opacity = "0.6";
+          resetSubmit.textContent = "Reset PIN";
+          resetSubtitle.textContent = "Check your email for the 6-digit code, then set your new PIN.";
+          resetLoading.textContent = "";
+          resetCode.focus();
+
+        } else {
+          // Step 2: Verify code and set new PIN
+          const code = resetCode.value.trim();
+          const newPin = resetNewPin.value.trim();
+
+          if (!code || !/^\d{6}$/.test(code)) { resetError.textContent = "Enter the 6-digit code."; return; }
+          if (!newPin || !/^\d{4}$/.test(newPin)) { resetError.textContent = "New PIN must be 4 digits."; return; }
+
+          const res = await fetch(RESET_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "verify", email, code, newPin }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            resetError.textContent = data.error || "Something went wrong.";
+            return;
+          }
+
+          // Success — show message and go back to login
+          resetSuccess.textContent = "PIN updated! Redirecting to sign in...";
+          resetSuccess.style.display = "block";
+          resetSubmit.style.display = "none";
+
+          setTimeout(() => {
+            resetScreen.style.display = "none";
+            authScreen.style.display = "flex";
+            resetSubmit.style.display = "block";
+            resetEmail.readOnly = false;
+            resetEmail.style.opacity = "1";
+            resetStep = "email";
+          }, 2000);
+        }
+      } catch (e) {
+        resetError.textContent = "Connection error. Please try again.";
+      } finally {
+        resetSubmit.disabled = false;
+        resetLoading.style.display = "none";
+      }
+    }
 
     // ========== SERVER HISTORY ==========
     function saveHistoryToServer() {
