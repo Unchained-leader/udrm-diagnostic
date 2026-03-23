@@ -4,13 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unchained AI Coach</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       height: 100%;
       background: #000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #e0e0e0;
+    }
+
+    /* ========== BRAND VARIABLES ========== */
+    :root {
+      --gold: #b99c4f;
+      --gold-light: #DFC468;
+      --gold-dark: #9A7730;
+      --gold-gradient: linear-gradient(135deg, #DFC468, #9A7730);
+      --gold-gradient-hover: linear-gradient(135deg, #e8d07a, #a88335);
+      --black: #000000;
+      --white: #ffffff;
+      --gray-light: #ececec;
+      --gray-dark: #1a1a1a;
+      --gray-mid: #888;
+      --surface: #0d0d0d;
+      --surface-raised: #151515;
+      --border-subtle: #222;
+      --border-gold: rgba(185, 156, 79, 0.3);
     }
 
     /* ========== AUTH SCREEN ========== */
@@ -22,16 +43,24 @@
       height: 100%;
       padding: 24px;
       text-align: center;
+      background: radial-gradient(ellipse at center bottom, rgba(185, 156, 79, 0.06) 0%, transparent 70%);
     }
     #auth-screen h2 {
-      color: #C4872E;
-      font-size: 24px;
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
       margin-bottom: 8px;
     }
     #auth-screen .subtitle {
-      color: #888;
-      font-size: 14px;
-      margin-bottom: 32px;
+      font-family: 'Montserrat', sans-serif;
+      color: #666;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      margin-bottom: 36px;
     }
     #auth-form {
       width: 100%;
@@ -42,56 +71,65 @@
     }
     #auth-form input {
       width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #333;
+      padding: 13px 16px;
+      border: 1px solid var(--border-subtle);
       border-radius: 8px;
-      background: #1a1a1a;
+      background: var(--surface-raised);
       color: #e0e0e0;
       font-size: 14px;
-      font-family: inherit;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
       outline: none;
+      transition: border-color 0.2s;
     }
-    #auth-form input:focus { border-color: #C4872E; }
-    #auth-form input::placeholder { color: #666; }
+    #auth-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15); }
+    #auth-form input::placeholder { color: #555; }
     .auth-btn {
-      padding: 12px;
+      padding: 13px;
       border: none;
       border-radius: 8px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
+      transition: all 0.25s;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
     }
     #auth-submit {
-      background: #C4872E;
+      background: var(--gold-gradient);
       color: #000;
+      border: none;
     }
-    #auth-submit:hover { background: #d4973e; }
-    #auth-submit:disabled { background: #555; cursor: not-allowed; }
+    #auth-submit:hover { background: var(--gold-gradient-hover); box-shadow: 0 4px 16px rgba(185, 156, 79, 0.25); }
+    #auth-submit:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
     #auth-toggle {
       background: transparent;
-      color: #C4872E;
-      border: 1px solid #333;
+      color: var(--gold);
+      border: 1px solid var(--border-subtle);
+      font-weight: 400;
+      font-size: 13px;
+      text-transform: none;
+      letter-spacing: 0.3px;
     }
-    #auth-toggle:hover { border-color: #C4872E; }
+    #auth-toggle:hover { border-color: var(--gold); background: rgba(185, 156, 79, 0.05); }
     #auth-error {
-      color: #ff5555;
+      color: #fc5454;
       font-size: 13px;
       min-height: 20px;
     }
     #auth-loading {
       display: none;
-      color: #C4872E;
+      color: var(--gold);
       font-size: 13px;
     }
     .signed-in-as {
       font-size: 11px;
-      color: #666;
+      color: #555;
       cursor: pointer;
       padding: 2px 8px;
     }
-    .signed-in-as:hover { color: #C4872E; }
+    .signed-in-as:hover { color: var(--gold); }
 
     /* ========== CHAT CONTAINER ========== */
     #chat-container {
@@ -100,12 +138,11 @@
       height: 100%;
       max-width: 800px;
       margin: 0 auto;
-      background: #000;
+      background: var(--black);
     }
     #chat-header {
-      background: #000;
-      color: #C4872E;
-      border-bottom: 2px solid #C4872E;
+      background: var(--black);
+      border-bottom: 1px solid var(--border-gold);
       padding: 16px 20px;
       display: flex;
       align-items: center;
@@ -114,13 +151,18 @@
     }
     #chat-header h2 {
       margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      color: #C4872E;
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
     }
     #chat-header span {
-      font-size: 12px;
-      color: #d4a854;
+      font-size: 11px;
+      color: #555;
+      font-weight: 400;
+      letter-spacing: 0.3px;
     }
     .header-actions {
       display: flex;
@@ -129,36 +171,49 @@
     }
     #new-chat-btn {
       background: transparent;
-      border: 1px solid #C4872E;
-      color: #C4872E;
-      padding: 6px 12px;
+      border: 1px solid var(--border-gold);
+      color: var(--gold);
+      padding: 7px 14px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s;
       white-space: nowrap;
     }
-    #new-chat-btn:hover { background: #C4872E; color: #000; }
+    #new-chat-btn:hover { background: rgba(185, 156, 79, 0.1); border-color: var(--gold); }
     #sign-out-btn {
       background: transparent;
-      border: 1px solid #444;
-      color: #888;
-      padding: 6px 12px;
+      border: 1px solid var(--border-subtle);
+      color: #555;
+      padding: 7px 14px;
       border-radius: 6px;
-      font-size: 12px;
+      font-size: 11px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.5px;
       cursor: pointer;
       transition: all 0.2s;
       white-space: nowrap;
     }
-    #sign-out-btn:hover { border-color: #888; color: #ccc; }
+    #sign-out-btn:hover { border-color: #444; color: #888; }
     #chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
-      background: #111;
+      padding: 20px 16px;
+      background: var(--surface);
     }
+    /* Custom scrollbar */
+    #chat-messages::-webkit-scrollbar { width: 6px; }
+    #chat-messages::-webkit-scrollbar-track { background: transparent; }
+    #chat-messages::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
+    #chat-messages::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
     .msg {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       display: flex;
       flex-direction: column;
     }
@@ -166,22 +221,24 @@
     .msg.assistant { align-items: flex-start; }
     .msg-bubble {
       max-width: 85%;
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
       word-wrap: break-word;
       white-space: pre-wrap;
+      font-weight: 400;
     }
     .msg.user .msg-bubble {
-      background: #C4872E;
+      background: var(--gold-gradient);
       color: #000;
       border-bottom-right-radius: 4px;
+      font-weight: 500;
     }
     .msg.assistant .msg-bubble {
-      background: #1a1a1a;
-      color: #e0e0e0;
-      border: 1px solid #333;
+      background: var(--surface-raised);
+      color: #ddd;
+      border: 1px solid var(--border-subtle);
       border-bottom-left-radius: 4px;
     }
 
@@ -190,14 +247,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(196, 135, 46, 0.15);
-      border: 1px solid #C4872E;
+      background: rgba(185, 156, 79, 0.08);
+      border: 1px solid var(--border-gold);
       border-radius: 8px;
       padding: 8px 12px;
       margin-bottom: 4px;
       max-width: 85%;
       font-size: 13px;
-      color: #C4872E;
+      color: var(--gold);
     }
     .file-attachment svg { flex-shrink: 0; }
     .file-attachment .file-name {
@@ -206,7 +263,7 @@
       white-space: nowrap;
     }
     .file-attachment .file-size {
-      color: #d4a854;
+      color: var(--gold-dark);
       font-size: 11px;
       flex-shrink: 0;
     }
@@ -216,8 +273,8 @@
       display: flex;
       align-items: flex-end;
       padding: 12px 16px;
-      border-top: 2px solid #C4872E;
-      background: #000;
+      border-top: 1px solid var(--border-gold);
+      background: var(--black);
       flex-shrink: 0;
       gap: 8px;
     }
@@ -227,13 +284,13 @@
     }
     #file-preview {
       display: none;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
       border-bottom: none;
       border-radius: 12px 12px 0 0;
       padding: 8px 12px;
       font-size: 12px;
-      color: #C4872E;
+      color: var(--gold);
       align-items: center;
       gap: 8px;
     }
@@ -247,7 +304,7 @@
     #file-preview .remove-file {
       background: none;
       border: none;
-      color: #777;
+      color: #555;
       cursor: pointer;
       font-size: 16px;
       padding: 0 4px;
@@ -256,30 +313,32 @@
     #file-preview .remove-file:hover { color: #e0e0e0; }
     #chat-input {
       width: 100%;
-      border: 1px solid #333;
+      border: 1px solid var(--border-subtle);
       border-radius: 24px;
-      padding: 10px 16px;
+      padding: 11px 18px;
       font-size: 14px;
       outline: none;
-      font-family: inherit;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
       resize: none;
       max-height: 80px;
-      background: #1a1a1a;
+      background: var(--surface-raised);
       color: #e0e0e0;
+      transition: border-color 0.2s;
     }
     #chat-input.has-file {
       border-radius: 0 0 12px 12px;
-      border-top-color: #333;
+      border-top-color: var(--border-subtle);
     }
-    #chat-input::placeholder { color: #777; }
-    #chat-input:focus { border-color: #C4872E; }
-    #chat-input.has-file:focus { border-color: #C4872E; }
+    #chat-input::placeholder { color: #555; }
+    #chat-input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.1); }
+    #chat-input.has-file:focus { border-color: var(--gold); }
 
     /* Action buttons */
     .action-btn {
       background: transparent;
-      color: #777;
-      border: 1px solid #333;
+      color: #555;
+      border: 1px solid var(--border-subtle);
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -288,21 +347,21 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
-    .action-btn:hover { color: #C4872E; border-color: #C4872E; }
+    .action-btn:hover { color: var(--gold); border-color: var(--gold); }
     .action-btn.recording {
-      color: #ff4444;
-      border-color: #ff4444;
+      color: #fc5454;
+      border-color: #fc5454;
       animation: pulse-recording 1.5s infinite;
     }
     @keyframes pulse-recording {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
-      50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(252, 84, 84, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(252, 84, 84, 0); }
     }
     #chat-send {
-      background: #C4872E;
-      color: #fff;
+      background: var(--gold-gradient);
+      color: #000;
       border: none;
       border-radius: 50%;
       width: 40px;
@@ -312,17 +371,17 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.2s;
+      transition: all 0.25s;
     }
-    #chat-send:hover { background: #a36e22; }
-    #chat-send:disabled { background: #333; cursor: not-allowed; }
+    #chat-send:hover { box-shadow: 0 2px 12px rgba(185, 156, 79, 0.3); }
+    #chat-send:disabled { background: #222; cursor: not-allowed; box-shadow: none; }
 
     /* Mic not supported banner */
     #mic-unsupported {
       display: none;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      color: #777;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
+      color: #555;
       font-size: 12px;
       padding: 8px 16px;
       text-align: center;
@@ -334,9 +393,9 @@
       padding: 8px 12px;
     }
     .typing span {
-      width: 8px;
-      height: 8px;
-      background: #C4872E;
+      width: 7px;
+      height: 7px;
+      background: var(--gold);
       border-radius: 50%;
       animation: bounce 1.4s infinite ease-in-out;
     }
@@ -350,11 +409,11 @@
     /* Listening indicator */
     #listening-indicator {
       display: none;
-      background: rgba(255, 68, 68, 0.1);
-      border-top: 1px solid #ff4444;
+      background: rgba(252, 84, 84, 0.06);
+      border-top: 1px solid rgba(252, 84, 84, 0.3);
       padding: 8px 16px;
       font-size: 13px;
-      color: #ff6666;
+      color: #fc5454;
       text-align: center;
       animation: fade-pulse 1.5s infinite;
     }
@@ -371,15 +430,16 @@
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #888;
-      font-size: 14px;
+      color: #555;
+      font-size: 13px;
       gap: 12px;
+      letter-spacing: 0.3px;
     }
     .loading-history .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid #333;
-      border-top-color: #C4872E;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border-subtle);
+      border-top-color: var(--gold);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -441,7 +501,7 @@
       <!-- Text input with file preview -->
       <div id="chat-input-wrapper">
         <div id="file-preview">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4872E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b99c4f" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span class="file-name" id="file-preview-name"></span>
           <button class="remove-file" id="remove-file-btn">&times;</button>
         </div>
@@ -450,7 +510,7 @@
 
       <!-- Send button -->
       <button id="chat-send">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#000"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
     </div>
   </div>
@@ -789,7 +849,7 @@
       div.className = "msg user";
       div.innerHTML = `
         <div class="file-attachment">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4872E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b99c4f" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           <span class="file-name">${escapeHtml(fileName)}</span>
           <span class="file-size">${fileSize}</span>
         </div>`;
