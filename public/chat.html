@@ -40,6 +40,18 @@
       font-size: 12px;
       color: #d4a854;
     }
+    #new-chat-btn {
+      background: transparent;
+      border: 1px solid #C4872E;
+      color: #C4872E;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    #new-chat-btn:hover { background: #C4872E; color: #000; }
     #chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -261,6 +273,7 @@
         <h2>Unchained AI Coach</h2>
         <span>Powered by Unchained Leader RNR Methodology</span>
       </div>
+      <button id="new-chat-btn" title="Start a new conversation">New Chat</button>
     </div>
     <div id="chat-messages"></div>
     <div id="listening-indicator">Listening... Speak now</div>
@@ -305,6 +318,8 @@
   <script>
     const API_URL = "https://unchained-ai-coach.vercel.app/api/chat";
     const WELCOME_MESSAGE = "Hey brother. I'm your Unchained AI Coach \u2014 I know every module, every framework, and every exercise in the program. Whether you need help understanding a concept, walking through an exercise, or processing a trigger right now, I'm here. What's going on?";
+    const STORAGE_KEY = "unchained_chat_history";
+    const MAX_HISTORY_MESSAGES = 100; // Keep last 100 messages to avoid storage limits
 
     let messages = [];
     let isStreaming = false;
@@ -322,6 +337,46 @@
     const filePreviewName = document.getElementById("file-preview-name");
     const removeFileBtn = document.getElementById("remove-file-btn");
     const listeningIndicator = document.getElementById("listening-indicator");
+    const newChatBtn = document.getElementById("new-chat-btn");
+
+    // ========== CONVERSATION HISTORY (localStorage) ==========
+    function saveHistory() {
+      try {
+        // Only save the last MAX_HISTORY_MESSAGES messages
+        const toSave = messages.slice(-MAX_HISTORY_MESSAGES);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+      } catch (e) {
+        console.log("Could not save chat history:", e.message);
+      }
+    }
+
+    function loadHistory() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.log("Could not load chat history:", e.message);
+      }
+      return null;
+    }
+
+    function clearHistory() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {}
+    }
+
+    function renderSavedMessages(savedMessages) {
+      messagesEl.innerHTML = "";
+      savedMessages.forEach(msg => {
+        addMessage(msg.role, msg.content, true);
+      });
+    }
 
     // ========== SPEECH RECOGNITION ==========
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -471,12 +526,14 @@
     }
 
     // ========== MESSAGES ==========
-    function addMessage(role, content) {
+    function addMessage(role, content, skipScroll) {
       const div = document.createElement("div");
       div.className = `msg ${role}`;
       div.innerHTML = `<div class="msg-bubble">${escapeHtml(content)}</div>`;
       messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      if (!skipScroll) {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
       return div;
     }
 
@@ -560,6 +617,7 @@
       }
 
       messages.push({ role: "user", content: userMessage });
+      saveHistory();
       showTyping();
 
       try {
@@ -613,6 +671,7 @@
         }
 
         messages.push({ role: "assistant", content: fullResponse.replace("[CRISIS_DETECTED]", "").trim() });
+        saveHistory();
       } catch (error) {
         removeTyping();
         addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to your coach directly if you need immediate support.");
@@ -624,7 +683,26 @@
     }
 
     // ========== INIT ==========
-    addMessage("assistant", WELCOME_MESSAGE);
+    // Load saved conversation or show welcome message
+    const savedHistory = loadHistory();
+    if (savedHistory && savedHistory.length > 0) {
+      messages = savedHistory;
+      renderSavedMessages(savedHistory);
+      // Scroll to the bottom after rendering saved messages
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    } else {
+      addMessage("assistant", WELCOME_MESSAGE);
+    }
+
+    // New Chat button
+    newChatBtn.addEventListener("click", () => {
+      if (isStreaming) return;
+      messages = [];
+      clearHistory();
+      messagesEl.innerHTML = "";
+      addMessage("assistant", WELCOME_MESSAGE);
+      inputEl.focus();
+    });
 
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => {
