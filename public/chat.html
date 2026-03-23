@@ -326,45 +326,6 @@
     // ========== SPEECH RECOGNITION ==========
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "en-US";
-
-      let finalTranscript = "";
-      let interimTranscript = "";
-
-      recognition.onresult = (event) => {
-        interimTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + " ";
-          } else {
-            interimTranscript = transcript;
-          }
-        }
-        inputEl.value = (finalTranscript + interimTranscript).trim();
-        inputEl.style.height = "auto";
-        inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
-      };
-
-      recognition.onend = () => {
-        if (isRecording) {
-          // Auto-stopped, restart
-          try { recognition.start(); } catch(e) {}
-        }
-      };
-
-      recognition.onerror = (event) => {
-        if (event.error === "not-allowed") {
-          stopRecording();
-          alert("Microphone access was denied. Please allow microphone access in your browser settings to use voice input.");
-        } else if (event.error !== "aborted") {
-          stopRecording();
-        }
-      };
-
       micBtn.addEventListener("click", () => {
         if (isRecording) {
           stopRecording();
@@ -373,30 +334,74 @@
         }
       });
     } else {
-      // Speech recognition not supported
       micBtn.style.display = "none";
     }
 
     function startRecording() {
-      if (!recognition) return;
-      isRecording = true;
-      micBtn.classList.add("recording");
-      listeningIndicator.classList.add("active");
-      recognition.start();
+      if (isRecording) return;
+
+      // Create a fresh instance each time to avoid stale state
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.maxAlternatives = 1;
+
+      // Keep track of what was in the input before we started
+      const existingText = inputEl.value;
+      let spokenText = "";
+
+      recognition.onresult = (event) => {
+        spokenText = "";
+        for (let i = 0; i < event.results.length; i++) {
+          spokenText += event.results[i][0].transcript;
+        }
+        // Append spoken text to any existing input
+        const combined = existingText ? existingText + " " + spokenText : spokenText;
+        inputEl.value = combined.trim();
+        inputEl.style.height = "auto";
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
+      };
+
+      recognition.onend = () => {
+        // Always clean up when recognition ends for any reason
+        cleanupRecording();
+      };
+
+      recognition.onerror = (event) => {
+        console.log("Speech error:", event.error);
+        cleanupRecording();
+        if (event.error === "not-allowed") {
+          alert("Microphone access was denied. Please allow microphone access in your browser settings.");
+        } else if (event.error === "no-speech") {
+          // Silently end — user just didn't say anything
+        } else if (event.error === "network") {
+          alert("Speech recognition requires an internet connection.");
+        }
+      };
+
+      try {
+        recognition.start();
+        isRecording = true;
+        micBtn.classList.add("recording");
+        listeningIndicator.classList.add("active");
+      } catch (e) {
+        console.error("Failed to start speech recognition:", e);
+        cleanupRecording();
+      }
     }
 
     function stopRecording() {
       if (!recognition) return;
+      try { recognition.stop(); } catch(e) {}
+      // onend handler will call cleanupRecording
+    }
+
+    function cleanupRecording() {
       isRecording = false;
       micBtn.classList.remove("recording");
       listeningIndicator.classList.remove("active");
-      try { recognition.stop(); } catch(e) {}
-      // Reset for next recording session
-      setTimeout(() => {
-        if (recognition) {
-          recognition.abort();
-        }
-      }, 100);
+      recognition = null;
     }
 
     // ========== FILE UPLOAD ==========
