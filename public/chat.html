@@ -73,15 +73,78 @@
       border: 1px solid #333;
       border-bottom-left-radius: 4px;
     }
+
+    /* File attachment bubble */
+    .file-attachment {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(196, 135, 46, 0.15);
+      border: 1px solid #C4872E;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 4px;
+      max-width: 85%;
+      font-size: 13px;
+      color: #C4872E;
+    }
+    .file-attachment svg { flex-shrink: 0; }
+    .file-attachment .file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-attachment .file-size {
+      color: #d4a854;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    /* Input area */
     #chat-input-area {
       display: flex;
+      align-items: flex-end;
       padding: 12px 16px;
       border-top: 2px solid #C4872E;
       background: #000;
       flex-shrink: 0;
+      gap: 8px;
     }
-    #chat-input {
+    #chat-input-wrapper {
       flex: 1;
+      position: relative;
+    }
+    #file-preview {
+      display: none;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #C4872E;
+      align-items: center;
+      gap: 8px;
+    }
+    #file-preview.active { display: flex; }
+    #file-preview .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #file-preview .remove-file {
+      background: none;
+      border: none;
+      color: #777;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    #file-preview .remove-file:hover { color: #e0e0e0; }
+    #chat-input {
+      width: 100%;
       border: 1px solid #333;
       border-radius: 24px;
       padding: 10px 16px;
@@ -93,8 +156,39 @@
       background: #1a1a1a;
       color: #e0e0e0;
     }
+    #chat-input.has-file {
+      border-radius: 0 0 12px 12px;
+      border-top-color: #333;
+    }
     #chat-input::placeholder { color: #777; }
     #chat-input:focus { border-color: #C4872E; }
+    #chat-input.has-file:focus { border-color: #C4872E; }
+
+    /* Action buttons */
+    .action-btn {
+      background: transparent;
+      color: #777;
+      border: 1px solid #333;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { color: #C4872E; border-color: #C4872E; }
+    .action-btn.recording {
+      color: #ff4444;
+      border-color: #ff4444;
+      animation: pulse-recording 1.5s infinite;
+    }
+    @keyframes pulse-recording {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(255, 68, 68, 0); }
+    }
     #chat-send {
       background: #C4872E;
       color: #fff;
@@ -102,7 +196,6 @@
       border-radius: 50%;
       width: 40px;
       height: 40px;
-      margin-left: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -112,6 +205,18 @@
     }
     #chat-send:hover { background: #a36e22; }
     #chat-send:disabled { background: #333; cursor: not-allowed; }
+
+    /* Mic not supported banner */
+    #mic-unsupported {
+      display: none;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #777;
+      font-size: 12px;
+      padding: 8px 16px;
+      text-align: center;
+    }
+
     .typing {
       display: inline-flex;
       gap: 4px;
@@ -130,6 +235,23 @@
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1); opacity: 1; }
     }
+
+    /* Listening indicator */
+    #listening-indicator {
+      display: none;
+      background: rgba(255, 68, 68, 0.1);
+      border-top: 1px solid #ff4444;
+      padding: 8px 16px;
+      font-size: 13px;
+      color: #ff6666;
+      text-align: center;
+      animation: fade-pulse 1.5s infinite;
+    }
+    #listening-indicator.active { display: block; }
+    @keyframes fade-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
 </head>
 <body>
@@ -141,8 +263,39 @@
       </div>
     </div>
     <div id="chat-messages"></div>
+    <div id="listening-indicator">Listening... Speak now</div>
     <div id="chat-input-area">
-      <textarea id="chat-input" placeholder="What's going on?" rows="1"></textarea>
+      <!-- File upload (hidden input) -->
+      <input type="file" id="file-input" style="display:none" accept=".txt,.pdf,.doc,.docx,.jpg,.jpeg,.png,.csv,.xlsx" />
+
+      <!-- Upload button -->
+      <button class="action-btn" id="upload-btn" title="Upload homework file">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+
+      <!-- Mic button -->
+      <button class="action-btn" id="mic-btn" title="Voice input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+
+      <!-- Text input with file preview -->
+      <div id="chat-input-wrapper">
+        <div id="file-preview">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C4872E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="file-name" id="file-preview-name"></span>
+          <button class="remove-file" id="remove-file-btn">&times;</button>
+        </div>
+        <textarea id="chat-input" placeholder="What's going on?" rows="1"></textarea>
+      </div>
+
+      <!-- Send button -->
       <button id="chat-send">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
@@ -155,11 +308,164 @@
 
     let messages = [];
     let isStreaming = false;
+    let pendingFile = null;
+    let recognition = null;
+    let isRecording = false;
 
     const messagesEl = document.getElementById("chat-messages");
     const inputEl = document.getElementById("chat-input");
     const sendBtn = document.getElementById("chat-send");
+    const micBtn = document.getElementById("mic-btn");
+    const uploadBtn = document.getElementById("upload-btn");
+    const fileInput = document.getElementById("file-input");
+    const filePreview = document.getElementById("file-preview");
+    const filePreviewName = document.getElementById("file-preview-name");
+    const removeFileBtn = document.getElementById("remove-file-btn");
+    const listeningIndicator = document.getElementById("listening-indicator");
 
+    // ========== SPEECH RECOGNITION ==========
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      let finalTranscript = "";
+      let interimTranscript = "";
+
+      recognition.onresult = (event) => {
+        interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + " ";
+          } else {
+            interimTranscript = transcript;
+          }
+        }
+        inputEl.value = (finalTranscript + interimTranscript).trim();
+        inputEl.style.height = "auto";
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          // Auto-stopped, restart
+          try { recognition.start(); } catch(e) {}
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed") {
+          stopRecording();
+          alert("Microphone access was denied. Please allow microphone access in your browser settings to use voice input.");
+        } else if (event.error !== "aborted") {
+          stopRecording();
+        }
+      };
+
+      micBtn.addEventListener("click", () => {
+        if (isRecording) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      });
+    } else {
+      // Speech recognition not supported
+      micBtn.style.display = "none";
+    }
+
+    function startRecording() {
+      if (!recognition) return;
+      isRecording = true;
+      micBtn.classList.add("recording");
+      listeningIndicator.classList.add("active");
+      recognition.start();
+    }
+
+    function stopRecording() {
+      if (!recognition) return;
+      isRecording = false;
+      micBtn.classList.remove("recording");
+      listeningIndicator.classList.remove("active");
+      try { recognition.stop(); } catch(e) {}
+      // Reset for next recording session
+      setTimeout(() => {
+        if (recognition) {
+          recognition.abort();
+        }
+      }, 100);
+    }
+
+    // ========== FILE UPLOAD ==========
+    uploadBtn.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        alert("File is too large. Maximum size is 5MB.");
+        fileInput.value = "";
+        return;
+      }
+
+      pendingFile = file;
+      filePreviewName.textContent = file.name + " (" + formatFileSize(file.size) + ")";
+      filePreview.classList.add("active");
+      inputEl.classList.add("has-file");
+      inputEl.focus();
+    });
+
+    removeFileBtn.addEventListener("click", () => {
+      clearPendingFile();
+    });
+
+    function clearPendingFile() {
+      pendingFile = null;
+      fileInput.value = "";
+      filePreview.classList.remove("active");
+      inputEl.classList.remove("has-file");
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    }
+
+    async function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        // For images, convert to a description note
+        if (file.type.startsWith("image/")) {
+          resolve("[Uploaded image: " + file.name + " (" + formatFileSize(file.size) + "). Note: I can see that you've uploaded an image, but I can't view images directly. Please describe what's in the image or paste any text from it.]");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target.result;
+          if (text && text.trim().length > 0) {
+            // Limit to first ~10000 chars to avoid overwhelming the API
+            const truncated = text.length > 10000 ? text.substring(0, 10000) + "\n\n[...file truncated, showing first 10,000 characters]" : text;
+            resolve(truncated);
+          } else {
+            resolve("[Uploaded file: " + file.name + " — could not extract text content. This may be a binary file. Please describe what's in the file or copy/paste the relevant text.]");
+          }
+        };
+        reader.onerror = () => {
+          resolve("[Uploaded file: " + file.name + " — could not read file content.]");
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // ========== MESSAGES ==========
     function addMessage(role, content) {
       const div = document.createElement("div");
       div.className = `msg ${role}`;
@@ -167,6 +473,19 @@
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return div;
+    }
+
+    function addFileMessage(fileName, fileSize) {
+      const div = document.createElement("div");
+      div.className = "msg user";
+      div.innerHTML = `
+        <div class="file-attachment">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4872E" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="file-name">${escapeHtml(fileName)}</span>
+          <span class="file-size">${fileSize}</span>
+        </div>`;
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     function escapeHtml(text) {
@@ -189,17 +508,53 @@
       if (el) el.remove();
     }
 
+    // ========== SEND ==========
     async function sendMessage() {
-      const content = inputEl.value.trim();
-      if (!content || isStreaming) return;
+      let content = inputEl.value.trim();
+      let fileContent = null;
+      let fileName = null;
+      let fileSize = null;
+
+      // Handle attached file
+      if (pendingFile) {
+        fileName = pendingFile.name;
+        fileSize = formatFileSize(pendingFile.size);
+        fileContent = await readFileAsText(pendingFile);
+        clearPendingFile();
+      }
+
+      if (!content && !fileContent) return;
+      if (isStreaming) return;
+
+      // Stop recording if active
+      if (isRecording) stopRecording();
 
       isStreaming = true;
       sendBtn.disabled = true;
       inputEl.value = "";
       inputEl.style.height = "auto";
 
-      messages.push({ role: "user", content });
-      addMessage("user", content);
+      // Build the user message
+      let userMessage = "";
+      if (fileContent && content) {
+        userMessage = content + "\n\n--- Attached File: " + fileName + " ---\n" + fileContent;
+      } else if (fileContent) {
+        userMessage = "Here's my homework file (" + fileName + "):\n\n" + fileContent;
+      } else {
+        userMessage = content;
+      }
+
+      // Display in chat
+      if (fileName) {
+        addFileMessage(fileName, fileSize);
+      }
+      if (content) {
+        addMessage("user", content);
+      } else if (fileName && !content) {
+        addMessage("user", "Here's my homework file.");
+      }
+
+      messages.push({ role: "user", content: userMessage });
       showTyping();
 
       try {
@@ -263,7 +618,7 @@
       inputEl.focus();
     }
 
-    // Show welcome message
+    // ========== INIT ==========
     addMessage("assistant", WELCOME_MESSAGE);
 
     sendBtn.addEventListener("click", sendMessage);
