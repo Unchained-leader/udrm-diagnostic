@@ -97,7 +97,7 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { messages, userId, userName, currentWeek } = body;
+    const { messages, userId, userName, currentWeek, conversationSummary } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
@@ -120,6 +120,11 @@ export async function POST(request) {
       name: userName || null,
     });
 
+    // If there's a conversation summary from previous sessions, prepend it
+    const summaryContext = conversationSummary
+      ? `\n═══ PREVIOUS CONVERSATION CONTEXT ═══\nThe following is a summary of your earlier conversations with this user. Use it to maintain continuity and reference past discussions when relevant:\n${conversationSummary}\n═══ END PREVIOUS CONTEXT ═══\n`
+      : "";
+
     // Format messages for Claude API (keep last 20 for context window management)
     const recentMessages = messages.slice(-20).map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
@@ -133,7 +138,7 @@ export async function POST(request) {
       system: [
         {
           type: "text",
-          text: systemPrompt,
+          text: systemPrompt + summaryContext,
           cache_control: { type: "ephemeral" }, // Enable prompt caching
         },
       ],

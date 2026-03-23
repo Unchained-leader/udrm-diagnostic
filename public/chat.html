@@ -12,8 +12,90 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #e0e0e0;
     }
-    #chat-container {
+
+    /* ========== AUTH SCREEN ========== */
+    #auth-screen {
       display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px;
+      text-align: center;
+    }
+    #auth-screen h2 {
+      color: #C4872E;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    #auth-screen .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    #auth-form {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #auth-form input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    #auth-form input:focus { border-color: #C4872E; }
+    #auth-form input::placeholder { color: #666; }
+    .auth-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    #auth-submit {
+      background: #C4872E;
+      color: #000;
+    }
+    #auth-submit:hover { background: #d4973e; }
+    #auth-submit:disabled { background: #555; cursor: not-allowed; }
+    #auth-toggle {
+      background: transparent;
+      color: #C4872E;
+      border: 1px solid #333;
+    }
+    #auth-toggle:hover { border-color: #C4872E; }
+    #auth-error {
+      color: #ff5555;
+      font-size: 13px;
+      min-height: 20px;
+    }
+    #auth-loading {
+      display: none;
+      color: #C4872E;
+      font-size: 13px;
+    }
+    .signed-in-as {
+      font-size: 11px;
+      color: #666;
+      cursor: pointer;
+      padding: 2px 8px;
+    }
+    .signed-in-as:hover { color: #C4872E; }
+
+    /* ========== CHAT CONTAINER ========== */
+    #chat-container {
+      display: none;
       flex-direction: column;
       height: 100%;
       max-width: 800px;
@@ -40,6 +122,11 @@
       font-size: 12px;
       color: #d4a854;
     }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     #new-chat-btn {
       background: transparent;
       border: 1px solid #C4872E;
@@ -52,6 +139,18 @@
       white-space: nowrap;
     }
     #new-chat-btn:hover { background: #C4872E; color: #000; }
+    #sign-out-btn {
+      background: transparent;
+      border: 1px solid #444;
+      color: #888;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    #sign-out-btn:hover { border-color: #888; color: #ccc; }
     #chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -264,16 +363,57 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+
+    /* Loading spinner for history load */
+    .loading-history {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #888;
+      font-size: 14px;
+      gap: 12px;
+    }
+    .loading-history .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #333;
+      border-top-color: #C4872E;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+  <!-- ========== AUTH SCREEN ========== -->
+  <div id="auth-screen">
+    <h2>Unchained AI Coach</h2>
+    <p class="subtitle">Sign in to access your coaching conversations</p>
+    <div id="auth-form">
+      <input type="email" id="auth-email" placeholder="Your email address" autocomplete="email" />
+      <input type="password" id="auth-pin" placeholder="4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
+      <div id="auth-error"></div>
+      <div id="auth-loading">Signing in...</div>
+      <button class="auth-btn" id="auth-submit">Sign In</button>
+      <button class="auth-btn" id="auth-toggle">First time? Create an account</button>
+    </div>
+  </div>
+
+  <!-- ========== CHAT SCREEN ========== -->
   <div id="chat-container">
     <div id="chat-header">
       <div>
         <h2>Unchained AI Coach</h2>
         <span>Powered by Unchained Leader RNR Methodology</span>
       </div>
-      <button id="new-chat-btn" title="Start a new conversation">New Chat</button>
+      <div class="header-actions">
+        <button id="new-chat-btn" title="Start a new conversation">New Chat</button>
+        <button id="sign-out-btn" title="Sign out">Sign Out</button>
+      </div>
     </div>
     <div id="chat-messages"></div>
     <div id="listening-indicator">Listening... Speak now</div>
@@ -316,17 +456,32 @@
   </div>
 
   <script>
-    const API_URL = "https://unchained-ai-coach.vercel.app/api/chat";
+    const BASE_URL = "https://unchained-ai-coach.vercel.app/api";
+    const API_URL = BASE_URL + "/chat";
+    const AUTH_URL = BASE_URL + "/auth";
+    const HISTORY_URL = BASE_URL + "/history";
     const WELCOME_MESSAGE = "Hey brother. I'm your Unchained AI Coach \u2014 I know every module, every framework, and every exercise in the program. Whether you need help understanding a concept, walking through an exercise, or processing a trigger right now, I'm here. What's going on?";
-    const STORAGE_KEY = "unchained_chat_history";
-    const MAX_HISTORY_MESSAGES = 100; // Keep last 100 messages to avoid storage limits
+    const SESSION_KEY = "unchained_session";
+    const SAVE_DEBOUNCE_MS = 2000;
 
     let messages = [];
+    let conversationSummary = null;
     let isStreaming = false;
     let pendingFile = null;
     let recognition = null;
     let isRecording = false;
+    let currentUser = null; // { email, pin }
+    let saveTimeout = null;
 
+    // DOM refs
+    const authScreen = document.getElementById("auth-screen");
+    const chatContainer = document.getElementById("chat-container");
+    const authEmail = document.getElementById("auth-email");
+    const authPin = document.getElementById("auth-pin");
+    const authSubmit = document.getElementById("auth-submit");
+    const authToggle = document.getElementById("auth-toggle");
+    const authError = document.getElementById("auth-error");
+    const authLoading = document.getElementById("auth-loading");
     const messagesEl = document.getElementById("chat-messages");
     const inputEl = document.getElementById("chat-input");
     const sendBtn = document.getElementById("chat-send");
@@ -338,37 +493,149 @@
     const removeFileBtn = document.getElementById("remove-file-btn");
     const listeningIndicator = document.getElementById("listening-indicator");
     const newChatBtn = document.getElementById("new-chat-btn");
+    const signOutBtn = document.getElementById("sign-out-btn");
 
-    // ========== CONVERSATION HISTORY (localStorage) ==========
-    function saveHistory() {
+    // ========== AUTH ==========
+    let isRegisterMode = false;
+
+    authToggle.addEventListener("click", () => {
+      isRegisterMode = !isRegisterMode;
+      authSubmit.textContent = isRegisterMode ? "Create Account" : "Sign In";
+      authToggle.textContent = isRegisterMode
+        ? "Already have an account? Sign In"
+        : "First time? Create an account";
+      authError.textContent = "";
+    });
+
+    authSubmit.addEventListener("click", handleAuth);
+    authPin.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleAuth();
+    });
+    authEmail.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") authPin.focus();
+    });
+
+    async function handleAuth() {
+      const email = authEmail.value.trim();
+      const pin = authPin.value.trim();
+      authError.textContent = "";
+
+      if (!email) { authError.textContent = "Please enter your email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { authError.textContent = "Please enter a 4-digit PIN."; return; }
+
+      authSubmit.disabled = true;
+      authLoading.style.display = "block";
+
       try {
-        // Only save the last MAX_HISTORY_MESSAGES messages
-        const toSave = messages.slice(-MAX_HISTORY_MESSAGES);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        const res = await fetch(AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: isRegisterMode ? "register" : "login",
+            email,
+            pin,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          authError.textContent = data.error || "Something went wrong.";
+          return;
+        }
+
+        // Success — save session and enter chat
+        currentUser = { email: email.toLowerCase(), pin };
+        try {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+        } catch (e) {}
+
+        await enterChat();
       } catch (e) {
-        console.log("Could not save chat history:", e.message);
+        authError.textContent = "Connection error. Please try again.";
+      } finally {
+        authSubmit.disabled = false;
+        authLoading.style.display = "none";
       }
     }
 
-    function loadHistory() {
+    async function enterChat() {
+      authScreen.style.display = "none";
+      chatContainer.style.display = "flex";
+
+      // Show loading state
+      messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading your conversations...</div>';
+
+      // Load history from server
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+        const res = await fetch(HISTORY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "load",
+            email: currentUser.email,
+            pin: currentUser.pin,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          conversationSummary = data.summary || null;
+
+          if (data.messages && data.messages.length > 0) {
+            messages = data.messages;
+            messagesEl.innerHTML = "";
+            renderSavedMessages(messages);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
           }
         }
       } catch (e) {
-        console.log("Could not load chat history:", e.message);
+        console.log("Could not load server history:", e.message);
       }
-      return null;
+
+      // No history — show welcome
+      messagesEl.innerHTML = "";
+      messages = [];
+      addMessage("assistant", WELCOME_MESSAGE);
     }
 
-    function clearHistory() {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch (e) {}
+    function signOut() {
+      if (isStreaming) return;
+      currentUser = null;
+      messages = [];
+      conversationSummary = null;
+      try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+      chatContainer.style.display = "none";
+      authScreen.style.display = "flex";
+      authEmail.value = "";
+      authPin.value = "";
+      authError.textContent = "";
+      messagesEl.innerHTML = "";
+    }
+
+    signOutBtn.addEventListener("click", signOut);
+
+    // ========== SERVER HISTORY ==========
+    function saveHistoryToServer() {
+      if (!currentUser) return;
+      // Debounce saves to avoid hammering the server
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        try {
+          await fetch(HISTORY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "save",
+              email: currentUser.email,
+              pin: currentUser.pin,
+              messages,
+            }),
+          });
+        } catch (e) {
+          console.log("Could not save history:", e.message);
+        }
+      }, SAVE_DEBOUNCE_MS);
     }
 
     function renderSavedMessages(savedMessages) {
@@ -394,15 +661,12 @@
 
     function startRecording() {
       if (isRecording) return;
-
-      // Create a fresh instance each time to avoid stale state
       recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
 
-      // Keep track of what was in the input before we started
       const existingText = inputEl.value;
       let spokenText = "";
 
@@ -411,25 +675,18 @@
         for (let i = 0; i < event.results.length; i++) {
           spokenText += event.results[i][0].transcript;
         }
-        // Append spoken text to any existing input
         const combined = existingText ? existingText + " " + spokenText : spokenText;
         inputEl.value = combined.trim();
         inputEl.style.height = "auto";
         inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
       };
 
-      recognition.onend = () => {
-        // Always clean up when recognition ends for any reason
-        cleanupRecording();
-      };
-
+      recognition.onend = () => { cleanupRecording(); };
       recognition.onerror = (event) => {
         console.log("Speech error:", event.error);
         cleanupRecording();
         if (event.error === "not-allowed") {
           alert("Microphone access was denied. Please allow microphone access in your browser settings.");
-        } else if (event.error === "no-speech") {
-          // Silently end — user just didn't say anything
         } else if (event.error === "network") {
           alert("Speech recognition requires an internet connection.");
         }
@@ -449,7 +706,6 @@
     function stopRecording() {
       if (!recognition) return;
       try { recognition.stop(); } catch(e) {}
-      // onend handler will call cleanupRecording
     }
 
     function cleanupRecording() {
@@ -460,21 +716,17 @@
     }
 
     // ========== FILE UPLOAD ==========
-    uploadBtn.addEventListener("click", () => {
-      fileInput.click();
-    });
+    uploadBtn.addEventListener("click", () => { fileInput.click(); });
 
     fileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         alert("File is too large. Maximum size is 5MB.");
         fileInput.value = "";
         return;
       }
-
       pendingFile = file;
       filePreviewName.textContent = file.name + " (" + formatFileSize(file.size) + ")";
       filePreview.classList.add("active");
@@ -482,9 +734,7 @@
       inputEl.focus();
     });
 
-    removeFileBtn.addEventListener("click", () => {
-      clearPendingFile();
-    });
+    removeFileBtn.addEventListener("click", () => { clearPendingFile(); });
 
     function clearPendingFile() {
       pendingFile = null;
@@ -501,21 +751,18 @@
 
     async function readFileAsText(file) {
       return new Promise((resolve, reject) => {
-        // For images, convert to a description note
         if (file.type.startsWith("image/")) {
           resolve("[Uploaded image: " + file.name + " (" + formatFileSize(file.size) + "). Note: I can see that you've uploaded an image, but I can't view images directly. Please describe what's in the image or paste any text from it.]");
           return;
         }
-
         const reader = new FileReader();
         reader.onload = (e) => {
           const text = e.target.result;
           if (text && text.trim().length > 0) {
-            // Limit to first ~10000 chars to avoid overwhelming the API
             const truncated = text.length > 10000 ? text.substring(0, 10000) + "\n\n[...file truncated, showing first 10,000 characters]" : text;
             resolve(truncated);
           } else {
-            resolve("[Uploaded file: " + file.name + " — could not extract text content. This may be a binary file. Please describe what's in the file or copy/paste the relevant text.]");
+            resolve("[Uploaded file: " + file.name + " — could not extract text content.]");
           }
         };
         reader.onerror = () => {
@@ -577,7 +824,6 @@
       let fileName = null;
       let fileSize = null;
 
-      // Handle attached file
       if (pendingFile) {
         fileName = pendingFile.name;
         fileSize = formatFileSize(pendingFile.size);
@@ -587,8 +833,6 @@
 
       if (!content && !fileContent) return;
       if (isStreaming) return;
-
-      // Stop recording if active
       if (isRecording) stopRecording();
 
       isStreaming = true;
@@ -596,7 +840,6 @@
       inputEl.value = "";
       inputEl.style.height = "auto";
 
-      // Build the user message
       let userMessage = "";
       if (fileContent && content) {
         userMessage = content + "\n\n--- Attached File: " + fileName + " ---\n" + fileContent;
@@ -606,10 +849,7 @@
         userMessage = content;
       }
 
-      // Display in chat
-      if (fileName) {
-        addFileMessage(fileName, fileSize);
-      }
+      if (fileName) { addFileMessage(fileName, fileSize); }
       if (content) {
         addMessage("user", content);
       } else if (fileName && !content) {
@@ -617,7 +857,7 @@
       }
 
       messages.push({ role: "user", content: userMessage });
-      saveHistory();
+      saveHistoryToServer();
       showTyping();
 
       try {
@@ -626,9 +866,10 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             messages,
-            userId: null,
+            userId: currentUser ? currentUser.email : null,
             userName: null,
             currentWeek: null,
+            conversationSummary,
           }),
         });
 
@@ -671,7 +912,7 @@
         }
 
         messages.push({ role: "assistant", content: fullResponse.replace("[CRISIS_DETECTED]", "").trim() });
-        saveHistory();
+        saveHistoryToServer();
       } catch (error) {
         removeTyping();
         addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to your coach directly if you need immediate support.");
@@ -682,28 +923,32 @@
       inputEl.focus();
     }
 
-    // ========== INIT ==========
-    // Load saved conversation or show welcome message
-    const savedHistory = loadHistory();
-    if (savedHistory && savedHistory.length > 0) {
-      messages = savedHistory;
-      renderSavedMessages(savedHistory);
-      // Scroll to the bottom after rendering saved messages
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    } else {
-      addMessage("assistant", WELCOME_MESSAGE);
-    }
-
-    // New Chat button
-    newChatBtn.addEventListener("click", () => {
+    // ========== NEW CHAT ==========
+    newChatBtn.addEventListener("click", async () => {
       if (isStreaming) return;
+
+      // Save current conversation as summary on server before clearing
+      if (currentUser && messages.length > 0) {
+        try {
+          await fetch(HISTORY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "clear",
+              email: currentUser.email,
+              pin: currentUser.pin,
+            }),
+          });
+        } catch (e) {}
+      }
+
       messages = [];
-      clearHistory();
       messagesEl.innerHTML = "";
       addMessage("assistant", WELCOME_MESSAGE);
       inputEl.focus();
     });
 
+    // ========== EVENT LISTENERS ==========
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -715,6 +960,19 @@
       inputEl.style.height = "auto";
       inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
     });
+
+    // ========== INIT ==========
+    // Check for saved session
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email && parsed.pin) {
+          currentUser = parsed;
+          enterChat();
+        }
+      }
+    } catch (e) {}
   </script>
 </body>
 </html>
