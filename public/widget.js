@@ -16,7 +16,7 @@
   styles.textContent = `
     #unchained-widget-btn {
       position: fixed;
-      bottom: 24px;
+      bottom: 100px;
       right: 24px;
       width: 64px;
       height: 64px;
@@ -42,7 +42,7 @@
     }
     #unchained-chat-panel {
       position: fixed;
-      bottom: 100px;
+      bottom: 176px;
       right: 24px;
       width: 400px;
       max-width: calc(100vw - 48px);
@@ -184,7 +184,7 @@
         max-height: 100vh;
         border-radius: 0;
       }
-      #unchained-widget-btn { bottom: 16px; right: 16px; }
+      #unchained-widget-btn { bottom: 90px; right: 16px; }
     }
   `;
   document.head.appendChild(styles);
