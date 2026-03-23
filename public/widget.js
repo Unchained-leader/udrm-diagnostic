@@ -21,7 +21,7 @@
       width: 64px;
       height: 64px;
       border-radius: 50%;
-      background: #1A1A2E;
+      background: #000000;
       border: 3px solid #C4872E;
       cursor: pointer;
       box-shadow: 0 4px 24px rgba(0,0,0,0.3);
@@ -48,9 +48,10 @@
       max-width: calc(100vw - 48px);
       height: 560px;
       max-height: calc(100vh - 140px);
-      background: #fff;
+      background: #000000;
       border-radius: 16px;
-      box-shadow: 0 8px 48px rgba(0,0,0,0.2);
+      border: 2px solid #C4872E;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.4);
       z-index: 99999;
       display: none;
       flex-direction: column;
@@ -59,8 +60,9 @@
     }
     #unchained-chat-panel.open { display: flex; }
     #unchained-chat-header {
-      background: #1A1A2E;
-      color: #fff;
+      background: #000000;
+      color: #C4872E;
+      border-bottom: 1px solid #C4872E;
       padding: 16px 20px;
       display: flex;
       align-items: center;
@@ -75,23 +77,23 @@
     }
     #unchained-chat-header span {
       font-size: 12px;
-      color: #aaa;
+      color: #d4a854;
     }
     #unchained-chat-close {
       background: none;
       border: none;
-      color: #aaa;
+      color: #C4872E;
       font-size: 24px;
       cursor: pointer;
       padding: 0;
       line-height: 1;
     }
-    #unchained-chat-close:hover { color: #fff; }
+    #unchained-chat-close:hover { color: #d4a854; }
     #unchained-chat-messages {
       flex: 1;
       overflow-y: auto;
       padding: 16px;
-      background: #f9f9f9;
+      background: #111111;
     }
     .unchained-msg {
       margin-bottom: 12px;
@@ -110,26 +112,26 @@
       white-space: pre-wrap;
     }
     .unchained-msg.user .unchained-msg-bubble {
-      background: #1A1A2E;
-      color: #fff;
+      background: #C4872E;
+      color: #000;
       border-bottom-right-radius: 4px;
     }
     .unchained-msg.assistant .unchained-msg-bubble {
-      background: #fff;
-      color: #333;
-      border: 1px solid #e0e0e0;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border: 1px solid #333;
       border-bottom-left-radius: 4px;
     }
     #unchained-chat-input-area {
       display: flex;
       padding: 12px 16px;
-      border-top: 1px solid #e0e0e0;
-      background: #fff;
+      border-top: 1px solid #C4872E;
+      background: #000000;
       flex-shrink: 0;
     }
     #unchained-chat-input {
       flex: 1;
-      border: 1px solid #ddd;
+      border: 1px solid #333;
       border-radius: 24px;
       padding: 10px 16px;
       font-size: 14px;
@@ -137,7 +139,10 @@
       font-family: inherit;
       resize: none;
       max-height: 80px;
+      background: #1a1a1a;
+      color: #e0e0e0;
     }
+    #unchained-chat-input::placeholder { color: #777; }
     #unchained-chat-input:focus { border-color: #C4872E; }
     #unchained-chat-send {
       background: #C4872E;
@@ -155,7 +160,7 @@
       transition: background 0.2s;
     }
     #unchained-chat-send:hover { background: #a36e22; }
-    #unchained-chat-send:disabled { background: #ccc; cursor: not-allowed; }
+    #unchained-chat-send:disabled { background: #333; cursor: not-allowed; }
     .unchained-typing {
       display: inline-flex;
       gap: 4px;
@@ -164,7 +169,7 @@
     .unchained-typing span {
       width: 8px;
       height: 8px;
-      background: #999;
+      background: #C4872E;
       border-radius: 50%;
       animation: unchainedBounce 1.4s infinite ease-in-out;
     }
