@@ -208,7 +208,7 @@
     <div id="unchained-chat-header">
       <div>
         <h3>${WIDGET_TITLE}</h3>
-        <span>Powered by your program methodology</span>
+        <span>Powered by Unchained Leader RNR Methodology</span>
       </div>
       <button id="unchained-chat-close">&times;</button>
     </div>
