@@ -193,7 +193,7 @@
   // Chat button
   const btn = document.createElement("div");
   btn.id = "unchained-widget-btn";
-  btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/><path d="M7 9h10v2H7zm0-3h10v2H7z"/></svg>`;
+  btn.innerHTML = `<span style="font-family:'Georgia',serif;font-size:22px;font-weight:bold;color:#C4872E;letter-spacing:1px;line-height:1;">AI</span>`;
   document.body.appendChild(btn);
 
   // Chat panel
