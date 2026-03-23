@@ -1,13 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED AI COACH — Embeddable Chat Widget
 // Paste this script tag into GoHighLevel Custom Code block:
-// <script src="https://YOUR-VERCEL-URL.vercel.app/widget.js"></script>
+// <script src="https://unchained-ai-coach.vercel.app/widget.js"></script>
 // ═══════════════════════════════════════════════════════════════
 
 (function () {
   // ── CONFIGURATION ──
   // Change this to your deployed Vercel URL
-  const API_URL = window.UNCHAINED_API_URL || "https://YOUR-APP.vercel.app/api/chat";
+  const API_URL = window.UNCHAINED_API_URL || "https://unchained-ai-coach.vercel.app/api/chat";
   const WIDGET_TITLE = "Unchained AI Coach";
   const WELCOME_MESSAGE = "Hey brother. I'm your Unchained AI Coach — I know every module, every framework, and every exercise in the program. Whether you need help understanding a concept, walking through an exercise, or processing a trigger right now, I'm here. What's going on?";
 
