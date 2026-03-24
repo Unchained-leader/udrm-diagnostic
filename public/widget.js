@@ -7,6 +7,7 @@
 (function () {
   // ── CONFIGURATION ──
   const CHAT_URL = window.UNCHAINED_MKT_CHAT_URL || "https://unchained-marketing-coach.vercel.app/chat.html";
+  const API_BASE = window.UNCHAINED_MKT_API_URL || "https://unchained-marketing-coach.vercel.app";
   const WIDGET_TITLE = "Unchained AI Guide";
 
   // ── STYLES ──
