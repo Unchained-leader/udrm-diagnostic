@@ -26,6 +26,7 @@ export async function POST(request) {
 
       // Send reset code email via Resend
       const resendKey = process.env.RESEND_API_KEY;
+      const fromEmail = process.env.RESET_FROM_EMAIL || "Unchained Support <onboarding@resend.dev>";
       if (resendKey) {
         try {
           const emailRes = await fetch("https://api.resend.com/emails", {
@@ -35,7 +36,7 @@ export async function POST(request) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "Unchained Support <onboarding@resend.dev>",
+              from: fromEmail,
               to: [normalizedEmail],
               subject: "Your Unchained AI Coach PIN Reset Code",
               html: `
