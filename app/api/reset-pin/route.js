@@ -78,7 +78,7 @@ export async function POST(request) {
 
       // Check reset code
       const storedCode = await redis.get(`reset:${normalizedEmail}`);
-      if (!storedCode || storedCode !== code) {
+      if (!storedCode || String(storedCode) !== String(code)) {
         return Response.json({ error: "Invalid or expired code. Please request a new one." }, { status: 400 });
       }
 
