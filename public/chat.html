@@ -261,22 +261,6 @@
       align-items: center;
       gap: 8px;
     }
-    #new-chat-btn {
-      background: transparent;
-      border: 1px solid var(--border-gold);
-      color: var(--gold);
-      padding: 7px 14px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.25s;
-      white-space: nowrap;
-    }
-    #new-chat-btn:hover { background: rgba(185, 156, 79, 0.1); border-color: var(--gold); }
     #sign-out-btn {
       background: transparent;
       border: 1px solid var(--border-subtle);
@@ -582,7 +566,6 @@
         <span>Powered by Unchained Leader RNR Methodology</span>
       </div>
       <div class="header-actions">
-        <button id="new-chat-btn" title="Start a new conversation">New Chat</button>
         <button id="sign-out-btn" title="Sign out">Sign Out</button>
       </div>
     </div>
@@ -664,7 +647,6 @@
     const filePreviewName = document.getElementById("file-preview-name");
     const removeFileBtn = document.getElementById("remove-file-btn");
     const listeningIndicator = document.getElementById("listening-indicator");
-    const newChatBtn = document.getElementById("new-chat-btn");
     const signOutBtn = document.getElementById("sign-out-btn");
 
     // ========== AUTH ==========
@@ -1208,31 +1190,6 @@
       sendBtn.disabled = false;
       inputEl.focus();
     }
-
-    // ========== NEW CHAT ==========
-    newChatBtn.addEventListener("click", async () => {
-      if (isStreaming) return;
-
-      // Save current conversation as summary on server before clearing
-      if (currentUser && messages.length > 0) {
-        try {
-          await fetch(HISTORY_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "clear",
-              email: currentUser.email,
-              pin: currentUser.pin,
-            }),
-          });
-        } catch (e) {}
-      }
-
-      messages = [];
-      messagesEl.innerHTML = "";
-      addMessage("assistant", WELCOME_MESSAGE);
-      inputEl.focus();
-    });
 
     // ========== EVENT LISTENERS ==========
     sendBtn.addEventListener("click", sendMessage);
