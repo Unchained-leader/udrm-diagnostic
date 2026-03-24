@@ -24,24 +24,44 @@ export async function POST(request) {
       // Store code in Redis with 10-minute expiry
       await redis.set(`reset:${normalizedEmail}`, resetCode, { ex: 600 });
 
-      // Call GHL webhook to send the email
-      const webhookUrl = process.env.GHL_RESET_WEBHOOK_URL;
-      if (webhookUrl) {
+      // Send reset code email via Resend
+      const resendKey = process.env.RESEND_API_KEY;
+      if (resendKey) {
         try {
-          await fetch(webhookUrl, {
+          const emailRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Authorization": `Bearer ${resendKey}`,
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({
-              email: normalizedEmail,
-              resetCode: resetCode,
+              from: "Unchained Support <onboarding@resend.dev>",
+              to: [normalizedEmail],
+              subject: "Your Unchained AI Coach PIN Reset Code",
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #111; color: #e0e0e0; border-radius: 12px;">
+                  <h2 style="color: #C4872E; margin-top: 0;">Reset Your PIN</h2>
+                  <p>Hey — you requested a PIN reset for your Unchained AI Coach account.</p>
+                  <p>Your reset code is:</p>
+                  <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #C4872E; margin: 16px 0;">
+                    ${resetCode}
+                  </div>
+                  <p style="color: #999; font-size: 14px;">This code expires in 10 minutes. If you didn't request this, just ignore this email.</p>
+                  <p style="margin-top: 24px;">Stay unchained,<br/><strong style="color: #C4872E;">The Unchained Team</strong></p>
+                </div>
+              `,
             }),
           });
+          if (!emailRes.ok) {
+            const errBody = await emailRes.text();
+            console.error("Resend email error:", emailRes.status, errBody);
+          }
         } catch (e) {
-          console.error("GHL webhook error:", e.message);
+          console.error("Resend email error:", e.message);
           // Don't fail the request — code is still in Redis
         }
       } else {
-        console.warn("GHL_RESET_WEBHOOK_URL not configured");
+        console.warn("RESEND_API_KEY not configured");
       }
 
       return Response.json({ ok: true });
