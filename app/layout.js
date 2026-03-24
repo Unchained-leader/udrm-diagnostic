@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Unchained AI Coach",
-  description: "Your 24/7 AI coaching companion for the Unchained Vices program",
+  title: "Unchained AI Guide",
+  description: "Understand what is really driving the behavior you can't shake",
 };
 
 export default function RootLayout({ children }) {

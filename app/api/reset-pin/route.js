@@ -11,20 +11,15 @@ export async function POST(request) {
 
     // ========== REQUEST RESET ==========
     if (action === "request") {
-      // Check user exists
-      const user = await redis.get(`user:${normalizedEmail}`);
+      const user = await redis.get(`mkt:user:${normalizedEmail}`);
       if (!user) {
-        // Don't reveal whether email exists — show same success message
+        // Don't reveal whether email exists
         return Response.json({ ok: true });
       }
 
-      // Generate 6-digit reset code
       const resetCode = String(Math.floor(100000 + Math.random() * 900000));
+      await redis.set(`mkt:reset:${normalizedEmail}`, resetCode, { ex: 600 });
 
-      // Store code in Redis with 10-minute expiry
-      await redis.set(`reset:${normalizedEmail}`, resetCode, { ex: 600 });
-
-      // Send reset code email via Resend
       const resendKey = process.env.RESEND_API_KEY;
       const fromEmail = process.env.RESET_FROM_EMAIL || "Unchained Support <onboarding@resend.dev>";
       if (resendKey) {
@@ -38,11 +33,11 @@ export async function POST(request) {
             body: JSON.stringify({
               from: fromEmail,
               to: [normalizedEmail],
-              subject: "Your Unchained AI Coach PIN Reset Code",
+              subject: "Your Unchained AI Guide PIN Reset Code",
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: #111; color: #e0e0e0; border-radius: 12px;">
                   <h2 style="color: #C4872E; margin-top: 0;">Reset Your PIN</h2>
-                  <p>Hey — you requested a PIN reset for your Unchained AI Coach account.</p>
+                  <p>Hey — you requested a PIN reset for your Unchained AI Guide account.</p>
                   <p>Your reset code is:</p>
                   <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 20px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #C4872E; margin: 16px 0;">
                     ${resetCode}
@@ -59,7 +54,6 @@ export async function POST(request) {
           }
         } catch (e) {
           console.error("Resend email error:", e.message);
-          // Don't fail the request — code is still in Redis
         }
       } else {
         console.warn("RESEND_API_KEY not configured");
@@ -77,24 +71,21 @@ export async function POST(request) {
         return Response.json({ error: "New PIN must be 4 digits." }, { status: 400 });
       }
 
-      // Check reset code
-      const storedCode = await redis.get(`reset:${normalizedEmail}`);
+      const storedCode = await redis.get(`mkt:reset:${normalizedEmail}`);
       if (!storedCode || String(storedCode) !== String(code)) {
         return Response.json({ error: "Invalid or expired code. Please request a new one." }, { status: 400 });
       }
 
-      // Update the user's PIN
-      const user = await redis.get(`user:${normalizedEmail}`);
+      const user = await redis.get(`mkt:user:${normalizedEmail}`);
       if (!user) {
         return Response.json({ error: "Account not found." }, { status: 404 });
       }
 
       const userData = typeof user === "string" ? JSON.parse(user) : user;
       userData.pin = newPin;
-      await redis.set(`user:${normalizedEmail}`, JSON.stringify(userData));
+      await redis.set(`mkt:user:${normalizedEmail}`, JSON.stringify(userData));
 
-      // Clean up the reset code
-      await redis.del(`reset:${normalizedEmail}`);
+      await redis.del(`mkt:reset:${normalizedEmail}`);
 
       return Response.json({ ok: true, message: "PIN updated successfully." });
     }

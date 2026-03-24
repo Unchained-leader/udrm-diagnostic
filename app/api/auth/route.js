@@ -12,7 +12,7 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { action, email, pin } = await request.json();
+    const { action, email, pin, name } = await request.json();
     const normalizedEmail = (email || "").trim().toLowerCase();
 
     if (!normalizedEmail || !pin) {
@@ -38,9 +38,18 @@ export async function POST(request) {
       );
     }
 
-    const userKey = `user:${normalizedEmail}`;
+    const userKey = `mkt:user:${normalizedEmail}`;
 
     if (action === "register") {
+      // Validate name is provided for registration
+      const trimmedName = (name || "").trim();
+      if (!trimmedName) {
+        return Response.json(
+          { error: "Full name is required." },
+          { status: 400, headers: CORS_HEADERS }
+        );
+      }
+
       // Check if user already exists
       const existing = await redis.get(userKey);
       if (existing) {
@@ -53,11 +62,12 @@ export async function POST(request) {
       // Create new user
       await redis.set(userKey, {
         pin,
+        name: trimmedName,
         createdAt: new Date().toISOString(),
       });
 
       return Response.json(
-        { success: true, message: "Account created." },
+        { success: true, message: "Account created.", name: trimmedName },
         { headers: CORS_HEADERS }
       );
 
@@ -78,7 +88,7 @@ export async function POST(request) {
       }
 
       return Response.json(
-        { success: true, message: "Signed in." },
+        { success: true, message: "Signed in.", name: user.name || null },
         { headers: CORS_HEADERS }
       );
 

@@ -48,7 +48,7 @@ async function sendCrisisAlert(message, userId) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `🚨 *CRISIS ALERT — Unchained AI Coach*\n*User:* ${userId || "Unknown"}\n*Time:* ${new Date().toISOString()}\n*Message:* ${message.substring(0, 500)}\n\nPlease reach out to this member immediately.`,
+          text: `🚨 *CRISIS ALERT — Unchained AI Guide (Marketing)*\n*User:* ${userId || "Unknown"}\n*Time:* ${new Date().toISOString()}\n*Message:* ${message.substring(0, 500)}\n\nPlease reach out to this person immediately.`,
         }),
       });
     } catch (e) {
@@ -66,14 +66,14 @@ async function sendCrisisAlert(message, userId) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "Unchained AI Coach <alerts@yourdomain.com>",
+          from: "Unchained AI Guide <alerts@unchained.support>",
           to: process.env.ALERT_EMAIL,
-          subject: "🚨 CRISIS ALERT — Member Needs Immediate Support",
+          subject: "🚨 CRISIS ALERT — Marketing Coach User Needs Immediate Support",
           html: `<h2>Crisis Detected</h2>
             <p><strong>User:</strong> ${userId || "Unknown"}</p>
             <p><strong>Time:</strong> ${new Date().toISOString()}</p>
             <p><strong>Message:</strong> ${message.substring(0, 500)}</p>
-            <p>Please reach out to this member immediately.</p>`,
+            <p>Please reach out to this person immediately.</p>`,
         }),
       });
     } catch (e) {
@@ -97,7 +97,7 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { messages, userId, userName, currentWeek, conversationSummary } = body;
+    const { messages, userId, userName, conversationSummary } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
@@ -116,7 +116,6 @@ export async function POST(request) {
 
     // Build system prompt with user context
     const systemPrompt = buildSystemPrompt(knowledgeBase, {
-      currentWeek: currentWeek || null,
       name: userName || null,
     });
 
@@ -139,7 +138,7 @@ export async function POST(request) {
         {
           type: "text",
           text: systemPrompt + summaryContext,
-          cache_control: { type: "ephemeral" }, // Enable prompt caching
+          cache_control: { type: "ephemeral" },
         },
       ],
       messages: recentMessages,
@@ -156,19 +155,16 @@ export async function POST(request) {
               event.delta?.type === "text_delta"
             ) {
               const chunk = event.delta.text;
-              // Send as SSE format
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`)
               );
             }
           }
-          // Get final message for crisis tag detection
           const finalMessage = await stream.finalMessage();
           const fullResponse = finalMessage.content
             .map((c) => c.text)
             .join("");
 
-          // Check if Claude flagged a crisis
           if (fullResponse.includes("[CRISIS_DETECTED]")) {
             sendCrisisAlert(latestMessage, userId || userName);
           }

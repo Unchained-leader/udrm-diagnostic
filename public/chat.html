@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unchained AI Coach</title>
+  <title>Unchained AI Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -61,6 +61,8 @@
       font-weight: 400;
       letter-spacing: 0.5px;
       margin-bottom: 36px;
+      max-width: 340px;
+      line-height: 1.6;
     }
     #auth-form {
       width: 100%;
@@ -143,6 +145,10 @@
       transition: color 0.2s;
     }
     #forgot-pin-link:hover { color: var(--gold); }
+
+    /* Name field (only shown in register mode) */
+    #auth-name { display: none; }
+    #auth-name.visible { display: block; }
 
     /* Reset PIN screen */
     #reset-screen {
@@ -282,7 +288,6 @@
       padding: 20px 16px;
       background: var(--surface);
     }
-    /* Custom scrollbar */
     #chat-messages::-webkit-scrollbar { width: 6px; }
     #chat-messages::-webkit-scrollbar-track { background: transparent; }
     #chat-messages::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 3px; }
@@ -318,32 +323,6 @@
       border-bottom-left-radius: 4px;
     }
 
-    /* File attachment bubble */
-    .file-attachment {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(185, 156, 79, 0.08);
-      border: 1px solid var(--border-gold);
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 4px;
-      max-width: 85%;
-      font-size: 13px;
-      color: var(--gold);
-    }
-    .file-attachment svg { flex-shrink: 0; }
-    .file-attachment .file-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .file-attachment .file-size {
-      color: var(--gold-dark);
-      font-size: 11px;
-      flex-shrink: 0;
-    }
-
     /* Input area */
     #chat-input-area {
       display: flex;
@@ -358,35 +337,6 @@
       flex: 1;
       position: relative;
     }
-    #file-preview {
-      display: none;
-      background: var(--surface-raised);
-      border: 1px solid var(--border-subtle);
-      border-bottom: none;
-      border-radius: 12px 12px 0 0;
-      padding: 8px 12px;
-      font-size: 12px;
-      color: var(--gold);
-      align-items: center;
-      gap: 8px;
-    }
-    #file-preview.active { display: flex; }
-    #file-preview .file-name {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    #file-preview .remove-file {
-      background: none;
-      border: none;
-      color: #555;
-      cursor: pointer;
-      font-size: 16px;
-      padding: 0 4px;
-      line-height: 1;
-    }
-    #file-preview .remove-file:hover { color: #e0e0e0; }
     #chat-input {
       width: 100%;
       border: 1px solid var(--border-subtle);
@@ -402,13 +352,8 @@
       color: #e0e0e0;
       transition: border-color 0.2s;
     }
-    #chat-input.has-file {
-      border-radius: 0 0 12px 12px;
-      border-top-color: var(--border-subtle);
-    }
     #chat-input::placeholder { color: #555; }
     #chat-input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.1); }
-    #chat-input.has-file:focus { border-color: var(--gold); }
 
     /* Action buttons */
     .action-btn {
@@ -452,17 +397,6 @@
     #chat-send:hover { box-shadow: 0 2px 12px rgba(185, 156, 79, 0.3); }
     #chat-send:disabled { background: #222; cursor: not-allowed; box-shadow: none; }
 
-    /* Mic not supported banner */
-    #mic-unsupported {
-      display: none;
-      background: var(--surface-raised);
-      border: 1px solid var(--border-subtle);
-      color: #555;
-      font-size: 12px;
-      padding: 8px 16px;
-      text-align: center;
-    }
-
     .typing {
       display: inline-flex;
       gap: 4px;
@@ -499,7 +433,7 @@
       50% { opacity: 0.5; }
     }
 
-    /* Loading spinner for history load */
+    /* Loading spinner */
     .loading-history {
       display: flex;
       flex-direction: column;
@@ -527,16 +461,17 @@
 <body>
   <!-- ========== AUTH SCREEN ========== -->
   <div id="auth-screen">
-    <h2>Unchained AI Coach</h2>
-    <p class="subtitle">Sign in to access your coaching conversations</p>
+    <h2>Unchained AI Guide</h2>
+    <p class="subtitle">A confidential space to understand what is really driving the behavior you cannot shake. No judgment. Just truth.</p>
     <div id="auth-form">
+      <input type="text" id="auth-name" placeholder="Your full name" autocomplete="name" />
       <input type="email" id="auth-email" placeholder="Your email address" autocomplete="email" />
-      <input type="password" id="auth-pin" placeholder="4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
+      <input type="password" id="auth-pin" placeholder="Create a 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
       <div id="auth-error"></div>
       <div id="auth-loading">Signing in...</div>
-      <button class="auth-btn" id="auth-submit">Sign In</button>
-      <button class="auth-btn" id="auth-toggle">First time? Create an account</button>
-      <button id="forgot-pin-link">Forgot your PIN?</button>
+      <button class="auth-btn" id="auth-submit">Get Started</button>
+      <button class="auth-btn" id="auth-toggle">Already have an account? Sign In</button>
+      <button id="forgot-pin-link" style="display:none">Forgot your PIN?</button>
     </div>
   </div>
 
@@ -562,8 +497,8 @@
   <div id="chat-container">
     <div id="chat-header">
       <div>
-        <h2>Unchained AI Coach</h2>
-        <span>Powered by Unchained Leader RNR Methodology</span>
+        <h2>Unchained AI Guide</h2>
+        <span>Powered by Unchained Leader</span>
       </div>
       <div class="header-actions">
         <button id="sign-out-btn" title="Sign out">Sign Out</button>
@@ -572,16 +507,6 @@
     <div id="chat-messages"></div>
     <div id="listening-indicator">Listening... Speak now</div>
     <div id="chat-input-area">
-      <!-- File upload (hidden input) -->
-      <input type="file" id="file-input" style="display:none" accept=".txt,.pdf,.doc,.docx,.jpg,.jpeg,.png,.csv,.xlsx" />
-
-      <!-- Upload button -->
-      <button class="action-btn" id="upload-btn" title="Upload homework file">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
-        </svg>
-      </button>
-
       <!-- Mic button -->
       <button class="action-btn" id="mic-btn" title="Voice input">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -592,13 +517,8 @@
         </svg>
       </button>
 
-      <!-- Text input with file preview -->
+      <!-- Text input -->
       <div id="chat-input-wrapper">
-        <div id="file-preview">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b99c4f" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="file-name" id="file-preview-name"></span>
-          <button class="remove-file" id="remove-file-btn">&times;</button>
-        </div>
         <textarea id="chat-input" placeholder="What's going on?" rows="1"></textarea>
       </div>
 
@@ -610,55 +530,66 @@
   </div>
 
   <script>
-    const BASE_URL = "https://unchained-ai-coach.vercel.app/api";
-    const API_URL = BASE_URL + "/chat";
-    const AUTH_URL = BASE_URL + "/auth";
-    const HISTORY_URL = BASE_URL + "/history";
-    const RESET_URL = BASE_URL + "/reset-pin";
-    const WELCOME_MESSAGE = "Hey my friend \u2014 it\u2019s Mason. Welcome to your Unchained AI Coach. I built this myself and loaded it with transcripts from every program module, hundreds of hours of additional training, and dozens of hours coaching it to work the way I coach. Need help with a concept, an action step, or processing a trigger? This is a great place to do it. Just remember \u2014 this doesn\u2019t replace group coaching or the Unchained Leader community. Now, what\u2019s going on?";
-    const SESSION_KEY = "unchained_session";
+    const BASE_URL = window.UNCHAINED_MKT_API_URL || "";
+    const API_URL = BASE_URL + "/api/chat";
+    const AUTH_URL = BASE_URL + "/api/auth";
+    const HISTORY_URL = BASE_URL + "/api/history";
+    const RESET_URL = BASE_URL + "/api/reset-pin";
+    const WELCOME_MESSAGE = "Hey brother. I\u2019m the Unchained AI Guide. I was built by a man who spent 17 years and $12,000 trying to break free from unwanted behavior, and nothing worked until he found the root underneath it all.\n\nI\u2019m not here to judge you. I\u2019m not here to sell you anything. I\u2019m here to help you understand what is really driving the thing you can\u2019t shake. If you\u2019re tired of fighting the same battle with the same strategies that keep failing, you\u2019re in the right place.\n\nSo what\u2019s going on?";
+    const SESSION_KEY = "unchained_mkt_session";
     const SAVE_DEBOUNCE_MS = 2000;
 
     let messages = [];
     let conversationSummary = null;
     let isStreaming = false;
-    let pendingFile = null;
     let recognition = null;
     let isRecording = false;
-    let currentUser = null; // { email, pin }
+    let currentUser = null; // { email, pin, name }
     let saveTimeout = null;
 
     // DOM refs
     const authScreen = document.getElementById("auth-screen");
     const chatContainer = document.getElementById("chat-container");
+    const authName = document.getElementById("auth-name");
     const authEmail = document.getElementById("auth-email");
     const authPin = document.getElementById("auth-pin");
     const authSubmit = document.getElementById("auth-submit");
     const authToggle = document.getElementById("auth-toggle");
     const authError = document.getElementById("auth-error");
     const authLoading = document.getElementById("auth-loading");
+    const forgotPinLink = document.getElementById("forgot-pin-link");
     const messagesEl = document.getElementById("chat-messages");
     const inputEl = document.getElementById("chat-input");
     const sendBtn = document.getElementById("chat-send");
     const micBtn = document.getElementById("mic-btn");
-    const uploadBtn = document.getElementById("upload-btn");
-    const fileInput = document.getElementById("file-input");
-    const filePreview = document.getElementById("file-preview");
-    const filePreviewName = document.getElementById("file-preview-name");
-    const removeFileBtn = document.getElementById("remove-file-btn");
     const listeningIndicator = document.getElementById("listening-indicator");
     const signOutBtn = document.getElementById("sign-out-btn");
 
     // ========== AUTH ==========
-    let isRegisterMode = false;
+    let isRegisterMode = true; // Default to register for new visitors
+
+    function updateAuthUI() {
+      if (isRegisterMode) {
+        authSubmit.textContent = "Get Started";
+        authToggle.textContent = "Already have an account? Sign In";
+        authPin.placeholder = "Create a 4-digit PIN";
+        authName.classList.add("visible");
+        forgotPinLink.style.display = "none";
+      } else {
+        authSubmit.textContent = "Sign In";
+        authToggle.textContent = "First time? Create an account";
+        authPin.placeholder = "Your 4-digit PIN";
+        authName.classList.remove("visible");
+        forgotPinLink.style.display = "block";
+      }
+      authError.textContent = "";
+    }
+
+    updateAuthUI();
 
     authToggle.addEventListener("click", () => {
       isRegisterMode = !isRegisterMode;
-      authSubmit.textContent = isRegisterMode ? "Create Account" : "Sign In";
-      authToggle.textContent = isRegisterMode
-        ? "Already have an account? Sign In"
-        : "First time? Create an account";
-      authError.textContent = "";
+      updateAuthUI();
     });
 
     authSubmit.addEventListener("click", handleAuth);
@@ -668,12 +599,17 @@
     authEmail.addEventListener("keydown", (e) => {
       if (e.key === "Enter") authPin.focus();
     });
+    authName.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") authEmail.focus();
+    });
 
     async function handleAuth() {
+      const name = authName.value.trim();
       const email = authEmail.value.trim();
       const pin = authPin.value.trim();
       authError.textContent = "";
 
+      if (isRegisterMode && !name) { authError.textContent = "Please enter your full name."; return; }
       if (!email) { authError.textContent = "Please enter your email."; return; }
       if (!pin || !/^\d{4}$/.test(pin)) { authError.textContent = "Please enter a 4-digit PIN."; return; }
 
@@ -681,14 +617,17 @@
       authLoading.style.display = "block";
 
       try {
+        const payload = {
+          action: isRegisterMode ? "register" : "login",
+          email,
+          pin,
+        };
+        if (isRegisterMode) payload.name = name;
+
         const res = await fetch(AUTH_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: isRegisterMode ? "register" : "login",
-            email,
-            pin,
-          }),
+          body: JSON.stringify(payload),
         });
 
         const data = await res.json();
@@ -697,8 +636,9 @@
           return;
         }
 
-        // Success — save session and enter chat
-        currentUser = { email: email.toLowerCase(), pin };
+        // Success
+        const userName = data.name || name || null;
+        currentUser = { email: email.toLowerCase(), pin, name: userName };
         try {
           localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
         } catch (e) {}
@@ -716,7 +656,6 @@
       authScreen.style.display = "none";
       chatContainer.style.display = "flex";
 
-      // Show loading state
       messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading your conversations...</div>';
 
       // Load history from server
@@ -761,10 +700,13 @@
       try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
       chatContainer.style.display = "none";
       authScreen.style.display = "flex";
+      authName.value = "";
       authEmail.value = "";
       authPin.value = "";
       authError.textContent = "";
       messagesEl.innerHTML = "";
+      isRegisterMode = true;
+      updateAuthUI();
     }
 
     signOutBtn.addEventListener("click", signOut);
@@ -780,10 +722,9 @@
     const resetLoading = document.getElementById("reset-loading");
     const resetSubtitle = document.getElementById("reset-subtitle");
     const resetStepCode = document.getElementById("reset-step-code");
-    const forgotPinLink = document.getElementById("forgot-pin-link");
     const backToLogin = document.getElementById("back-to-login");
 
-    let resetStep = "email"; // "email" or "code"
+    let resetStep = "email";
 
     forgotPinLink.addEventListener("click", () => {
       authScreen.style.display = "none";
@@ -818,7 +759,6 @@
 
       try {
         if (resetStep === "email") {
-          // Step 1: Request reset code
           const res = await fetch(RESET_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -831,7 +771,6 @@
             return;
           }
 
-          // Move to code step
           resetStep = "code";
           resetStepCode.style.display = "block";
           resetEmail.readOnly = true;
@@ -842,7 +781,6 @@
           resetCode.focus();
 
         } else {
-          // Step 2: Verify code and set new PIN
           const code = resetCode.value.trim();
           const newPin = resetNewPin.value.trim();
 
@@ -861,7 +799,6 @@
             return;
           }
 
-          // Success — show message and go back to login
           resetSuccess.textContent = "PIN updated! Redirecting to sign in...";
           resetSuccess.style.display = "block";
           resetSubmit.style.display = "none";
@@ -873,6 +810,8 @@
             resetEmail.readOnly = false;
             resetEmail.style.opacity = "1";
             resetStep = "email";
+            isRegisterMode = false;
+            updateAuthUI();
           }, 2000);
         }
       } catch (e) {
@@ -886,7 +825,6 @@
     // ========== SERVER HISTORY ==========
     function saveHistoryToServer() {
       if (!currentUser) return;
-      // Debounce saves to avoid hammering the server
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(async () => {
         try {
@@ -955,8 +893,6 @@
         cleanupRecording();
         if (event.error === "not-allowed") {
           alert("Microphone access was denied. Please allow microphone access in your browser settings.");
-        } else if (event.error === "network") {
-          alert("Speech recognition requires an internet connection.");
         }
       };
 
@@ -983,63 +919,6 @@
       recognition = null;
     }
 
-    // ========== FILE UPLOAD ==========
-    uploadBtn.addEventListener("click", () => { fileInput.click(); });
-
-    fileInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        alert("File is too large. Maximum size is 5MB.");
-        fileInput.value = "";
-        return;
-      }
-      pendingFile = file;
-      filePreviewName.textContent = file.name + " (" + formatFileSize(file.size) + ")";
-      filePreview.classList.add("active");
-      inputEl.classList.add("has-file");
-      inputEl.focus();
-    });
-
-    removeFileBtn.addEventListener("click", () => { clearPendingFile(); });
-
-    function clearPendingFile() {
-      pendingFile = null;
-      fileInput.value = "";
-      filePreview.classList.remove("active");
-      inputEl.classList.remove("has-file");
-    }
-
-    function formatFileSize(bytes) {
-      if (bytes < 1024) return bytes + " B";
-      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-    }
-
-    async function readFileAsText(file) {
-      return new Promise((resolve, reject) => {
-        if (file.type.startsWith("image/")) {
-          resolve("[Uploaded image: " + file.name + " (" + formatFileSize(file.size) + "). Note: I can see that you've uploaded an image, but I can't view images directly. Please describe what's in the image or paste any text from it.]");
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target.result;
-          if (text && text.trim().length > 0) {
-            const truncated = text.length > 10000 ? text.substring(0, 10000) + "\n\n[...file truncated, showing first 10,000 characters]" : text;
-            resolve(truncated);
-          } else {
-            resolve("[Uploaded file: " + file.name + " — could not extract text content.]");
-          }
-        };
-        reader.onerror = () => {
-          resolve("[Uploaded file: " + file.name + " — could not read file content.]");
-        };
-        reader.readAsText(file);
-      });
-    }
-
     // ========== MESSAGES ==========
     function addMessage(role, content, skipScroll) {
       const div = document.createElement("div");
@@ -1050,19 +929,6 @@
         messagesEl.scrollTop = messagesEl.scrollHeight;
       }
       return div;
-    }
-
-    function addFileMessage(fileName, fileSize) {
-      const div = document.createElement("div");
-      div.className = "msg user";
-      div.innerHTML = `
-        <div class="file-attachment">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b99c4f" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span class="file-name">${escapeHtml(fileName)}</span>
-          <span class="file-size">${fileSize}</span>
-        </div>`;
-      messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     function escapeHtml(text) {
@@ -1088,18 +954,7 @@
     // ========== SEND ==========
     async function sendMessage() {
       let content = inputEl.value.trim();
-      let fileContent = null;
-      let fileName = null;
-      let fileSize = null;
-
-      if (pendingFile) {
-        fileName = pendingFile.name;
-        fileSize = formatFileSize(pendingFile.size);
-        fileContent = await readFileAsText(pendingFile);
-        clearPendingFile();
-      }
-
-      if (!content && !fileContent) return;
+      if (!content) return;
       if (isStreaming) return;
       if (isRecording) stopRecording();
 
@@ -1108,23 +963,8 @@
       inputEl.value = "";
       inputEl.style.height = "auto";
 
-      let userMessage = "";
-      if (fileContent && content) {
-        userMessage = content + "\n\n--- Attached File: " + fileName + " ---\n" + fileContent;
-      } else if (fileContent) {
-        userMessage = "Here's my homework file (" + fileName + "):\n\n" + fileContent;
-      } else {
-        userMessage = content;
-      }
-
-      if (fileName) { addFileMessage(fileName, fileSize); }
-      if (content) {
-        addMessage("user", content);
-      } else if (fileName && !content) {
-        addMessage("user", "Here's my homework file.");
-      }
-
-      messages.push({ role: "user", content: userMessage });
+      addMessage("user", content);
+      messages.push({ role: "user", content });
       saveHistoryToServer();
       showTyping();
 
@@ -1135,8 +975,7 @@
           body: JSON.stringify({
             messages,
             userId: currentUser ? currentUser.email : null,
-            userName: null,
-            currentWeek: null,
+            userName: currentUser ? currentUser.name : null,
             conversationSummary,
           }),
         });
@@ -1183,7 +1022,7 @@
         saveHistoryToServer();
       } catch (error) {
         removeTyping();
-        addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to your coach directly if you need immediate support.");
+        addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to support@UnchainedLeader.com if you need to talk to someone.");
       }
 
       isStreaming = false;
@@ -1205,7 +1044,6 @@
     });
 
     // ========== INIT ==========
-    // Check for saved session
     try {
       const saved = localStorage.getItem(SESSION_KEY);
       if (saved) {

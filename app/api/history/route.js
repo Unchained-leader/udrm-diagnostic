@@ -6,8 +6,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-const MAX_RECENT_MESSAGES = 50; // Keep last 50 messages in recent history
-const SUMMARY_THRESHOLD = 40; // Summarize when recent hits this count
+const MAX_RECENT_MESSAGES = 50;
+const SUMMARY_THRESHOLD = 40;
 
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: CORS_HEADERS });
@@ -26,7 +26,7 @@ export async function POST(request) {
       );
     }
 
-    const userKey = `user:${normalizedEmail}`;
+    const userKey = `mkt:user:${normalizedEmail}`;
     const user = await redis.get(userKey);
     if (!user || user.pin !== pin) {
       return Response.json(
@@ -35,11 +35,10 @@ export async function POST(request) {
       );
     }
 
-    const historyKey = `history:${normalizedEmail}`;
-    const summaryKey = `summary:${normalizedEmail}`;
+    const historyKey = `mkt:history:${normalizedEmail}`;
+    const summaryKey = `mkt:summary:${normalizedEmail}`;
 
     if (action === "load") {
-      // Load conversation history + summary
       const [history, summary] = await Promise.all([
         redis.get(historyKey),
         redis.get(summaryKey),
@@ -61,8 +60,6 @@ export async function POST(request) {
         );
       }
 
-      // Save the messages (client sends full current session messages)
-      // We keep the most recent messages and let summarization handle older ones
       const toSave = messages.slice(-MAX_RECENT_MESSAGES);
       await redis.set(historyKey, toSave);
 
@@ -72,7 +69,6 @@ export async function POST(request) {
       );
 
     } else if (action === "summarize") {
-      // Called periodically to compress older messages into a summary
       const history = await redis.get(historyKey);
       if (!history || history.length < SUMMARY_THRESHOLD) {
         return Response.json(
@@ -81,12 +77,10 @@ export async function POST(request) {
         );
       }
 
-      // Split: older messages get summarized, recent stay as-is
-      const splitPoint = history.length - 20; // Keep last 20 as recent
+      const splitPoint = history.length - 20;
       const olderMessages = history.slice(0, splitPoint);
       const recentMessages = history.slice(splitPoint);
 
-      // Build summary text from older messages
       const existingSummary = await redis.get(summaryKey);
       const olderText = olderMessages
         .map((m) => `${m.role}: ${m.content.substring(0, 200)}`)
@@ -96,7 +90,6 @@ export async function POST(request) {
         ? `${existingSummary}\n\n--- Continued ---\n${olderText}`
         : olderText;
 
-      // Keep summary under a reasonable size (last ~4000 chars)
       const trimmedSummary =
         newSummary.length > 4000
           ? "..." + newSummary.slice(-4000)
@@ -117,10 +110,8 @@ export async function POST(request) {
       );
 
     } else if (action === "clear") {
-      // Clear history for new chat (but keep summary of past conversations)
       const history = await redis.get(historyKey);
       if (history && history.length > 0) {
-        // Summarize current conversation before clearing
         const existingSummary = (await redis.get(summaryKey)) || "";
         const sessionText = history
           .map((m) => `${m.role}: ${m.content.substring(0, 200)}`)
