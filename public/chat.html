@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unchained AI Guide</title>
+  <title>Unchained AI Guide — Root Genre Diagnostic</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -241,11 +241,16 @@
     #chat-header {
       background: var(--black);
       border-bottom: 1px solid var(--border-gold);
-      padding: 16px 20px;
+      padding: 14px 20px 10px;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
+      margin-bottom: 10px;
     }
     #chat-header h2 {
       margin: 0;
@@ -282,6 +287,47 @@
       white-space: nowrap;
     }
     #sign-out-btn:hover { border-color: #444; color: #888; }
+
+    /* ========== PROGRESS BAR ========== */
+    #progress-container {
+      width: 100%;
+      padding: 0;
+      display: none;
+    }
+    #progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold-gradient);
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    #progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+    #progress-text {
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.3px;
+    }
+    #progress-percent {
+      font-size: 11px;
+      color: var(--gold);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ========== MESSAGES ========== */
     #chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -322,6 +368,30 @@
       border: 1px solid var(--border-subtle);
       border-bottom-left-radius: 4px;
     }
+
+    /* CTA Button (programmable later) */
+    #cta-container {
+      display: none;
+      padding: 12px 16px;
+      background: var(--black);
+      border-top: 1px solid var(--border-subtle);
+    }
+    #cta-button {
+      width: 100%;
+      padding: 14px;
+      background: var(--gold-gradient);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    #cta-button:hover { box-shadow: 0 4px 20px rgba(185, 156, 79, 0.35); }
 
     /* Input area */
     #chat-input-area {
@@ -462,14 +532,14 @@
   <!-- ========== AUTH SCREEN ========== -->
   <div id="auth-screen">
     <h2>Unchained AI Guide</h2>
-    <p class="subtitle">A confidential space to understand what is really driving the behavior you cannot shake. No judgment. Just truth.</p>
+    <p class="subtitle">A private, confidential diagnostic that uncovers the hidden roots driving your cycle. 10 questions. About 5 minutes. No judgment. Just truth.</p>
     <div id="auth-form">
       <input type="text" id="auth-name" placeholder="Your full name" autocomplete="name" />
       <input type="email" id="auth-email" placeholder="Your email address" autocomplete="email" />
       <input type="password" id="auth-pin" placeholder="Create a 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
       <div id="auth-error"></div>
       <div id="auth-loading">Signing in...</div>
-      <button class="auth-btn" id="auth-submit">Get Started</button>
+      <button class="auth-btn" id="auth-submit">Start Your Diagnostic</button>
       <button class="auth-btn" id="auth-toggle">Already have an account? Sign In</button>
       <button id="forgot-pin-link" style="display:none">Forgot your PIN?</button>
     </div>
@@ -496,16 +566,31 @@
   <!-- ========== CHAT SCREEN ========== -->
   <div id="chat-container">
     <div id="chat-header">
-      <div>
-        <h2>Unchained AI Guide</h2>
-        <span>Powered by Unchained Leader</span>
+      <div class="header-top">
+        <div>
+          <h2>Root Genre Diagnostic</h2>
+          <span>Powered by Unchained Leader</span>
+        </div>
+        <div class="header-actions">
+          <button id="sign-out-btn" title="Sign out">Sign Out</button>
+        </div>
       </div>
-      <div class="header-actions">
-        <button id="sign-out-btn" title="Sign out">Sign Out</button>
+      <div id="progress-container">
+        <div id="progress-bar-bg">
+          <div id="progress-bar-fill"></div>
+        </div>
+        <div id="progress-label">
+          <span id="progress-text">Diagnostic in progress</span>
+          <span id="progress-percent">0%</span>
+        </div>
       </div>
     </div>
     <div id="chat-messages"></div>
     <div id="listening-indicator">Listening... Speak now</div>
+    <!-- CTA container (programmable later for Art of Freedom documentary link) -->
+    <div id="cta-container">
+      <button id="cta-button">Watch the Art of Freedom Documentary</button>
+    </div>
     <div id="chat-input-area">
       <!-- Mic button -->
       <button class="action-btn" id="mic-btn" title="Voice input">
@@ -519,7 +604,7 @@
 
       <!-- Text input -->
       <div id="chat-input-wrapper">
-        <textarea id="chat-input" placeholder="What's going on?" rows="1"></textarea>
+        <textarea id="chat-input" placeholder="Type your response..." rows="1"></textarea>
       </div>
 
       <!-- Send button -->
@@ -535,7 +620,9 @@
     const AUTH_URL = BASE_URL + "/api/auth";
     const HISTORY_URL = BASE_URL + "/api/history";
     const RESET_URL = BASE_URL + "/api/reset-pin";
-    const WELCOME_MESSAGE = "Hey brother. I\u2019m the Unchained AI Guide. I was built by a man who spent 17 years and $12,000 trying to break free from unwanted behavior, and nothing worked until he found the root underneath it all.\n\nI\u2019m not here to judge you. I\u2019m not here to sell you anything. I\u2019m here to help you understand what is really driving the thing you can\u2019t shake. If you\u2019re tired of fighting the same battle with the same strategies that keep failing, you\u2019re in the right place.\n\nSo what\u2019s going on?";
+    const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
+    const CTA_URL = ""; // Set later for Art of Freedom documentary
+    const WELCOME_MESSAGE = "Welcome, brother.\n\n100% private. 100% confidential. No one sees your answers.\n\n10 questions. About 5 minutes. The more honest you are, the more your report reveals.\n\nThis diagnostic is designed to uncover the hidden roots driving your cycle. Things willpower and accountability will never touch.\n\nReady to start?";
     const SESSION_KEY = "unchained_mkt_session";
     const SAVE_DEBOUNCE_MS = 2000;
 
@@ -546,6 +633,8 @@
     let isRecording = false;
     let currentUser = null; // { email, pin, name }
     let saveTimeout = null;
+    let currentProgress = 0;
+    let diagnosticComplete = false;
 
     // DOM refs
     const authScreen = document.getElementById("auth-screen");
@@ -564,20 +653,68 @@
     const micBtn = document.getElementById("mic-btn");
     const listeningIndicator = document.getElementById("listening-indicator");
     const signOutBtn = document.getElementById("sign-out-btn");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBarFill = document.getElementById("progress-bar-fill");
+    const progressPercent = document.getElementById("progress-percent");
+    const progressText = document.getElementById("progress-text");
+    const ctaContainer = document.getElementById("cta-container");
+    const ctaButton = document.getElementById("cta-button");
+
+    // ========== PROGRESS BAR ==========
+    function updateProgress(percent) {
+      if (percent <= currentProgress && percent !== 100) return; // Only advance forward
+      currentProgress = percent;
+      progressContainer.style.display = "block";
+      progressBarFill.style.width = percent + "%";
+      progressPercent.textContent = percent + "%";
+
+      if (percent >= 100) {
+        progressText.textContent = "Diagnostic complete";
+        diagnosticComplete = true;
+        // Show CTA if URL is configured
+        if (CTA_URL) {
+          ctaContainer.style.display = "block";
+        }
+      } else if (percent >= 92) {
+        progressText.textContent = "Almost done";
+      } else if (percent >= 67) {
+        progressText.textContent = "Home stretch";
+      } else if (percent >= 50) {
+        progressText.textContent = "Halfway there";
+      } else {
+        progressText.textContent = "Diagnostic in progress";
+      }
+    }
+
+    function parseProgressFromResponse(text) {
+      const match = text.match(/\[PROGRESS:(\d+)\]/);
+      if (match) {
+        updateProgress(parseInt(match[1], 10));
+      }
+      // Strip progress tags from displayed text
+      return text.replace(/\[PROGRESS:\d+\]/g, "").trim();
+    }
+
+    // ========== CTA ==========
+    ctaButton.addEventListener("click", () => {
+      if (CTA_URL) {
+        window.open(CTA_URL, "_blank");
+      }
+    });
 
     // ========== AUTH ==========
-    let isRegisterMode = true; // Default to register for new visitors
+    let isRegisterMode = true;
 
     function updateAuthUI() {
       if (isRegisterMode) {
-        authSubmit.textContent = "Get Started";
+        authSubmit.textContent = "Start Your Diagnostic";
         authToggle.textContent = "Already have an account? Sign In";
         authPin.placeholder = "Create a 4-digit PIN";
         authName.classList.add("visible");
         forgotPinLink.style.display = "none";
       } else {
         authSubmit.textContent = "Sign In";
-        authToggle.textContent = "First time? Create an account";
+        authToggle.textContent = "First time? Start the Diagnostic";
         authPin.placeholder = "Your 4-digit PIN";
         authName.classList.remove("visible");
         forgotPinLink.style.display = "block";
@@ -656,7 +793,7 @@
       authScreen.style.display = "none";
       chatContainer.style.display = "flex";
 
-      messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading your conversations...</div>';
+      messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading...</div>';
 
       // Load history from server
       try {
@@ -679,6 +816,8 @@
             messagesEl.innerHTML = "";
             renderSavedMessages(messages);
             messagesEl.scrollTop = messagesEl.scrollHeight;
+            // Restore progress from saved messages
+            restoreProgressFromHistory(messages);
             return;
           }
         }
@@ -690,6 +829,23 @@
       messagesEl.innerHTML = "";
       messages = [];
       addMessage("assistant", WELCOME_MESSAGE);
+      updateProgress(0);
+    }
+
+    function restoreProgressFromHistory(savedMessages) {
+      // Scan through saved messages to find the latest progress tag
+      let lastProgress = 0;
+      for (const msg of savedMessages) {
+        if (msg.role === "assistant") {
+          const match = msg.content.match(/\[PROGRESS:(\d+)\]/);
+          if (match) {
+            lastProgress = parseInt(match[1], 10);
+          }
+        }
+      }
+      if (lastProgress > 0) {
+        updateProgress(lastProgress);
+      }
     }
 
     function signOut() {
@@ -697,6 +853,8 @@
       currentUser = null;
       messages = [];
       conversationSummary = null;
+      currentProgress = 0;
+      diagnosticComplete = false;
       try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
       chatContainer.style.display = "none";
       authScreen.style.display = "flex";
@@ -705,6 +863,9 @@
       authPin.value = "";
       authError.textContent = "";
       messagesEl.innerHTML = "";
+      progressContainer.style.display = "none";
+      progressBarFill.style.width = "0%";
+      ctaContainer.style.display = "none";
       isRegisterMode = true;
       updateAuthUI();
     }
@@ -847,7 +1008,9 @@
     function renderSavedMessages(savedMessages) {
       messagesEl.innerHTML = "";
       savedMessages.forEach(msg => {
-        addMessage(msg.role, msg.content, true);
+        // Strip progress tags from displayed saved messages
+        const cleanContent = msg.content.replace(/\[PROGRESS:\d+\]/g, "").replace(/\[CRISIS_DETECTED\]/g, "").trim();
+        addMessage(msg.role, cleanContent, true);
       });
     }
 
@@ -1010,7 +1173,13 @@
                 const parsed = JSON.parse(data);
                 if (parsed.text) {
                   fullResponse += parsed.text;
-                  bubble.textContent = fullResponse.replace("[CRISIS_DETECTED]", "").trim();
+                  // Display without progress tags and crisis tags
+                  const displayText = fullResponse
+                    .replace(/\[PROGRESS:\d+\]/g, "")
+                    .replace(/\[CRISIS_DETECTED\]/g, "")
+                    .replace(/\[CTA_PLACEHOLDER\]/g, "")
+                    .trim();
+                  bubble.textContent = displayText;
                   messagesEl.scrollTop = messagesEl.scrollHeight;
                 }
               } catch (e) {}
@@ -1018,8 +1187,26 @@
           }
         }
 
-        messages.push({ role: "assistant", content: fullResponse.replace("[CRISIS_DETECTED]", "").trim() });
+        // Parse progress from response
+        const cleanResponse = parseProgressFromResponse(fullResponse);
+
+        // Store full response (with tags) for history, display clean
+        messages.push({ role: "assistant", content: fullResponse.trim() });
+
+        // Update display with clean text
+        bubble.textContent = cleanResponse
+          .replace(/\[CRISIS_DETECTED\]/g, "")
+          .replace(/\[CTA_PLACEHOLDER\]/g, "")
+          .trim();
+
         saveHistoryToServer();
+
+        // If diagnostic just completed (100%), save diagnostic data
+        if (currentProgress >= 100 && !diagnosticComplete) {
+          diagnosticComplete = true;
+          saveDiagnosticData();
+        }
+
       } catch (error) {
         removeTyping();
         addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to support@UnchainedLeader.com if you need to talk to someone.");
@@ -1028,6 +1215,26 @@
       isStreaming = false;
       sendBtn.disabled = false;
       inputEl.focus();
+    }
+
+    // ========== SAVE DIAGNOSTIC DATA ==========
+    async function saveDiagnosticData() {
+      if (!currentUser) return;
+      try {
+        await fetch(DIAGNOSTIC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            pin: currentUser.pin,
+            name: currentUser.name,
+            messages: messages,
+            completedAt: new Date().toISOString(),
+          }),
+        });
+      } catch (e) {
+        console.log("Could not save diagnostic data:", e.message);
+      }
     }
 
     // ========== EVENT LISTENERS ==========

@@ -48,7 +48,7 @@ async function sendCrisisAlert(message, userId) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `🚨 *CRISIS ALERT — Unchained AI Guide (Marketing)*\n*User:* ${userId || "Unknown"}\n*Time:* ${new Date().toISOString()}\n*Message:* ${message.substring(0, 500)}\n\nPlease reach out to this person immediately.`,
+          text: `🚨 *CRISIS ALERT — Root Genre Diagnostic*\n*User:* ${userId || "Unknown"}\n*Time:* ${new Date().toISOString()}\n*Message:* ${message.substring(0, 500)}\n\nPlease reach out to this person immediately.`,
         }),
       });
     } catch (e) {
@@ -68,7 +68,7 @@ async function sendCrisisAlert(message, userId) {
         body: JSON.stringify({
           from: "Unchained AI Guide <alerts@unchained.support>",
           to: process.env.ALERT_EMAIL,
-          subject: "🚨 CRISIS ALERT — Marketing Coach User Needs Immediate Support",
+          subject: "🚨 CRISIS ALERT — Root Genre Diagnostic User Needs Immediate Support",
           html: `<h2>Crisis Detected</h2>
             <p><strong>User:</strong> ${userId || "Unknown"}</p>
             <p><strong>Time:</strong> ${new Date().toISOString()}</p>
@@ -114,9 +114,19 @@ export async function POST(request) {
       sendCrisisAlert(latestMessage, userId || userName); // fire and forget
     }
 
+    // Check if diagnostic is already complete (look for [PROGRESS:100] in history)
+    let diagnosticComplete = false;
+    for (const msg of messages) {
+      if (msg.role === "assistant" && msg.content && msg.content.includes("[PROGRESS:100]")) {
+        diagnosticComplete = true;
+        break;
+      }
+    }
+
     // Build system prompt with user context
     const systemPrompt = buildSystemPrompt(knowledgeBase, {
       name: userName || null,
+      diagnosticComplete,
     });
 
     // If there's a conversation summary from previous sessions, prepend it
@@ -130,10 +140,10 @@ export async function POST(request) {
       content: msg.content,
     }));
 
-    // Call Claude API with streaming
+    // Call Claude API with streaming — use higher max tokens for diagnostic teaser output
     const stream = await client.messages.stream({
       model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: [
         {
           type: "text",
