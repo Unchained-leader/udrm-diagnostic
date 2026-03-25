@@ -951,6 +951,7 @@
       ctaContainer.style.display = "none";
       messagesEl.innerHTML = "";
       addMessage("assistant", WELCOME_MESSAGE);
+      messages.push({ role: "assistant", content: WELCOME_MESSAGE });
       addWelcomeBackLink();
     }
     signOutBtn.addEventListener("click", signOut);
@@ -986,6 +987,7 @@
       messagesEl.innerHTML = "";
       messages = [];
       addMessage("assistant", WELCOME_MESSAGE);
+      messages.push({ role: "assistant", content: WELCOME_MESSAGE });
     }
 
     function saveHistoryToServer() {
@@ -1252,6 +1254,7 @@
       // No session — anonymous start. Zero friction.
       messagesEl.innerHTML = "";
       addMessage("assistant", WELCOME_MESSAGE);
+      messages.push({ role: "assistant", content: WELCOME_MESSAGE });
       addWelcomeBackLink();
     })();
   </script>
