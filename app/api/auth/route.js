@@ -1,4 +1,5 @@
 import redis from "../lib/redis";
+import { createOrUpdateContact } from "../lib/ghl";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { action, email, pin, name } = await request.json();
+    const { action, email, pin, name, phone } = await request.json();
     const normalizedEmail = (email || "").trim().toLowerCase();
 
     if (!normalizedEmail || !pin) {
@@ -63,8 +64,17 @@ export async function POST(request) {
       await redis.set(userKey, {
         pin,
         name: trimmedName,
+        phone: phone || "",
         createdAt: new Date().toISOString(),
       });
+
+      // Create contact in GoHighLevel CRM (fire and forget)
+      createOrUpdateContact({
+        email: normalizedEmail,
+        name: trimmedName,
+        phone: phone || "",
+        tags: ["Diagnostic Started", "Root Genre Diagnostic"],
+      }).catch((e) => console.error("GHL sync error:", e.message));
 
       return Response.json(
         { success: true, message: "Account created.", name: trimmedName },

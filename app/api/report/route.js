@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import redis from "../lib/redis";
 import PDFDocument from "pdfkit";
+import { createOrUpdateContact, storeDiagnosticData, addContactTags } from "../lib/ghl";
 
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
@@ -83,6 +84,22 @@ export async function POST(request) {
       rootNarrativeType: analysis.rootNarrativeType,
       neuropathway: analysis.neuropathway,
     });
+
+    // Sync to GoHighLevel CRM (fire and forget)
+    (async () => {
+      try {
+        const contactId = await createOrUpdateContact({
+          email: normalizedEmail,
+          name: userName,
+          tags: ["Diagnostic Complete", "Report 1 Sent", `RNT: ${analysis.rootNarrativeType || "Unknown"}`],
+        });
+        if (contactId) {
+          await storeDiagnosticData(contactId, messages, analysis);
+        }
+      } catch (e) {
+        console.error("GHL report sync error:", e.message);
+      }
+    })();
 
     return Response.json({ success: true, message: "Report sent" }, { headers: CORS_HEADERS });
   } catch (error) {
