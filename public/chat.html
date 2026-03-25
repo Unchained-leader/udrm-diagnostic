@@ -676,6 +676,7 @@
         .replace(/\[CRISIS_DETECTED\]/g, "")
         .replace(/\[CONTACT_CAPTURE\]/g, "")
         .replace(/\[CTA_PLACEHOLDER\]/g, "")
+        .replace(/\[BOOKING_CTA\]/g, "")
         .trim();
     }
 
@@ -773,19 +774,81 @@
         // Save diagnostic data
         saveDiagnosticData();
 
+        // Generate and send Report 1 PDF via email (fire and forget)
+        generateAndSendReport();
+
         // Hide the capture form and show confirmation
         const captureEl = document.getElementById("contact-capture");
         captureEl.innerHTML = `
           <div style="text-align:center; padding: 8px 0;">
             <div style="color: var(--gold); font-size: 16px; font-weight: 600; margin-bottom: 8px;">Locked in.</div>
-            <div style="color: #888; font-size: 13px; line-height: 1.5;">Your report is being prepared. You can log back in anytime with your email and PIN.</div>
+            <div style="color: #888; font-size: 13px; line-height: 1.5;">Your report is on its way to your email. You can log back in anytime with your email and PIN.</div>
           </div>
         `;
 
-        // Show CTA if configured
-        if (CTA_URL) {
-          ctaContainer.style.display = "block";
-        }
+        // Inject a message to resume the conversation (triggers upsell)
+        messages.push({ role: "user", content: "Account created. My name is " + name + "." });
+        // Small delay then auto-send to trigger the upsell
+        setTimeout(() => {
+          addMessage("user", "Account created. My name is " + name + ".");
+          // Trigger the AI to deliver the $27 upsell
+          isStreaming = true;
+          sendBtn.disabled = true;
+          showTyping();
+          fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages,
+              userId: currentUser.email,
+              userName: currentUser.name,
+              conversationSummary,
+            }),
+          }).then(async (response) => {
+            if (!response.ok) throw new Error("API error");
+            removeTyping();
+            const assistantDiv = document.createElement("div");
+            assistantDiv.className = "msg assistant";
+            const bubble = document.createElement("div");
+            bubble.className = "msg-bubble";
+            assistantDiv.appendChild(bubble);
+            messagesEl.appendChild(assistantDiv);
+            let fullResponse = "";
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              const chunk = decoder.decode(value);
+              const lines = chunk.split("\n");
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const data = line.slice(6);
+                  if (data === "[DONE]") break;
+                  try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.text) {
+                      fullResponse += parsed.text;
+                      bubble.textContent = cleanDisplayText(fullResponse);
+                      messagesEl.scrollTop = messagesEl.scrollHeight;
+                    }
+                  } catch(e) {}
+                }
+              }
+            }
+            parseProgressFromResponse(fullResponse);
+            messages.push({ role: "assistant", content: fullResponse.trim() });
+            bubble.textContent = cleanDisplayText(fullResponse);
+            saveHistoryToServer();
+            if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
+            isStreaming = false;
+            sendBtn.disabled = false;
+          }).catch(() => {
+            removeTyping();
+            isStreaming = false;
+            sendBtn.disabled = false;
+          });
+        }, 1500);
 
       } catch(e) {
         errorEl.textContent = "Connection error. Please try again.";
@@ -1197,6 +1260,11 @@
           showContactCapture();
         }
 
+        // Check for booking CTA trigger
+        if (fullResponse.includes("[BOOKING_CTA]")) {
+          showBookingCTA();
+        }
+
       } catch(error) {
         removeTyping();
         addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to support@UnchainedLeader.com if you need to talk to someone.");
@@ -1223,6 +1291,58 @@
           }),
         });
       } catch(e) { console.log("Could not save diagnostic data:", e.message); }
+    }
+
+    // ========== GENERATE AND SEND REPORT ==========
+    async function generateAndSendReport() {
+      if (!currentUser) return;
+      try {
+        const REPORT_URL = BASE_URL + "/api/report";
+        const res = await fetch(REPORT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            pin: currentUser.pin,
+            name: currentUser.name,
+            diagnosticData: messages,
+          }),
+        });
+        if (res.ok) {
+          console.log("Report generated and sent successfully");
+        } else {
+          console.log("Report generation failed:", await res.text());
+        }
+      } catch(e) { console.log("Could not generate report:", e.message); }
+    }
+
+    // ========== BOOKING CTA ==========
+    const BOOKING_URL = ""; // Set to Calendly URL when ready
+
+    function showBookingCTA() {
+      const bookingDiv = document.createElement("div");
+      bookingDiv.style.cssText = "margin: 14px 0; max-width: 85%;";
+      bookingDiv.innerHTML = `
+        <a href="${BOOKING_URL || '#'}" target="_blank" rel="noopener"
+           style="display:block; width:100%; padding:16px; background:linear-gradient(135deg, #DFC468, #9A7730); color:#000; border:none; border-radius:10px; font-size:15px; font-weight:700; font-family:'Montserrat',sans-serif; letter-spacing:1px; text-transform:uppercase; cursor:pointer; text-decoration:none; text-align:center; transition:all 0.25s;"
+           onmouseover="this.style.boxShadow='0 4px 20px rgba(185,156,79,0.4)'"
+           onmouseout="this.style.boxShadow='none'"
+           id="booking-cta-btn">
+          Book Your Clarity Call — $27
+        </a>
+        <div style="text-align:center; margin-top:8px; color:#555; font-size:11px;">
+          30 minutes with an Unchained Leader certified coach
+        </div>
+      `;
+      messagesEl.appendChild(bookingDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      if (!BOOKING_URL) {
+        document.getElementById("booking-cta-btn").addEventListener("click", (e) => {
+          e.preventDefault();
+          alert("Booking link coming soon. Your diagnostic data is saved.");
+        });
+      }
     }
 
     // ========== EVENT LISTENERS ==========
