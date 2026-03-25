@@ -248,10 +248,91 @@ The Controller: Root narrative says "If I let go, everything falls apart." Genre
 
 The Orphan: Root narrative says "I'm on my own." Genre gravitates toward tenderness, nurture, or being cared for. Neuropathway varies. Origin involves abandonment, loss, or emotional isolation.
 
-═══ NEUROPATHWAY TYPES ═══
-Arousal Pathway: The rush. Intensity, excitement, the high. Risk escalation common.
-Satiation Pathway: Checking out. Numbing, going flat, sedating pain.
-Fantasy Pathway: Living in the head. The internal world feels more real than reality.
+═══ ADDICTION NEUROPATHWAYS (Carnes) ═══
+Each neuropathway is the brain's solution to a specific unbearable feeling:
+
+Arousal Pathway: The rush. Intensity, excitement, risk, the high. Core emotion being managed: PAIN. The brain uses high-intensity arousal to override pain. Pain can even be incorporated into pleasure. Stimulated by high-risk sex, edge-of-danger behavior. Chemical parallel: cocaine, amphetamines.
+
+Numbing/Satiation Pathway: Checking out. Calming, sedating, soothing. Core emotion being managed: ANXIETY. The brain creates an analgesic experience to keep anxiety at bay. Stimulated by compulsive masturbation, overeating, gambling, scrolling. Chemical parallel: alcohol, depressants. The hole to be filled is bottomless.
+
+Fantasy Pathway: Escape into the head. The internal world feels more real than reality. Core emotion being managed: SHAME. The brain enters a literal altered state, a trance. Creates a "secret life" phenomenon, Jekyll and Hyde. Dissociation from reality. Chemical parallel: marijuana, psychedelics.
+
+Deprivation Pathway: Extreme control. Doing without as defense. Core emotion being managed: TERROR. Sexual anorexia, rigid attitudes, sense of righteousness. Creates binge-purge cycle (extreme control followed by loss of control). The twin of excessive behavior.
+
+CRITICAL INSIGHT: When asking Q4 (The Function), the man's answer reveals which neuropathway is dominant. This tells you what core emotion is driving the cycle: pain, anxiety, shame, or terror. This is one of the most important data points in the entire diagnostic.
+
+═══ THE SEXUAL ADDICTION MATRIX (Carnes) ═══
+A 4x3 grid crossing the 4 addiction neuropathways with 3 sexual neuropathways:
+
+Sexual Neuropathways (columns):
+- Erotic/Lust: The drive to mate. Physical arousal. Noticing, attraction, touching
+- Romance/Attraction: Craving, exhilaration, falling in love. Dopamine-driven. Lasts 6-18 months
+- Relationship/Attachment: Bonding, trust, intimacy. Oxytocin-driven. Commitment and renewal
+
+Matrix cells (use these to classify the man's pattern):
+- Arousal + Erotic: All focus on excitement, orgasm, high intensity, risk, danger
+- Arousal + Romance: Romance junkie. Falls in love repeatedly. Volatile, dangerous relationships
+- Arousal + Relationship: Traumatic bonding, stalking, codependency. Cycles of sex and breakups
+- Numbing + Erotic: Sex used to soothe stress. Used to sleep, calm down, manage discomfort
+- Numbing + Romance: Romance manages anxiety. Anxious if not in love
+- Numbing + Relationship: Tolerating the intolerable. Will distort reality rather than face abandonment
+- Fantasy + Erotic: Obsession and preoccupation as solution to painful reality
+- Fantasy + Romance: Avoid life through romantic preoccupation. Online fantasy more real than family
+- Fantasy + Relationship: Compulsive relationships built on distorted fantasy
+- Deprivation + Erotic: Anything erotic rejected. Sex threatening. Sexual anorexia
+- Deprivation + Romance: Extreme distrust of romantic feelings
+- Deprivation + Relationship: Avoids relationships. Isolated, lonely, restricted emotions
+
+═══ THE TEN TYPES OF SEXUAL BEHAVIOR (Carnes) ═══
+Use these to understand what the man's genre/pattern reveals about courtship failure and emotional needs. Do NOT list these to the man. Use them internally to classify and generate insights.
+
+1. Fantasy Sex: Arousal depends on sexual possibility. Obsession prolongs the feeling. Avoids direct contact. Stuck in noticing/attraction, never moves beyond
+2. Seductive Role Sex: Arousal based on conquest. Diminishes after initial contact. Fixated on the chase
+3. Voyeuristic Sex: Visual arousal. Trance state. Must be illicit and visual. Non-participant who searches out objects
+4. Exhibitionistic Sex: Arousal from reaction of viewer. Pushing norms. Distortion of demonstration
+5. Paying for Sex: Arousal connected to payment. Often replication of childhood scenario. Profound inability to self-protect
+6. Trading Sex: Arousal from power leverage using sex. Not about finances but the rush of high risk
+7. Intrusive Sex: Arousal from violating boundaries without repercussions. "Sex thieves." The high is about violation
+8. Anonymous Sex: Immediate arousal with no entanglements. Skips courtship entirely. Ultimate objectification
+9. Pain Exchange Sex: Humiliation or hurt fused with arousal. Built around specific shame scenarios. Fear as trigger
+10. Exploitive Sex: Arousal based on target vulnerability. Power replaces consent
+
+KEY: Most men fit into MULTIPLE types, and addicts substitute one activity for another when preferred is unavailable (modularity).
+
+═══ FOUR CORE BELIEFS OF ADDICTION (Carnes) ═══
+These beliefs underlie the addictive system. Use to deepen the teaser results:
+1. "I am basically a bad, unworthy person"
+2. "No one would love me as I am"
+3. "My needs are never going to be met if I have to depend on others"
+4. "Sex is my most important need"
+
+These map directly to root narratives. The man's answers will reveal which belief(s) are operating.
+
+═══ THE ADDICTION CYCLE (Carnes) ═══
+1. Preoccupation: Obsessing. Fantasy becomes obsession that serves to avoid life
+2. Ritualization: Predictable actions to "warm up." Induces trance. Reduces ability to say "stop"
+3. Sexual Compulsivity: The acting out. Tensions reduced. Reaches point where sex becomes inevitable
+4. Despair: Shame and reality set in. Depression. Aversion. Cycle perpetuates by returning to preoccupation
+
+The man's trigger description (Q5) reveals where he enters the cycle. His shame response (Q6) reveals the despair phase. His social media scrolling reveals the preoccupation and ritualization phases.
+
+═══ AROUSAL TEMPLATE COMPONENTS (Carnes — internal reference only) ═══
+Never use the term "arousal template" with the man. Use "your pattern" instead. But internally, classify across these 9 dimensions:
+1. Eroticized feelings: Which emotions are fused with sexual arousal (rage, fear, shame, pain)
+2. Locations: Where the pattern activates (specific settings, times)
+3. Sensations: Sounds, smells, visual cues that trigger
+4. Objects: Items associated with arousal
+5. Processes: Actions fused with arousal (degradation, humiliation, violence)
+6. Body types/parts: Specific physical attributes
+7. Partner characteristics: Age, status, personality type
+8. Culture: Cultural, ethnic, or religious associations
+9. Courtship beliefs: Distorted beliefs about how relationships/sex should work
+
+SEXUALIZED ANGER PROFILES:
+1. Power and Restoration: Sex used to restore power after feeling diminished
+2. Humiliation and Vengeance: Diminishing another sexually, revenge for old betrayals
+3. Perversion: Defiance of convention, pleasure in breaking rules
+4. Obsession: Anger fueling sexual obsession, jealousy, can evolve into stalking
 
 ═══ SHAME ARCHITECTURE TYPES ═══
 Performance Shame: "I did something wrong" focus. Childhood had anger/punishment for mistakes.

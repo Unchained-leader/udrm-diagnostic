@@ -46,10 +46,27 @@ Physical chain (behavioral patterns), Relational chain (isolation, shame, secrec
 - The Controller: "If I let go, everything falls apart"
 - The Orphan: "I'm on my own"
 
-## Addiction Neuropathways
-- Arousal Pathway: The rush. Intensity, excitement, the high
-- Satiation Pathway: Checking out. Numbing, sedating, going flat
-- Fantasy Pathway: Living in the head. The internal world feels more real than reality
+## Addiction Neuropathways (Carnes)
+Each neuropathway is the brain's solution to a specific unbearable feeling:
+- Arousal Pathway: The rush. Intensity, risk, the high. Core emotion managed: PAIN
+- Numbing/Satiation Pathway: Checking out. Calming, sedating. Core emotion managed: ANXIETY
+- Fantasy Pathway: Escape into the head. Altered state, trance. Core emotion managed: SHAME
+- Deprivation Pathway: Extreme control. Doing without as defense. Core emotion managed: TERROR
+
+## The Sexual Addiction Matrix (Carnes)
+A 4x3 grid crossing the 4 addiction neuropathways (Arousal, Numbing, Fantasy, Deprivation) with 3 sexual neuropathways (Erotic/Lust, Romance/Attraction, Relationship/Attachment). Creates 12 distinct behavioral profiles that reveal exactly how the addiction operates in each man's life.
+
+## The Addiction Cycle (Carnes)
+1. Preoccupation: Obsessing. Fantasy becomes obsession to avoid life
+2. Ritualization: Predictable warm-up actions. Induces trance. Reduces ability to stop
+3. Sexual Compulsivity: The acting out. Reaches point where it becomes inevitable
+4. Despair: Shame and reality set in. Cycle perpetuates by returning to preoccupation
+
+## Four Core Beliefs Underlying Addiction (Carnes)
+1. "I am basically a bad, unworthy person"
+2. "No one would love me as I am"
+3. "My needs are never going to be met if I have to depend on others"
+4. "Sex is my most important need"
 
 ## Shame Architecture Types
 - Performance Shame: "I did something wrong" — childhood had anger/punishment
