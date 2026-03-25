@@ -16,7 +16,6 @@
       color: #e0e0e0;
     }
 
-    /* ========== BRAND VARIABLES ========== */
     :root {
       --gold: #b99c4f;
       --gold-light: #DFC468;
@@ -34,204 +33,9 @@
       --border-gold: rgba(185, 156, 79, 0.3);
     }
 
-    /* ========== AUTH SCREEN ========== */
-    #auth-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      padding: 24px;
-      text-align: center;
-      background: radial-gradient(ellipse at center bottom, rgba(185, 156, 79, 0.06) 0%, transparent 70%);
-    }
-    #auth-screen h2 {
-      font-family: 'Cinzel', serif;
-      color: var(--gold);
-      font-size: 26px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    #auth-screen .subtitle {
-      font-family: 'Montserrat', sans-serif;
-      color: #666;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.5px;
-      margin-bottom: 36px;
-      max-width: 340px;
-      line-height: 1.6;
-    }
-    #auth-form {
-      width: 100%;
-      max-width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #auth-form input {
-      width: 100%;
-      padding: 13px 16px;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      background: var(--surface-raised);
-      color: #e0e0e0;
-      font-size: 14px;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 400;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    #auth-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15); }
-    #auth-form input::placeholder { color: #555; }
-    .auth-btn {
-      padding: 13px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s;
-      font-family: 'Montserrat', sans-serif;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-    }
-    #auth-submit {
-      background: var(--gold-gradient);
-      color: #000;
-      border: none;
-    }
-    #auth-submit:hover { background: var(--gold-gradient-hover); box-shadow: 0 4px 16px rgba(185, 156, 79, 0.25); }
-    #auth-submit:disabled { background: #333; cursor: not-allowed; box-shadow: none; }
-    #auth-toggle {
-      background: transparent;
-      color: var(--gold);
-      border: 1px solid var(--border-subtle);
-      font-weight: 400;
-      font-size: 13px;
-      text-transform: none;
-      letter-spacing: 0.3px;
-    }
-    #auth-toggle:hover { border-color: var(--gold); background: rgba(185, 156, 79, 0.05); }
-    #auth-error {
-      color: #fc5454;
-      font-size: 13px;
-      min-height: 20px;
-    }
-    #auth-loading {
-      display: none;
-      color: var(--gold);
-      font-size: 13px;
-    }
-    .signed-in-as {
-      font-size: 11px;
-      color: #555;
-      cursor: pointer;
-      padding: 2px 8px;
-    }
-    .signed-in-as:hover { color: var(--gold); }
-
-    /* Forgot PIN link */
-    #forgot-pin-link {
-      background: none;
-      border: none;
-      color: #555;
-      font-size: 12px;
-      font-family: 'Montserrat', sans-serif;
-      cursor: pointer;
-      padding: 4px 0;
-      transition: color 0.2s;
-    }
-    #forgot-pin-link:hover { color: var(--gold); }
-
-    /* Name field (only shown in register mode) */
-    #auth-name { display: none; }
-    #auth-name.visible { display: block; }
-
-    /* Reset PIN screen */
-    #reset-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      padding: 24px;
-      text-align: center;
-      background: radial-gradient(ellipse at center bottom, rgba(185, 156, 79, 0.06) 0%, transparent 70%);
-    }
-    #reset-screen h2 {
-      font-family: 'Cinzel', serif;
-      color: var(--gold);
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    #reset-screen .subtitle {
-      font-family: 'Montserrat', sans-serif;
-      color: #666;
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.3px;
-      margin-bottom: 28px;
-      max-width: 340px;
-      line-height: 1.5;
-    }
-    #reset-form {
-      width: 100%;
-      max-width: 340px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #reset-form input {
-      width: 100%;
-      padding: 13px 16px;
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      background: var(--surface-raised);
-      color: #e0e0e0;
-      font-size: 14px;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 400;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    #reset-form input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15); }
-    #reset-form input::placeholder { color: #555; }
-    #reset-error {
-      color: #fc5454;
-      font-size: 13px;
-      min-height: 20px;
-    }
-    #reset-success {
-      color: #4ffa78;
-      font-size: 13px;
-      display: none;
-    }
-    #reset-loading {
-      display: none;
-      color: var(--gold);
-      font-size: 13px;
-    }
-    #back-to-login {
-      background: none;
-      border: none;
-      color: #555;
-      font-size: 12px;
-      font-family: 'Montserrat', sans-serif;
-      cursor: pointer;
-      padding: 8px 0;
-      transition: color 0.2s;
-    }
-    #back-to-login:hover { color: var(--gold); }
-
-    /* ========== CHAT CONTAINER ========== */
+    /* ========== CHAT CONTAINER (shown immediately) ========== */
     #chat-container {
-      display: none;
+      display: flex;
       flex-direction: column;
       height: 100%;
       max-width: 800px;
@@ -273,6 +77,7 @@
       gap: 8px;
     }
     #sign-out-btn {
+      display: none;
       background: transparent;
       border: 1px solid var(--border-subtle);
       color: #555;
@@ -369,7 +174,203 @@
       border-bottom-left-radius: 4px;
     }
 
-    /* CTA Button (programmable later) */
+    /* Welcome back link */
+    #welcome-back-link {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    #welcome-back-link button {
+      background: none;
+      border: none;
+      color: #444;
+      font-size: 12px;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    #welcome-back-link button:hover { color: var(--gold); }
+
+    /* ========== INLINE CONTACT CAPTURE FORM ========== */
+    #contact-capture {
+      display: none;
+      margin: 14px 0;
+      padding: 20px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
+      max-width: 85%;
+    }
+    #contact-capture h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    #contact-capture .capture-subtitle {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    #contact-capture input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
+    }
+    #contact-capture input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15); }
+    #contact-capture input::placeholder { color: #555; }
+    #capture-error {
+      color: #fc5454;
+      font-size: 12px;
+      min-height: 16px;
+      margin-bottom: 6px;
+    }
+    #capture-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--gold-gradient);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    #capture-submit:hover { box-shadow: 0 4px 16px rgba(185, 156, 79, 0.25); }
+    #capture-submit:disabled { background: #333; cursor: not-allowed; }
+
+    /* ========== LOGIN OVERLAY ========== */
+    #login-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #login-overlay.active { display: flex; }
+    #login-box {
+      background: var(--surface-raised);
+      border: 1px solid var(--border-gold);
+      border-radius: 16px;
+      padding: 32px 28px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    #login-box h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+    #login-box .login-subtitle {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    #login-box input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      background: #0d0d0d;
+      color: #e0e0e0;
+      font-size: 14px;
+      font-family: 'Montserrat', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
+    }
+    #login-box input:focus { border-color: var(--gold); }
+    #login-box input::placeholder { color: #555; }
+    #login-error {
+      color: #fc5454;
+      font-size: 12px;
+      min-height: 16px;
+      margin-bottom: 6px;
+    }
+    #login-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--gold-gradient);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s;
+      margin-bottom: 10px;
+    }
+    #login-submit:hover { box-shadow: 0 4px 16px rgba(185, 156, 79, 0.25); }
+    #login-submit:disabled { background: #333; cursor: not-allowed; }
+    .login-links {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+    .login-links button {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 12px;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      padding: 4px 0;
+      transition: color 0.2s;
+    }
+    .login-links button:hover { color: var(--gold); }
+
+    /* ========== RESET PIN (inside overlay) ========== */
+    #reset-section {
+      display: none;
+    }
+    #reset-section .reset-subtitle {
+      color: #666;
+      font-size: 12px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    #reset-step-code { display: none; }
+    #reset-error {
+      color: #fc5454;
+      font-size: 12px;
+      min-height: 16px;
+      margin-bottom: 6px;
+    }
+    #reset-success {
+      color: #4ffa78;
+      font-size: 12px;
+      display: none;
+      margin-bottom: 6px;
+    }
+
+    /* CTA Button */
     #cta-container {
       display: none;
       padding: 12px 16px;
@@ -403,10 +404,7 @@
       flex-shrink: 0;
       gap: 8px;
     }
-    #chat-input-wrapper {
-      flex: 1;
-      position: relative;
-    }
+    #chat-input-wrapper { flex: 1; position: relative; }
     #chat-input {
       width: 100%;
       border: 1px solid var(--border-subtle);
@@ -425,7 +423,6 @@
     #chat-input::placeholder { color: #555; }
     #chat-input:focus { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.1); }
 
-    /* Action buttons */
     .action-btn {
       background: transparent;
       color: #555;
@@ -473,8 +470,7 @@
       padding: 8px 12px;
     }
     .typing span {
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       background: var(--gold);
       border-radius: 50%;
       animation: bounce 1.4s infinite ease-in-out;
@@ -486,7 +482,6 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
-    /* Listening indicator */
     #listening-indicator {
       display: none;
       background: rgba(252, 84, 84, 0.06);
@@ -503,7 +498,6 @@
       50% { opacity: 0.5; }
     }
 
-    /* Loading spinner */
     .loading-history {
       display: flex;
       flex-direction: column;
@@ -516,54 +510,17 @@
       letter-spacing: 0.3px;
     }
     .loading-history .spinner {
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       border: 2px solid var(--border-subtle);
       border-top-color: var(--gold);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <!-- ========== AUTH SCREEN ========== -->
-  <div id="auth-screen">
-    <h2>Unchained AI Guide</h2>
-    <p class="subtitle">A private, confidential diagnostic that uncovers the hidden roots driving your cycle. 10 questions. About 5 minutes. No judgment. Just truth.</p>
-    <div id="auth-form">
-      <input type="text" id="auth-name" placeholder="Your full name" autocomplete="name" />
-      <input type="email" id="auth-email" placeholder="Your email address" autocomplete="email" />
-      <input type="password" id="auth-pin" placeholder="Create a 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
-      <div id="auth-error"></div>
-      <div id="auth-loading">Signing in...</div>
-      <button class="auth-btn" id="auth-submit">Start Your Diagnostic</button>
-      <button class="auth-btn" id="auth-toggle">Already have an account? Sign In</button>
-      <button id="forgot-pin-link" style="display:none">Forgot your PIN?</button>
-    </div>
-  </div>
-
-  <!-- ========== RESET PIN SCREEN ========== -->
-  <div id="reset-screen">
-    <h2>Reset Your PIN</h2>
-    <p class="subtitle" id="reset-subtitle">Enter your email and we'll send you a 6-digit code to reset your PIN.</p>
-    <div id="reset-form">
-      <input type="email" id="reset-email" placeholder="Your email address" autocomplete="email" />
-      <div id="reset-step-code" style="display:none">
-        <input type="text" id="reset-code" placeholder="6-digit code from email" maxlength="6" pattern="\d{6}" inputmode="numeric" autocomplete="off" style="margin-bottom:12px" />
-        <input type="password" id="reset-new-pin" placeholder="New 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
-      </div>
-      <div id="reset-error"></div>
-      <div id="reset-success"></div>
-      <div id="reset-loading">Sending...</div>
-      <button class="auth-btn" id="reset-submit" style="background: var(--gold-gradient); color: #000;">Send Reset Code</button>
-      <button id="back-to-login">&larr; Back to Sign In</button>
-    </div>
-  </div>
-
-  <!-- ========== CHAT SCREEN ========== -->
+  <!-- ========== CHAT SCREEN (shown immediately — zero friction) ========== -->
   <div id="chat-container">
     <div id="chat-header">
       <div class="header-top">
@@ -587,12 +544,10 @@
     </div>
     <div id="chat-messages"></div>
     <div id="listening-indicator">Listening... Speak now</div>
-    <!-- CTA container (programmable later for Art of Freedom documentary link) -->
     <div id="cta-container">
       <button id="cta-button">Watch the Art of Freedom Documentary</button>
     </div>
     <div id="chat-input-area">
-      <!-- Mic button -->
       <button class="action-btn" id="mic-btn" title="Voice input">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
@@ -601,16 +556,48 @@
           <line x1="8" y1="23" x2="16" y2="23"/>
         </svg>
       </button>
-
-      <!-- Text input -->
       <div id="chat-input-wrapper">
         <textarea id="chat-input" placeholder="Type your response..." rows="1"></textarea>
       </div>
-
-      <!-- Send button -->
       <button id="chat-send">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="#000"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- ========== LOGIN OVERLAY (for returning users) ========== -->
+  <div id="login-overlay">
+    <div id="login-box">
+      <!-- Login section -->
+      <div id="login-section">
+        <h3>Welcome Back</h3>
+        <p class="login-subtitle">Sign in with your email and PIN to access your diagnostic results.</p>
+        <input type="email" id="login-email" placeholder="Your email address" autocomplete="email" />
+        <input type="password" id="login-pin" placeholder="Your 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
+        <div id="login-error"></div>
+        <button id="login-submit">Sign In</button>
+        <div class="login-links">
+          <button id="forgot-pin-link">Forgot PIN?</button>
+          <button id="close-login">Cancel</button>
+        </div>
+      </div>
+      <!-- Reset PIN section -->
+      <div id="reset-section">
+        <h3>Reset Your PIN</h3>
+        <p class="reset-subtitle" id="reset-subtitle">Enter your email and we'll send you a 6-digit code.</p>
+        <input type="email" id="reset-email" placeholder="Your email address" autocomplete="email" />
+        <div id="reset-step-code">
+          <input type="text" id="reset-code" placeholder="6-digit code from email" maxlength="6" pattern="\d{6}" inputmode="numeric" autocomplete="off" />
+          <input type="password" id="reset-new-pin" placeholder="New 4-digit PIN" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="margin-top:10px" />
+        </div>
+        <div id="reset-error"></div>
+        <div id="reset-success"></div>
+        <button id="login-submit" class="reset-submit-btn" style="background: var(--gold-gradient); color: #000; width:100%; padding:13px; border:none; border-radius:8px; font-size:14px; font-weight:600; font-family:'Montserrat',sans-serif; letter-spacing:0.8px; text-transform:uppercase; cursor:pointer; margin-bottom:10px;">Send Reset Code</button>
+        <div class="login-links">
+          <button id="back-to-login">Back to Sign In</button>
+          <button id="close-reset">Cancel</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -631,22 +618,14 @@
     let isStreaming = false;
     let recognition = null;
     let isRecording = false;
-    let currentUser = null; // { email, pin, name }
+    let currentUser = null; // null for anonymous, { email, pin, name } for logged-in
     let saveTimeout = null;
     let currentProgress = 0;
     let diagnosticComplete = false;
+    let contactCaptureShown = false;
 
     // DOM refs
-    const authScreen = document.getElementById("auth-screen");
     const chatContainer = document.getElementById("chat-container");
-    const authName = document.getElementById("auth-name");
-    const authEmail = document.getElementById("auth-email");
-    const authPin = document.getElementById("auth-pin");
-    const authSubmit = document.getElementById("auth-submit");
-    const authToggle = document.getElementById("auth-toggle");
-    const authError = document.getElementById("auth-error");
-    const authLoading = document.getElementById("auth-loading");
-    const forgotPinLink = document.getElementById("forgot-pin-link");
     const messagesEl = document.getElementById("chat-messages");
     const inputEl = document.getElementById("chat-input");
     const sendBtn = document.getElementById("chat-send");
@@ -659,10 +638,11 @@
     const progressText = document.getElementById("progress-text");
     const ctaContainer = document.getElementById("cta-container");
     const ctaButton = document.getElementById("cta-button");
+    const loginOverlay = document.getElementById("login-overlay");
 
     // ========== PROGRESS BAR ==========
     function updateProgress(percent) {
-      if (percent <= currentProgress && percent !== 100) return; // Only advance forward
+      if (percent <= currentProgress && percent !== 100) return;
       currentProgress = percent;
       progressContainer.style.display = "block";
       progressBarFill.style.width = percent + "%";
@@ -671,10 +651,6 @@
       if (percent >= 100) {
         progressText.textContent = "Diagnostic complete";
         diagnosticComplete = true;
-        // Show CTA if URL is configured
-        if (CTA_URL) {
-          ctaContainer.style.display = "block";
-        }
       } else if (percent >= 92) {
         progressText.textContent = "Almost done";
       } else if (percent >= 67) {
@@ -691,232 +667,224 @@
       if (match) {
         updateProgress(parseInt(match[1], 10));
       }
-      // Strip progress tags from displayed text
       return text.replace(/\[PROGRESS:\d+\]/g, "").trim();
+    }
+
+    function cleanDisplayText(text) {
+      return text
+        .replace(/\[PROGRESS:\d+\]/g, "")
+        .replace(/\[CRISIS_DETECTED\]/g, "")
+        .replace(/\[CONTACT_CAPTURE\]/g, "")
+        .replace(/\[CTA_PLACEHOLDER\]/g, "")
+        .trim();
     }
 
     // ========== CTA ==========
     ctaButton.addEventListener("click", () => {
-      if (CTA_URL) {
-        window.open(CTA_URL, "_blank");
-      }
+      if (CTA_URL) window.open(CTA_URL, "_blank");
     });
 
-    // ========== AUTH ==========
-    let isRegisterMode = true;
+    // ========== CONTACT CAPTURE (inline in chat after teaser) ==========
+    function showContactCapture() {
+      if (contactCaptureShown) return;
+      if (currentUser) return; // Already logged in
+      contactCaptureShown = true;
 
-    function updateAuthUI() {
-      if (isRegisterMode) {
-        authSubmit.textContent = "Start Your Diagnostic";
-        authToggle.textContent = "Already have an account? Sign In";
-        authPin.placeholder = "Create a 4-digit PIN";
-        authName.classList.add("visible");
-        forgotPinLink.style.display = "none";
-      } else {
-        authSubmit.textContent = "Sign In";
-        authToggle.textContent = "First time? Start the Diagnostic";
-        authPin.placeholder = "Your 4-digit PIN";
-        authName.classList.remove("visible");
-        forgotPinLink.style.display = "block";
-      }
-      authError.textContent = "";
+      const captureDiv = document.createElement("div");
+      captureDiv.id = "contact-capture";
+      captureDiv.style.display = "block";
+      captureDiv.innerHTML = `
+        <h3>Receive Your Report</h3>
+        <p class="capture-subtitle">This also creates a secure login so you can access your results anytime.</p>
+        <input type="text" id="capture-name" placeholder="Your first name" autocomplete="given-name" />
+        <input type="email" id="capture-email" placeholder="Your email address" autocomplete="email" />
+        <input type="tel" id="capture-phone" placeholder="Phone number (optional — for discreet text link)" autocomplete="tel" />
+        <input type="password" id="capture-pin" placeholder="Choose a 4-digit PIN" maxlength="4" pattern="\\d{4}" inputmode="numeric" autocomplete="off" />
+        <div id="capture-error"></div>
+        <button id="capture-submit">Lock It In</button>
+      `;
+      messagesEl.appendChild(captureDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      document.getElementById("capture-submit").addEventListener("click", handleContactCapture);
+      document.getElementById("capture-pin").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleContactCapture();
+      });
     }
 
-    updateAuthUI();
+    async function handleContactCapture() {
+      const name = document.getElementById("capture-name").value.trim();
+      const email = document.getElementById("capture-email").value.trim();
+      const phone = document.getElementById("capture-phone").value.trim();
+      const pin = document.getElementById("capture-pin").value.trim();
+      const errorEl = document.getElementById("capture-error");
+      const submitBtn = document.getElementById("capture-submit");
+      errorEl.textContent = "";
 
-    authToggle.addEventListener("click", () => {
-      isRegisterMode = !isRegisterMode;
-      updateAuthUI();
-    });
+      if (!name) { errorEl.textContent = "Please enter your first name."; return; }
+      if (!email) { errorEl.textContent = "Please enter your email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { errorEl.textContent = "PIN must be exactly 4 digits."; return; }
 
-    authSubmit.addEventListener("click", handleAuth);
-    authPin.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleAuth();
-    });
-    authEmail.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") authPin.focus();
-    });
-    authName.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") authEmail.focus();
-    });
-
-    async function handleAuth() {
-      const name = authName.value.trim();
-      const email = authEmail.value.trim();
-      const pin = authPin.value.trim();
-      authError.textContent = "";
-
-      if (isRegisterMode && !name) { authError.textContent = "Please enter your full name."; return; }
-      if (!email) { authError.textContent = "Please enter your email."; return; }
-      if (!pin || !/^\d{4}$/.test(pin)) { authError.textContent = "Please enter a 4-digit PIN."; return; }
-
-      authSubmit.disabled = true;
-      authLoading.style.display = "block";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
 
       try {
-        const payload = {
-          action: isRegisterMode ? "register" : "login",
-          email,
-          pin,
-        };
-        if (isRegisterMode) payload.name = name;
-
+        // Register account
         const res = await fetch(AUTH_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ action: "register", email, pin, name }),
         });
 
         const data = await res.json();
         if (!res.ok) {
-          authError.textContent = data.error || "Something went wrong.";
-          return;
-        }
-
-        // Success
-        const userName = data.name || name || null;
-        currentUser = { email: email.toLowerCase(), pin, name: userName };
-        try {
-          localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-        } catch (e) {}
-
-        await enterChat();
-      } catch (e) {
-        authError.textContent = "Connection error. Please try again.";
-      } finally {
-        authSubmit.disabled = false;
-        authLoading.style.display = "none";
-      }
-    }
-
-    async function enterChat() {
-      authScreen.style.display = "none";
-      chatContainer.style.display = "flex";
-
-      messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading...</div>';
-
-      // Load history from server
-      try {
-        const res = await fetch(HISTORY_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "load",
-            email: currentUser.email,
-            pin: currentUser.pin,
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          conversationSummary = data.summary || null;
-
-          if (data.messages && data.messages.length > 0) {
-            messages = data.messages;
-            messagesEl.innerHTML = "";
-            renderSavedMessages(messages);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
-            // Restore progress from saved messages
-            restoreProgressFromHistory(messages);
+          // If already registered, try logging in
+          if (res.status === 409) {
+            const loginRes = await fetch(AUTH_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "login", email, pin }),
+            });
+            const loginData = await loginRes.json();
+            if (!loginRes.ok) {
+              errorEl.textContent = loginData.error || "That email is already registered with a different PIN.";
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Lock It In";
+              return;
+            }
+          } else {
+            errorEl.textContent = data.error || "Something went wrong.";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Lock It In";
             return;
           }
         }
-      } catch (e) {
-        console.log("Could not load server history:", e.message);
-      }
 
-      // No history — show welcome
-      messagesEl.innerHTML = "";
-      messages = [];
-      addMessage("assistant", WELCOME_MESSAGE);
-      updateProgress(0);
-    }
+        // Success — save session
+        currentUser = { email: email.toLowerCase(), pin, name };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
 
-    function restoreProgressFromHistory(savedMessages) {
-      // Scan through saved messages to find the latest progress tag
-      let lastProgress = 0;
-      for (const msg of savedMessages) {
-        if (msg.role === "assistant") {
-          const match = msg.content.match(/\[PROGRESS:(\d+)\]/);
-          if (match) {
-            lastProgress = parseInt(match[1], 10);
-          }
+        // Show sign out button
+        signOutBtn.style.display = "block";
+
+        // Save conversation history to server
+        saveHistoryToServer();
+
+        // Save diagnostic data
+        saveDiagnosticData();
+
+        // Hide the capture form and show confirmation
+        const captureEl = document.getElementById("contact-capture");
+        captureEl.innerHTML = `
+          <div style="text-align:center; padding: 8px 0;">
+            <div style="color: var(--gold); font-size: 16px; font-weight: 600; margin-bottom: 8px;">Locked in.</div>
+            <div style="color: #888; font-size: 13px; line-height: 1.5;">Your report is being prepared. You can log back in anytime with your email and PIN.</div>
+          </div>
+        `;
+
+        // Show CTA if configured
+        if (CTA_URL) {
+          ctaContainer.style.display = "block";
         }
-      }
-      if (lastProgress > 0) {
-        updateProgress(lastProgress);
+
+      } catch(e) {
+        errorEl.textContent = "Connection error. Please try again.";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Lock It In";
       }
     }
 
-    function signOut() {
-      if (isStreaming) return;
-      currentUser = null;
-      messages = [];
-      conversationSummary = null;
-      currentProgress = 0;
-      diagnosticComplete = false;
-      try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
-      chatContainer.style.display = "none";
-      authScreen.style.display = "flex";
-      authName.value = "";
-      authEmail.value = "";
-      authPin.value = "";
-      authError.textContent = "";
-      messagesEl.innerHTML = "";
-      progressContainer.style.display = "none";
-      progressBarFill.style.width = "0%";
-      ctaContainer.style.display = "none";
-      isRegisterMode = true;
-      updateAuthUI();
+    // ========== LOGIN OVERLAY (returning users) ==========
+    function showLoginOverlay() {
+      document.getElementById("login-section").style.display = "block";
+      document.getElementById("reset-section").style.display = "none";
+      document.getElementById("login-error").textContent = "";
+      document.getElementById("login-email").value = "";
+      document.getElementById("login-pin").value = "";
+      loginOverlay.classList.add("active");
     }
 
-    signOutBtn.addEventListener("click", signOut);
+    function hideLoginOverlay() {
+      loginOverlay.classList.remove("active");
+    }
 
-    // ========== RESET PIN ==========
-    const resetScreen = document.getElementById("reset-screen");
-    const resetEmail = document.getElementById("reset-email");
-    const resetCode = document.getElementById("reset-code");
-    const resetNewPin = document.getElementById("reset-new-pin");
-    const resetSubmit = document.getElementById("reset-submit");
-    const resetError = document.getElementById("reset-error");
-    const resetSuccess = document.getElementById("reset-success");
-    const resetLoading = document.getElementById("reset-loading");
-    const resetSubtitle = document.getElementById("reset-subtitle");
-    const resetStepCode = document.getElementById("reset-step-code");
-    const backToLogin = document.getElementById("back-to-login");
+    document.getElementById("close-login").addEventListener("click", hideLoginOverlay);
+    document.getElementById("close-reset").addEventListener("click", hideLoginOverlay);
 
+    document.getElementById("login-submit").addEventListener("click", async () => {
+      const email = document.getElementById("login-email").value.trim();
+      const pin = document.getElementById("login-pin").value.trim();
+      const errorEl = document.getElementById("login-error");
+      errorEl.textContent = "";
+
+      if (!email) { errorEl.textContent = "Please enter your email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { errorEl.textContent = "Please enter a 4-digit PIN."; return; }
+
+      const btn = document.getElementById("login-submit");
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "login", email, pin }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || "Something went wrong.";
+          return;
+        }
+
+        currentUser = { email: email.toLowerCase(), pin, name: data.name || null };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
+
+        hideLoginOverlay();
+        signOutBtn.style.display = "block";
+        await loadHistory();
+      } catch(e) {
+        errorEl.textContent = "Connection error. Please try again.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("login-pin").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("login-submit").click();
+    });
+
+    // ========== FORGOT PIN (inside login overlay) ==========
     let resetStep = "email";
 
-    forgotPinLink.addEventListener("click", () => {
-      authScreen.style.display = "none";
-      resetScreen.style.display = "flex";
+    document.getElementById("forgot-pin-link").addEventListener("click", () => {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("reset-section").style.display = "block";
       resetStep = "email";
-      resetEmail.value = "";
-      resetCode.value = "";
-      resetNewPin.value = "";
-      resetError.textContent = "";
-      resetSuccess.style.display = "none";
-      resetStepCode.style.display = "none";
-      resetSubmit.textContent = "Send Reset Code";
-      resetSubtitle.textContent = "Enter your email and we'll send you a 6-digit code to reset your PIN.";
+      document.getElementById("reset-email").value = "";
+      document.getElementById("reset-code") && (document.getElementById("reset-code").value = "");
+      document.getElementById("reset-new-pin") && (document.getElementById("reset-new-pin").value = "");
+      document.getElementById("reset-error").textContent = "";
+      document.getElementById("reset-success").style.display = "none";
+      document.getElementById("reset-step-code").style.display = "none";
+      document.querySelector(".reset-submit-btn").textContent = "Send Reset Code";
+      document.getElementById("reset-subtitle").textContent = "Enter your email and we'll send you a 6-digit code.";
     });
 
-    backToLogin.addEventListener("click", () => {
-      resetScreen.style.display = "none";
-      authScreen.style.display = "flex";
+    document.getElementById("back-to-login").addEventListener("click", () => {
+      document.getElementById("reset-section").style.display = "none";
+      document.getElementById("login-section").style.display = "block";
     });
 
-    resetSubmit.addEventListener("click", handleReset);
+    document.querySelector(".reset-submit-btn").addEventListener("click", async () => {
+      const errorEl = document.getElementById("reset-error");
+      const successEl = document.getElementById("reset-success");
+      errorEl.textContent = "";
+      successEl.style.display = "none";
 
-    async function handleReset() {
-      resetError.textContent = "";
-      resetSuccess.style.display = "none";
+      const email = document.getElementById("reset-email").value.trim();
+      if (!email) { errorEl.textContent = "Please enter your email."; return; }
 
-      const email = resetEmail.value.trim();
-      if (!email) { resetError.textContent = "Please enter your email."; return; }
-
-      resetSubmit.disabled = true;
-      resetLoading.style.display = "block";
+      const btn = document.querySelector(".reset-submit-btn");
+      btn.disabled = true;
 
       try {
         if (resetStep === "email") {
@@ -925,65 +893,101 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "request", email }),
           });
-
           if (!res.ok) {
             const data = await res.json();
-            resetError.textContent = data.error || "Something went wrong.";
+            errorEl.textContent = data.error || "Something went wrong.";
             return;
           }
-
           resetStep = "code";
-          resetStepCode.style.display = "block";
-          resetEmail.readOnly = true;
-          resetEmail.style.opacity = "0.6";
-          resetSubmit.textContent = "Reset PIN";
-          resetSubtitle.textContent = "Check your email for the 6-digit code, then set your new PIN.";
-          resetLoading.textContent = "";
-          resetCode.focus();
-
+          document.getElementById("reset-step-code").style.display = "block";
+          document.getElementById("reset-email").readOnly = true;
+          document.getElementById("reset-email").style.opacity = "0.6";
+          btn.textContent = "Reset PIN";
+          document.getElementById("reset-subtitle").textContent = "Check your email for the 6-digit code.";
         } else {
-          const code = resetCode.value.trim();
-          const newPin = resetNewPin.value.trim();
-
-          if (!code || !/^\d{6}$/.test(code)) { resetError.textContent = "Enter the 6-digit code."; return; }
-          if (!newPin || !/^\d{4}$/.test(newPin)) { resetError.textContent = "New PIN must be 4 digits."; return; }
+          const code = document.getElementById("reset-code").value.trim();
+          const newPin = document.getElementById("reset-new-pin").value.trim();
+          if (!code || !/^\d{6}$/.test(code)) { errorEl.textContent = "Enter the 6-digit code."; return; }
+          if (!newPin || !/^\d{4}$/.test(newPin)) { errorEl.textContent = "New PIN must be 4 digits."; return; }
 
           const res = await fetch(RESET_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "verify", email, code, newPin }),
           });
-
           const data = await res.json();
-          if (!res.ok) {
-            resetError.textContent = data.error || "Something went wrong.";
-            return;
-          }
+          if (!res.ok) { errorEl.textContent = data.error || "Something went wrong."; return; }
 
-          resetSuccess.textContent = "PIN updated! Redirecting to sign in...";
-          resetSuccess.style.display = "block";
-          resetSubmit.style.display = "none";
-
+          successEl.textContent = "PIN updated! Returning to sign in...";
+          successEl.style.display = "block";
           setTimeout(() => {
-            resetScreen.style.display = "none";
-            authScreen.style.display = "flex";
-            resetSubmit.style.display = "block";
-            resetEmail.readOnly = false;
-            resetEmail.style.opacity = "1";
+            document.getElementById("reset-section").style.display = "none";
+            document.getElementById("login-section").style.display = "block";
+            document.getElementById("reset-email").readOnly = false;
+            document.getElementById("reset-email").style.opacity = "1";
             resetStep = "email";
-            isRegisterMode = false;
-            updateAuthUI();
           }, 2000);
         }
-      } catch (e) {
-        resetError.textContent = "Connection error. Please try again.";
+      } catch(e) {
+        errorEl.textContent = "Connection error. Please try again.";
       } finally {
-        resetSubmit.disabled = false;
-        resetLoading.style.display = "none";
+        btn.disabled = false;
       }
+    });
+
+    // ========== SIGN OUT ==========
+    function signOut() {
+      if (isStreaming) return;
+      currentUser = null;
+      messages = [];
+      conversationSummary = null;
+      currentProgress = 0;
+      diagnosticComplete = false;
+      contactCaptureShown = false;
+      try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+      signOutBtn.style.display = "none";
+      progressContainer.style.display = "none";
+      progressBarFill.style.width = "0%";
+      ctaContainer.style.display = "none";
+      messagesEl.innerHTML = "";
+      addMessage("assistant", WELCOME_MESSAGE);
+      addWelcomeBackLink();
+    }
+    signOutBtn.addEventListener("click", signOut);
+
+    // ========== HISTORY ==========
+    async function loadHistory() {
+      messagesEl.innerHTML = '<div class="loading-history"><div class="spinner"></div>Loading your results...</div>';
+
+      try {
+        const res = await fetch(HISTORY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "load", email: currentUser.email, pin: currentUser.pin }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          conversationSummary = data.summary || null;
+          if (data.messages && data.messages.length > 0) {
+            messages = data.messages;
+            messagesEl.innerHTML = "";
+            renderSavedMessages(messages);
+            restoreProgressFromHistory(messages);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return;
+          }
+        }
+      } catch(e) {
+        console.log("Could not load history:", e.message);
+      }
+
+      // No history found — show welcome
+      messagesEl.innerHTML = "";
+      messages = [];
+      addMessage("assistant", WELCOME_MESSAGE);
     }
 
-    // ========== SERVER HISTORY ==========
     function saveHistoryToServer() {
       if (!currentUser) return;
       clearTimeout(saveTimeout);
@@ -992,37 +996,43 @@
           await fetch(HISTORY_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "save",
-              email: currentUser.email,
-              pin: currentUser.pin,
-              messages,
-            }),
+            body: JSON.stringify({ action: "save", email: currentUser.email, pin: currentUser.pin, messages }),
           });
-        } catch (e) {
-          console.log("Could not save history:", e.message);
-        }
+        } catch(e) { console.log("Could not save history:", e.message); }
       }, SAVE_DEBOUNCE_MS);
     }
 
     function renderSavedMessages(savedMessages) {
       messagesEl.innerHTML = "";
       savedMessages.forEach(msg => {
-        // Strip progress tags from displayed saved messages
-        const cleanContent = msg.content.replace(/\[PROGRESS:\d+\]/g, "").replace(/\[CRISIS_DETECTED\]/g, "").trim();
-        addMessage(msg.role, cleanContent, true);
+        addMessage(msg.role, cleanDisplayText(msg.content), true);
       });
+    }
+
+    function restoreProgressFromHistory(savedMessages) {
+      let lastProgress = 0;
+      for (const msg of savedMessages) {
+        if (msg.role === "assistant") {
+          const match = msg.content.match(/\[PROGRESS:(\d+)\]/);
+          if (match) lastProgress = parseInt(match[1], 10);
+        }
+      }
+      if (lastProgress > 0) updateProgress(lastProgress);
+    }
+
+    // ========== WELCOME BACK LINK ==========
+    function addWelcomeBackLink() {
+      const linkDiv = document.createElement("div");
+      linkDiv.id = "welcome-back-link";
+      linkDiv.innerHTML = `<button onclick="showLoginOverlay()">Welcome back? Sign in with your email and PIN</button>`;
+      messagesEl.appendChild(linkDiv);
     }
 
     // ========== SPEECH RECOGNITION ==========
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       micBtn.addEventListener("click", () => {
-        if (isRecording) {
-          stopRecording();
-        } else {
-          startRecording();
-        }
+        if (isRecording) stopRecording(); else startRecording();
       });
     } else {
       micBtn.style.display = "none";
@@ -1035,39 +1045,27 @@
       recognition.interimResults = true;
       recognition.lang = "en-US";
       recognition.maxAlternatives = 1;
-
       const existingText = inputEl.value;
       let spokenText = "";
-
       recognition.onresult = (event) => {
         spokenText = "";
-        for (let i = 0; i < event.results.length; i++) {
-          spokenText += event.results[i][0].transcript;
-        }
-        const combined = existingText ? existingText + " " + spokenText : spokenText;
-        inputEl.value = combined.trim();
+        for (let i = 0; i < event.results.length; i++) spokenText += event.results[i][0].transcript;
+        inputEl.value = (existingText ? existingText + " " + spokenText : spokenText).trim();
         inputEl.style.height = "auto";
         inputEl.style.height = Math.min(inputEl.scrollHeight, 80) + "px";
       };
-
-      recognition.onend = () => { cleanupRecording(); };
+      recognition.onend = () => cleanupRecording();
       recognition.onerror = (event) => {
         console.log("Speech error:", event.error);
         cleanupRecording();
-        if (event.error === "not-allowed") {
-          alert("Microphone access was denied. Please allow microphone access in your browser settings.");
-        }
+        if (event.error === "not-allowed") alert("Microphone access was denied.");
       };
-
       try {
         recognition.start();
         isRecording = true;
         micBtn.classList.add("recording");
         listeningIndicator.classList.add("active");
-      } catch (e) {
-        console.error("Failed to start speech recognition:", e);
-        cleanupRecording();
-      }
+      } catch(e) { cleanupRecording(); }
     }
 
     function stopRecording() {
@@ -1088,9 +1086,7 @@
       div.className = `msg ${role}`;
       div.innerHTML = `<div class="msg-bubble">${escapeHtml(content)}</div>`;
       messagesEl.appendChild(div);
-      if (!skipScroll) {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
+      if (!skipScroll) messagesEl.scrollTop = messagesEl.scrollHeight;
       return div;
     }
 
@@ -1121,6 +1117,10 @@
       if (isStreaming) return;
       if (isRecording) stopRecording();
 
+      // Remove welcome-back link if present
+      const wbLink = document.getElementById("welcome-back-link");
+      if (wbLink) wbLink.remove();
+
       isStreaming = true;
       sendBtn.disabled = true;
       inputEl.value = "";
@@ -1128,7 +1128,7 @@
 
       addMessage("user", content);
       messages.push({ role: "user", content });
-      saveHistoryToServer();
+      if (currentUser) saveHistoryToServer();
       showTyping();
 
       try {
@@ -1161,10 +1161,8 @@
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
           const chunk = decoder.decode(value);
           const lines = chunk.split("\n");
-
           for (const line of lines) {
             if (line.startsWith("data: ")) {
               const data = line.slice(6);
@@ -1173,41 +1171,31 @@
                 const parsed = JSON.parse(data);
                 if (parsed.text) {
                   fullResponse += parsed.text;
-                  // Display without progress tags and crisis tags
-                  const displayText = fullResponse
-                    .replace(/\[PROGRESS:\d+\]/g, "")
-                    .replace(/\[CRISIS_DETECTED\]/g, "")
-                    .replace(/\[CTA_PLACEHOLDER\]/g, "")
-                    .trim();
-                  bubble.textContent = displayText;
+                  bubble.textContent = cleanDisplayText(fullResponse);
                   messagesEl.scrollTop = messagesEl.scrollHeight;
                 }
-              } catch (e) {}
+              } catch(e) {}
             }
           }
         }
 
-        // Parse progress from response
-        const cleanResponse = parseProgressFromResponse(fullResponse);
+        // Parse progress
+        parseProgressFromResponse(fullResponse);
 
-        // Store full response (with tags) for history, display clean
+        // Store full response with tags for history
         messages.push({ role: "assistant", content: fullResponse.trim() });
 
-        // Update display with clean text
-        bubble.textContent = cleanResponse
-          .replace(/\[CRISIS_DETECTED\]/g, "")
-          .replace(/\[CTA_PLACEHOLDER\]/g, "")
-          .trim();
+        // Clean display
+        bubble.textContent = cleanDisplayText(fullResponse);
 
-        saveHistoryToServer();
+        if (currentUser) saveHistoryToServer();
 
-        // If diagnostic just completed (100%), save diagnostic data
-        if (currentProgress >= 100 && !diagnosticComplete) {
-          diagnosticComplete = true;
-          saveDiagnosticData();
+        // Check for contact capture trigger
+        if (fullResponse.includes("[CONTACT_CAPTURE]") && !currentUser) {
+          showContactCapture();
         }
 
-      } catch (error) {
+      } catch(error) {
         removeTyping();
         addMessage("assistant", "I'm having trouble connecting right now. Please try again in a moment, or reach out to support@UnchainedLeader.com if you need to talk to someone.");
       }
@@ -1232,18 +1220,13 @@
             completedAt: new Date().toISOString(),
           }),
         });
-      } catch (e) {
-        console.log("Could not save diagnostic data:", e.message);
-      }
+      } catch(e) { console.log("Could not save diagnostic data:", e.message); }
     }
 
     // ========== EVENT LISTENERS ==========
     sendBtn.addEventListener("click", sendMessage);
     inputEl.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
     inputEl.addEventListener("input", () => {
       inputEl.style.height = "auto";
@@ -1251,16 +1234,26 @@
     });
 
     // ========== INIT ==========
-    try {
-      const saved = localStorage.getItem(SESSION_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.email && parsed.pin) {
-          currentUser = parsed;
-          enterChat();
+    (async function init() {
+      // Check for existing session (returning user)
+      try {
+        const saved = localStorage.getItem(SESSION_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.email && parsed.pin) {
+            currentUser = parsed;
+            signOutBtn.style.display = "block";
+            await loadHistory();
+            return;
+          }
         }
-      }
-    } catch (e) {}
+      } catch(e) {}
+
+      // No session — anonymous start. Zero friction.
+      messagesEl.innerHTML = "";
+      addMessage("assistant", WELCOME_MESSAGE);
+      addWelcomeBackLink();
+    })();
   </script>
 </body>
 </html>
