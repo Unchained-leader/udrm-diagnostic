@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import redis from "../lib/redis";
 import PDFDocument from "pdfkit";
+import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete } from "../lib/ghl";
 
 // ═══════════════════════════════════════════════════════════════
@@ -75,25 +76,42 @@ export async function POST(request) {
     const pdfBuffer = await generatePDF(analysis, firstName);
     const pdfBase64 = pdfBuffer.toString("base64");
 
-    // Send via Resend
-    await sendReportEmail(normalizedEmail, firstName, pdfBase64);
+    // Upload PDF to Vercel Blob for permanent storage
+    let reportUrl = null;
+    try {
+      const timestamp = Date.now();
+      const blob = await put(
+        `reports/${normalizedEmail.replace(/[^a-z0-9]/g, "-")}/${timestamp}-diagnostic.pdf`,
+        pdfBuffer,
+        { access: "public", contentType: "application/pdf" }
+      );
+      reportUrl = blob.url;
+      console.log("PDF uploaded to Blob:", reportUrl);
+    } catch (e) {
+      console.error("Blob upload failed (continuing without URL):", e.message);
+    }
 
-    // Store report metadata
+    // Send via Resend (with download link if available)
+    await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+
+    // Store report metadata (including PDF URL)
     await redis.set(`mkt:report:${normalizedEmail}`, {
       generatedAt: new Date().toISOString(),
       rootNarrativeType: analysis.rootNarrativeType,
       neuropathway: analysis.neuropathway,
+      reportUrl: reportUrl || null,
     });
 
-    // Send to GoHighLevel CRM via webhook (fire and forget)
+    // Send to GoHighLevel CRM via webhook (with PDF URL)
     ghlDiagnosticComplete({
       email: normalizedEmail,
       name: userName,
       messages,
       analysis,
+      reportUrl,
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
-    return Response.json({ success: true, message: "Report sent" }, { headers: CORS_HEADERS });
+    return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error("Report generation error:", error);
     return Response.json({ error: "Failed to generate report." }, { status: 500, headers: CORS_HEADERS });
@@ -459,7 +477,7 @@ async function generatePDF(analysis, firstName) {
 // EMAIL DELIVERY via Resend
 // ═══════════════════════════════════════════════════════════════
 
-async function sendReportEmail(email, firstName, pdfBase64) {
+async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
   if (!process.env.RESEND_API_KEY) {
     console.log("RESEND_API_KEY not set — skipping email delivery");
     return;
@@ -493,9 +511,10 @@ async function sendReportEmail(email, firstName, pdfBase64) {
             What you see in this report is about 20% of your full diagnostic. To see the complete picture and get a custom plan, log back in with your email and PIN.
           </p>
           <div style="text-align:center;margin:30px 0;">
-            <div style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">
-              PDF REPORT ATTACHED BELOW
-            </div>
+            ${reportUrl
+              ? `<a href="${reportUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">VIEW YOUR REPORT</a>`
+              : `<div style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">PDF REPORT ATTACHED BELOW</div>`
+            }
           </div>
           <div style="border-top:1px solid #333;padding-top:20px;margin-top:20px;text-align:center;">
             <div style="color:#c5a55a;font-size:11px;letter-spacing:2px;">#liveunchained</div>

@@ -11,7 +11,7 @@
  * Send diagnostic data to GHL via webhook.
  * GHL workflow handles: contact creation, tagging, notes, etc.
  */
-export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis }) {
+export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl }) {
   const webhookUrl = process.env.GHL_WEBHOOK_URL;
   if (!webhookUrl) {
     console.log("GHL_WEBHOOK_URL not configured — skipping CRM sync");
@@ -29,6 +29,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       name: name || "",
     },
     tags: tags || [],
+    reportUrl: reportUrl || null,
   };
 
   // Add analysis data if present
@@ -92,7 +93,7 @@ export async function ghlContactCreated({ email, name, phone }) {
 /**
  * Convenience: Send diagnostic complete event with full data
  */
-export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis }) {
+export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis, reportUrl }) {
   return sendToGHL({
     event: "diagnostic_complete",
     email,
@@ -105,6 +106,7 @@ export async function ghlDiagnosticComplete({ email, name, phone, messages, anal
     ],
     diagnosticData: messages,
     analysis,
+    reportUrl,
   });
 }
 
