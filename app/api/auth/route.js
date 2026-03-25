@@ -1,5 +1,5 @@
 import redis from "../lib/redis";
-import { createOrUpdateContact } from "../lib/ghl";
+import { ghlContactCreated } from "../lib/ghl";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -68,13 +68,12 @@ export async function POST(request) {
         createdAt: new Date().toISOString(),
       });
 
-      // Create contact in GoHighLevel CRM (fire and forget)
-      createOrUpdateContact({
+      // Send to GoHighLevel CRM via webhook (fire and forget)
+      ghlContactCreated({
         email: normalizedEmail,
         name: trimmedName,
         phone: phone || "",
-        tags: ["Diagnostic Started", "Root Genre Diagnostic"],
-      }).catch((e) => console.error("GHL sync error:", e.message));
+      }).catch((e) => console.error("GHL webhook error:", e.message));
 
       return Response.json(
         { success: true, message: "Account created.", name: trimmedName },

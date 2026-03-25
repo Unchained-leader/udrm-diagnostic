@@ -1,163 +1,135 @@
 // ═══════════════════════════════════════════════════════════════
-// GoHighLevel CRM Integration
-// Creates contacts, adds tags, stores notes with diagnostic data
+// GoHighLevel CRM Integration via Webhook
+// No API key needed — no token rotation — never expires
+// Sends data to a GHL Inbound Webhook workflow trigger
 // ═══════════════════════════════════════════════════════════════
 
-const GHL_API_BASE = "https://services.leadconnectorhq.com";
+// Set GHL_WEBHOOK_URL in Vercel env vars to your GHL Inbound Webhook URL
+// Found in: GHL → Automation → Create Workflow → Trigger: Inbound Webhook
 
-function getHeaders() {
-  return {
-    Authorization: `Bearer ${process.env.GHL_API_KEY}`,
-    "Content-Type": "application/json",
-    Version: "2021-07-28",
+/**
+ * Send diagnostic data to GHL via webhook.
+ * GHL workflow handles: contact creation, tagging, notes, etc.
+ */
+export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis }) {
+  const webhookUrl = process.env.GHL_WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.log("GHL_WEBHOOK_URL not configured — skipping CRM sync");
+    return;
+  }
+
+  const payload = {
+    event: event || "diagnostic_unknown",
+    timestamp: new Date().toISOString(),
+    contact: {
+      email: email || "",
+      firstName: (name || "").split(" ")[0] || "",
+      lastName: (name || "").split(" ").slice(1).join(" ") || "",
+      phone: phone || "",
+      name: name || "",
+    },
+    tags: tags || [],
   };
-}
 
-// ── Create or update a contact ──
-export async function createOrUpdateContact({ email, name, phone, tags = [] }) {
-  if (!process.env.GHL_API_KEY || !process.env.GHL_LOCATION_ID) {
-    console.log("GHL credentials not configured — skipping CRM sync");
-    return null;
-  }
-
-  const nameParts = (name || "").trim().split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || "";
-
-  // First try to find existing contact by email
-  try {
-    const searchRes = await fetch(
-      `${GHL_API_BASE}/contacts/search/duplicate?locationId=${process.env.GHL_LOCATION_ID}&email=${encodeURIComponent(email)}`,
-      { headers: getHeaders() }
-    );
-    const searchData = await searchRes.json();
-
-    if (searchData.contact && searchData.contact.id) {
-      // Contact exists — update with tags
-      const contactId = searchData.contact.id;
-      const existingTags = searchData.contact.tags || [];
-      const mergedTags = [...new Set([...existingTags, ...tags])];
-
-      const updateRes = await fetch(`${GHL_API_BASE}/contacts/${contactId}`, {
-        method: "PUT",
-        headers: getHeaders(),
-        body: JSON.stringify({
-          firstName: firstName || searchData.contact.firstName,
-          lastName: lastName || searchData.contact.lastName,
-          phone: phone || searchData.contact.phone,
-          tags: mergedTags,
-        }),
-      });
-      const updateData = await updateRes.json();
-      console.log("GHL contact updated:", contactId);
-      return contactId;
-    }
-  } catch (e) {
-    console.log("GHL search failed, creating new contact:", e.message);
-  }
-
-  // Create new contact
-  try {
-    const createRes = await fetch(`${GHL_API_BASE}/contacts/`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({
-        locationId: process.env.GHL_LOCATION_ID,
-        firstName,
-        lastName,
-        email,
-        phone: phone || "",
-        tags,
-        source: "Root Genre Diagnostic",
-      }),
-    });
-    const createData = await createRes.json();
-    const contactId = createData.contact?.id;
-    console.log("GHL contact created:", contactId);
-    return contactId;
-  } catch (e) {
-    console.error("GHL contact creation failed:", e.message);
-    return null;
-  }
-}
-
-// ── Add a note to a contact (stores diagnostic data) ──
-export async function addContactNote(contactId, noteBody) {
-  if (!process.env.GHL_API_KEY || !contactId) return;
-
-  try {
-    await fetch(`${GHL_API_BASE}/contacts/${contactId}/notes`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({ body: noteBody }),
-    });
-    console.log("GHL note added to contact:", contactId);
-  } catch (e) {
-    console.error("GHL note creation failed:", e.message);
-  }
-}
-
-// ── Add tags to a contact ──
-export async function addContactTags(contactId, tags) {
-  if (!process.env.GHL_API_KEY || !contactId) return;
-
-  try {
-    // Get existing tags first
-    const res = await fetch(`${GHL_API_BASE}/contacts/${contactId}`, {
-      headers: getHeaders(),
-    });
-    const data = await res.json();
-    const existingTags = data.contact?.tags || [];
-    const mergedTags = [...new Set([...existingTags, ...tags])];
-
-    await fetch(`${GHL_API_BASE}/contacts/${contactId}`, {
-      method: "PUT",
-      headers: getHeaders(),
-      body: JSON.stringify({ tags: mergedTags }),
-    });
-    console.log("GHL tags added:", tags);
-  } catch (e) {
-    console.error("GHL tag update failed:", e.message);
-  }
-}
-
-// ── Store full diagnostic conversation as a note ──
-export async function storeDiagnosticData(contactId, messages, analysis) {
-  if (!contactId) return;
-
-  // Build a readable summary for the coaching team
-  const userMessages = messages
-    .filter((m) => m.role === "user")
-    .map((m) => m.content.replace(/\[PROGRESS:\d+\]/g, "").trim())
-    .filter(Boolean);
-
-  let noteContent = `═══ ROOT GENRE DIAGNOSTIC DATA ═══\n`;
-  noteContent += `Generated: ${new Date().toISOString()}\n\n`;
-
+  // Add analysis data if present
   if (analysis) {
-    noteContent += `Root Narrative Type: ${analysis.rootNarrativeType || "N/A"}\n`;
-    noteContent += `Root Statement: "${analysis.rootNarrativeStatement || "N/A"}"\n`;
-    noteContent += `Neuropathway: ${analysis.neuropathway || "N/A"}\n`;
-    noteContent += `Core Emotion: ${analysis.coreEmotionManaged || "N/A"}\n`;
-    noteContent += `Shame Architecture: ${analysis.shameArchitecture || "N/A"}\n`;
-    noteContent += `Age First Exposure: ${analysis.ageFirstExposure || "N/A"}\n`;
-    noteContent += `Strategies Tried: ${analysis.strategiesCount || "N/A"}\n`;
-    noteContent += `Years Fighting: ${analysis.yearsFighting || "N/A"}\n\n`;
-    noteContent += `Key Insight: ${analysis.keyInsight || "N/A"}\n\n`;
+    payload.diagnostic = {
+      rootNarrativeType: analysis.rootNarrativeType || "",
+      rootNarrativeStatement: analysis.rootNarrativeStatement || "",
+      neuropathway: analysis.neuropathway || "",
+      coreEmotionManaged: analysis.coreEmotionManaged || "",
+      shameArchitecture: analysis.shameArchitecture || "",
+      ageFirstExposure: analysis.ageFirstExposure || "",
+      strategiesCount: analysis.strategiesCount || "",
+      yearsFighting: analysis.yearsFighting || "",
+      keyInsight: analysis.keyInsight || "",
+      patternDescription: analysis.patternDescription || "",
+    };
   }
 
-  noteContent += `═══ RAW CONVERSATION ═══\n`;
-  for (const msg of messages) {
-    const clean = msg.content
-      .replace(/\[PROGRESS:\d+\]/g, "")
-      .replace(/\[CRISIS_DETECTED\]/g, "")
-      .replace(/\[CONTACT_CAPTURE\]/g, "")
-      .replace(/\[BOOKING_CTA\]/g, "")
-      .trim();
-    if (clean) {
-      noteContent += `\n[${msg.role === "assistant" ? "GUIDE" : "USER"}]:\n${clean}\n`;
-    }
+  // Add raw conversation if present
+  if (diagnosticData && Array.isArray(diagnosticData)) {
+    // Build readable conversation summary for the contact note
+    const userAnswers = diagnosticData
+      .filter((m) => m.role === "user")
+      .map((m) =>
+        m.content
+          .replace(/\[PROGRESS:\d+\]/g, "")
+          .replace(/\[CRISIS_DETECTED\]/g, "")
+          .trim()
+      )
+      .filter(Boolean);
+
+    payload.conversationSummary = userAnswers.join(" | ");
+    payload.messageCount = diagnosticData.length;
   }
 
-  await addContactNote(contactId, noteContent);
+  try {
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    console.log(`GHL webhook sent (${event}): ${res.status}`);
+  } catch (e) {
+    console.error("GHL webhook failed:", e.message);
+  }
+}
+
+/**
+ * Convenience: Send contact creation event
+ */
+export async function ghlContactCreated({ email, name, phone }) {
+  return sendToGHL({
+    event: "contact_created",
+    email,
+    name,
+    phone,
+    tags: ["Diagnostic Started", "Root Genre Diagnostic"],
+  });
+}
+
+/**
+ * Convenience: Send diagnostic complete event with full data
+ */
+export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis }) {
+  return sendToGHL({
+    event: "diagnostic_complete",
+    email,
+    name,
+    phone,
+    tags: [
+      "Diagnostic Complete",
+      "Report 1 Sent",
+      `RNT: ${analysis?.rootNarrativeType || "Unknown"}`,
+    ],
+    diagnosticData: messages,
+    analysis,
+  });
+}
+
+/**
+ * Convenience: Send advanced diagnostic complete event
+ */
+export async function ghlAdvancedDiagnosticComplete({ email, name, messages, analysis }) {
+  return sendToGHL({
+    event: "advanced_diagnostic_complete",
+    email,
+    name,
+    tags: ["Advanced Diagnostic Complete"],
+    diagnosticData: messages,
+    analysis,
+  });
+}
+
+/**
+ * Convenience: Send booking event
+ */
+export async function ghlBookingConfirmed({ email, name }) {
+  return sendToGHL({
+    event: "clarity_call_booked",
+    email,
+    name,
+    tags: ["Clarity Call Booked", "$27 Paid"],
+  });
 }
