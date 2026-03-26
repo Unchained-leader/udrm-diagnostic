@@ -945,10 +945,15 @@
           block.options.forEach(opt => {
             const optDiv = document.createElement("div");
             optDiv.className = "quiz-option" + (block.type === "single" ? " radio" : "");
-            optDiv.innerHTML = `<div class="quiz-check"></div><div class="quiz-option-text">${opt.text}</div>`;
+            const checkDiv = document.createElement("div");
+            checkDiv.className = "quiz-check";
+            const textDiv = document.createElement("div");
+            textDiv.className = "quiz-option-text";
+            textDiv.textContent = opt.text;
+            optDiv.appendChild(checkDiv);
+            optDiv.appendChild(textDiv);
             optDiv.addEventListener("click", () => {
               if (block.type === "single") {
-                // Deselect all others in this block
                 container.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("checked"));
                 allSelections[blockIdx] = new Set([opt.id]);
               } else {
@@ -959,9 +964,21 @@
                 }
               }
               optDiv.classList.toggle("checked");
-              // Enable continue button if at least one selection exists somewhere
-              const hasAny = Object.values(allSelections).some(s => s.size > 0);
-              continueBtn.disabled = !hasAny;
+              // Validate: all single-select blocks need a selection, multi-select needs at least one
+              let valid = true;
+              for (const [idx, sel] of Object.entries(allSelections)) {
+                const b = blocks[parseInt(idx)];
+                if (!b) continue;
+                if (b.type === "single" && sel.size === 0) { valid = false; break; }
+              }
+              if (valid) {
+                const hasMultis = Object.entries(allSelections).some(([idx]) => blocks[parseInt(idx)]?.type === "multi");
+                if (hasMultis) {
+                  const anyMultiFilled = Object.entries(allSelections).some(([idx, sel]) => blocks[parseInt(idx)]?.type === "multi" && sel.size > 0);
+                  if (!anyMultiFilled) valid = false;
+                }
+              }
+              continueBtn.disabled = !valid;
             });
             container.appendChild(optDiv);
           });
