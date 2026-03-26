@@ -93,7 +93,122 @@
     }
     #sign-out-btn:hover { border-color: #444; color: #888; }
 
-    /* ========== MULTIPLE CHOICE BUTTONS ========== */
+    /* ========== QUIZ UI — CHECKBOXES, RADIO, TEXT INPUT ========== */
+    .quiz-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .quiz-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .quiz-option:hover {
+      background: rgba(185, 156, 79, 0.08);
+      border-color: var(--gold);
+    }
+    .quiz-option.checked {
+      background: rgba(185, 156, 79, 0.15);
+      border-color: var(--gold);
+    }
+    .quiz-option.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .quiz-check {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-gold);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      transition: all 0.2s;
+    }
+    .quiz-option.radio .quiz-check {
+      border-radius: 50%;
+    }
+    .quiz-option.checked .quiz-check {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+    .quiz-option.checked .quiz-check::after {
+      content: '✓';
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .quiz-option-text {
+      color: #e0e0e0;
+      font-size: 13.5px;
+      line-height: 1.4;
+    }
+    .quiz-option.checked .quiz-option-text {
+      color: var(--gold-light);
+    }
+    .quiz-continue-btn {
+      margin-top: 10px;
+      padding: 12px 24px;
+      background: var(--gold-gradient);
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    .quiz-continue-btn:hover {
+      background: var(--gold-gradient-hover);
+    }
+    .quiz-continue-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .quiz-text-input {
+      margin-top: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 36px;
+      max-height: 100px;
+    }
+    .quiz-text-input::placeholder { color: #555; }
+    .quiz-text-input:focus {
+      outline: none;
+      border-color: var(--border-gold);
+    }
+    .quiz-section-label {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
+
+    /* Legacy MC buttons (keep for backward compat) */
     .mc-options {
       display: flex;
       flex-direction: column;
@@ -121,9 +236,6 @@
       background: rgba(185, 156, 79, 0.1);
       border-color: var(--gold);
       color: var(--gold-light);
-    }
-    .mc-btn:active {
-      background: rgba(185, 156, 79, 0.2);
     }
     .mc-btn.selected {
       background: rgba(185, 156, 79, 0.15);
@@ -657,7 +769,7 @@
     const RESET_URL = BASE_URL + "/api/reset-pin";
     const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
     const CTA_URL = ""; // Set later for Art of Freedom documentary
-    const WELCOME_MESSAGE = "Welcome, brother.\n\nMost approaches to this battle focus on stopping the behavior. Accountability, willpower, filters, white-knuckling it. You have probably tried some of those. And they probably worked for a while before the cycle came back.\n\nThis diagnostic takes a completely different approach. The type of content your brain gravitates toward is not random. It is a fingerprint. It traces directly back to a wound and a lie you believed about that wound, usually long before you ever found a screen.\n\nBy identifying your pattern, we can trace the root that is actually driving the cycle. Not the behavior. The thing underneath it. That is what makes this different from everything you have tried.\n\n100% private. 100% confidential. No one sees your answers but you.\n\n9 questions. About 2 minutes. Multiple choice. The more honest you are, the more your report will reveal.\n\nReady? Type yes below to get started.";
+    const WELCOME_MESSAGE = "Welcome, brother.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Type yes to start.";
     const SESSION_KEY = "unchained_mkt_session";
     const SAVE_DEBOUNCE_MS = 2000;
 
@@ -726,10 +838,127 @@
         .replace(/\[CTA_PLACEHOLDER\]/g, "")
         .replace(/\[BOOKING_CTA\]/g, "")
         .replace(/\[MC_OPTIONS\][\s\S]*?\[\/MC_OPTIONS\]/g, "")
+        .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
+        .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
+        .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "")
         .trim();
     }
 
-    // ========== MULTIPLE CHOICE RENDERING ==========
+    // ========== QUIZ UI RENDERING ==========
+    function parseQuizBlocks(text) {
+      const blocks = [];
+      // Find all MULTI_SELECT, SINGLE_SELECT, and TEXT_INPUT blocks in order
+      const regex = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        const type = match[1];
+        const content = match[2].trim();
+        if (type === "TEXT_INPUT") {
+          blocks.push({ type: "text_input", placeholder: content });
+        } else {
+          const lines = content.split("\n").filter(l => l.trim());
+          const options = lines.map(line => {
+            const idx = line.indexOf("|");
+            if (idx > 0) {
+              return { id: line.substring(0, idx).trim(), text: line.substring(idx + 1).trim() };
+            }
+            return null;
+          }).filter(Boolean);
+          blocks.push({ type: type === "MULTI_SELECT" ? "multi" : "single", options });
+        }
+      }
+      return blocks.length > 0 ? blocks : null;
+    }
+
+    function renderQuizBlocks(blocks, parentDiv) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "quiz-wrapper";
+      const allSelections = {}; // { blockIndex: Set of selected ids }
+      let textInputValue = "";
+
+      blocks.forEach((block, blockIdx) => {
+        if (block.type === "text_input") {
+          const input = document.createElement("textarea");
+          input.className = "quiz-text-input";
+          input.placeholder = block.placeholder;
+          input.rows = 1;
+          input.addEventListener("input", () => { textInputValue = input.value; });
+          wrapper.appendChild(input);
+        } else {
+          allSelections[blockIdx] = new Set();
+          const container = document.createElement("div");
+          container.className = "quiz-block";
+
+          block.options.forEach(opt => {
+            const optDiv = document.createElement("div");
+            optDiv.className = "quiz-option" + (block.type === "single" ? " radio" : "");
+            optDiv.innerHTML = `<div class="quiz-check"></div><div class="quiz-option-text">${opt.text}</div>`;
+            optDiv.addEventListener("click", () => {
+              if (block.type === "single") {
+                // Deselect all others in this block
+                container.querySelectorAll(".quiz-option").forEach(o => o.classList.remove("checked"));
+                allSelections[blockIdx] = new Set([opt.id]);
+              } else {
+                if (optDiv.classList.contains("checked")) {
+                  allSelections[blockIdx].delete(opt.id);
+                } else {
+                  allSelections[blockIdx].add(opt.id);
+                }
+              }
+              optDiv.classList.toggle("checked");
+              // Enable continue button if at least one selection exists somewhere
+              const hasAny = Object.values(allSelections).some(s => s.size > 0);
+              continueBtn.disabled = !hasAny;
+            });
+            container.appendChild(optDiv);
+          });
+          wrapper.appendChild(container);
+        }
+      });
+
+      // Continue button
+      const continueBtn = document.createElement("button");
+      continueBtn.className = "quiz-continue-btn";
+      continueBtn.textContent = "Continue";
+      continueBtn.disabled = true;
+      continueBtn.addEventListener("click", () => {
+        // Disable all options
+        wrapper.querySelectorAll(".quiz-option").forEach(o => {
+          if (!o.classList.contains("checked")) o.classList.add("disabled");
+          o.style.pointerEvents = "none";
+        });
+        continueBtn.disabled = true;
+        continueBtn.style.display = "none";
+        const textInputs = wrapper.querySelectorAll(".quiz-text-input");
+        textInputs.forEach(t => { t.disabled = true; });
+
+        // Build the user message from selections
+        const selectedIds = [];
+        const selectedTexts = [];
+        Object.keys(allSelections).forEach(idx => {
+          const block = blocks[parseInt(idx)];
+          allSelections[idx].forEach(id => {
+            selectedIds.push(id);
+            const opt = block.options.find(o => o.id === id);
+            if (opt) selectedTexts.push(opt.text);
+          });
+        });
+
+        let userMsg = "Selected: " + selectedIds.join(", ");
+        if (textInputValue.trim()) {
+          userMsg += "\nAdditional: " + textInputValue.trim();
+        }
+
+        addMessage("user", selectedTexts.join(" | ") + (textInputValue.trim() ? " | " + textInputValue.trim() : ""));
+        messages.push({ role: "user", content: userMsg });
+        sendToAI();
+      });
+      wrapper.appendChild(continueBtn);
+      parentDiv.appendChild(wrapper);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Legacy MC support
     function parseMCOptions(text) {
       const match = text.match(/\[MC_OPTIONS\]([\s\S]*?)\[\/MC_OPTIONS\]/);
       if (!match) return null;
@@ -751,15 +980,10 @@
         btn.className = "mc-btn";
         btn.innerHTML = `<span class="mc-label">${opt.label}</span>${opt.text}`;
         btn.addEventListener("click", () => {
-          // Mark selected and disable all
           container.querySelectorAll(".mc-btn").forEach(b => {
-            if (b === btn) {
-              b.classList.add("selected");
-            } else {
-              b.classList.add("disabled");
-            }
+            if (b === btn) b.classList.add("selected");
+            else b.classList.add("disabled");
           });
-          // Send the selection as user message
           const userMsg = `${opt.label}) ${opt.text}`;
           addMessage("user", userMsg);
           messages.push({ role: "user", content: userMsg });
@@ -930,8 +1154,9 @@
             parseProgressFromResponse(fullResponse);
             messages.push({ role: "assistant", content: fullResponse.trim() });
             bubble.textContent = cleanDisplayText(fullResponse);
-            const mcOpts = parseMCOptions(fullResponse);
-            if (mcOpts) renderMCButtons(mcOpts, assistantDiv);
+            const quizBlocks = parseQuizBlocks(fullResponse);
+            if (quizBlocks) { renderQuizBlocks(quizBlocks, assistantDiv); }
+            else { const mcOpts = parseMCOptions(fullResponse); if (mcOpts) renderMCButtons(mcOpts, assistantDiv); }
             saveHistoryToServer();
             if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
             isStreaming = false;

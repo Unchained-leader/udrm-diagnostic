@@ -97,9 +97,9 @@ export async function POST(request) {
     // Store report metadata (including PDF URL)
     await redis.set(`mkt:report:${normalizedEmail}`, {
       generatedAt: new Date().toISOString(),
-      rootNarrativeType: analysis.rootNarrativeType,
-      shameArchitecture: analysis.shameArchitecture,
-      genreSelected: analysis.genreSelected,
+      arousalTemplateType: analysis.arousalTemplateType,
+      attachmentStyle: analysis.attachmentStyle,
+      neuropathway: analysis.neuropathway,
       reportUrl: reportUrl || null,
     });
 
@@ -142,37 +142,77 @@ async function analyzeConversation(messages, userName) {
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 2048,
+    max_tokens: 4096,
     messages: [{
       role: "user",
-      content: `Analyze this Root Genre Diagnostic conversation and extract structured data. The quiz uses multiple-choice questions. Pay close attention to what the man selected for each question.
+      content: `Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections.
 
 CONVERSATION:
 ${conversationText}
 
-GENRE-TO-WOUND MAPPING (use this to generate the whyYouWatch field):
-- Power/BDSM → Felt powerless or unsafe as a child. Brain craves control in fantasy because real life felt dangerously out of control.
-- Taboo/forbidden → Shame was fused with arousal early. The "wrongness" IS the draw. Brain eroticized shame itself.
-- Wife with others/cuckold/voyeur → Deep belief of being unworthy, not enough. Watching someone else have what you feel you cannot provide.
-- Tender/romantic → Emotionally starved. Brain is chasing intimacy and connection, not sex.
-- Same-sex (straight man) → Craving masculine validation/approval that was missing from father or key male figures.
-- Escalation/novelty → Numbing. Brain building tolerance, needing bigger doses to escape the same pain.
+AROUSAL TEMPLATE TYPES (based on Section 2 content theme selections):
+- val_ items → The Invisible Man. Root: "I am not enough / not wanted." Counterfeits: being chosen, seen, desired.
+- pow_ items → The Controller. Root: "I am unsafe / powerless." Counterfeits: mastery, safety, control.
+- sur_ items → The Surrendered. Root: "I must perform to be loved / exhausted from controlling." Counterfeits: relief from responsibility.
+- tab_ items → The Shame Circuit. Root: "Shame is fused with arousal." The transgression IS the neurochemical payload.
+- voy_ items → The Observer. Root: "I am safer watching than participating." Counterfeits: connection without vulnerability.
+- ten_ items → The Orphan Heart. Root: "I was never emotionally safe." Counterfeits: nurture, warmth, being held.
+- nov_ items → The Escalator. Dopamine tolerance. Chasing a hit the brain can no longer produce at baseline.
+- conf_ items → Complex Template. Multiple roots intersecting. Decoded individually.
+
+CONFUSING PATTERNS DECODER:
+- conf_wife_others: Three roots: (1) Masochistic shame eroticization — shame IS the neurochemical payload, (2) Compersive anxiety management — brain masters abandonment fear by making it voluntary, (3) Self-worth narrative — "I am not enough" playing out sexually.
+- conf_race: Race/ethnicity present during imprinting OR brain eroticized cultural "other" as forbidden. Power dynamics mapped onto racial categories from culture.
+- conf_trans: Novelty-driven arousal template needs maximum novelty for dopamine. May also activate taboo circuit. Does NOT define orientation.
+- conf_pain: Pain and arousal share neurochemical pathways. Often traces to childhood physical abuse or corporal punishment near sexual development.
+- conf_humiliation: Root narrative "I am worthless" converting belief into arousal. Brain resolves tension between public identity and private belief about worth.
+
+ATTACHMENT STYLES (based on Section 6):
+- anx_ items → Anxious-Preoccupied
+- avoid_ items → Dismissive-Avoidant
+- fear_ items → Fearful-Avoidant (Disorganized)
+- sec_ items → Secure (but hijacked)
+- Both anxious + avoidant high → Disorganized
 
 Return ONLY valid JSON, no markdown:
 {
-  "rootNarrativeType": "The Invisible Man|The Performer|The Shame Bearer|The Escapist|The Controller|The Orphan",
-  "rootNarrativeStatement": "The core lie in the man's own emotional language (e.g., 'I am not enough', 'I do not matter', 'Something is fundamentally wrong with me')",
-  "genreSelected": "What the man selected for Q1 — the content type his brain gravitates toward",
-  "whyYouWatch": "3-4 sentences explaining WHY his brain craves this specific content. Connect the genre to the wound. This is the centerpiece of the report. Be direct, specific, and make the man feel decoded. Do NOT use clinical language. Write like a perceptive friend who finally sees the connection the man has never seen.",
-  "woundOrigin": "2-3 sentences connecting his childhood home environment (Q5) and age of first exposure (Q4) to the root narrative. How the wound was formed.",
-  "shameArchitecture": "Performance Shame|Identity Shame|Silence Shame",
-  "shameCycle": "2-3 sentences explaining how the shame voice he identified (Q6) actually FUELS the cycle rather than stopping it. Connect the shame to his childhood home. The shame that was supposed to stop the behavior is the same shame that drives it.",
-  "triggerPattern": "1-2 sentences about what triggers him (Q3) and how that trigger connects to the root wound",
-  "isolationLevel": "Based on Q8 — how many people know",
-  "patternDuration": "Based on Q7 — how long and what he has tried",
-  "soulQuestion": "What he selected for Q9 — the real question underneath",
-  "keyInsight": "The single most powerful paragraph for this specific man. 3-4 sentences. Connect ALL the dots: why he watches what he watches, why shame makes it worse not better, why nothing has worked, and why it actually makes perfect sense once you see the wound. This should feel like someone turned the lights on. Write it directly to him.",
-  "whatsBelowSurface": "1-2 sentences previewing what the Advanced Diagnostic and Clarity Call reveals — the strategy autopsy, custom plan, and the full WHY behind every failed approach"
+  "arousalTemplateType": "The Invisible Man|The Controller|The Surrendered|The Shame Circuit|The Observer|The Orphan Heart|The Escalator|Complex Template",
+  "arousalTemplateSecondary": "secondary type if applicable, or null",
+  "rootNarrativeStatement": "The core lie (e.g. 'I am not enough', 'I am unsafe')",
+  "whatBrainCounterfeits": "What the brain is trying to get through the behavior (1 sentence)",
+
+  "behaviorRootMap": [{"behavior": "behavior name", "root": "decoded root explanation (2-3 sentences)"}],
+
+  "confusingPatternsDecoded": [{"pattern": "pattern name", "explanation": "full clinical decoder (3-5 sentences, zero shame, clinical clarity)"}],
+
+  "neuropathway": "Arousal|Numbing|Fantasy|Deprivation",
+  "neuropathwayManages": "Pain|Anxiety|Shame|Terror",
+  "neuropathwayExplanation": "2-3 sentences: what the behavior is doing for the nervous system",
+
+  "imprintingAge": "age range of first exposure",
+  "imprintingContext": "how exposure happened",
+  "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting, connecting childhood environment to current pattern",
+
+  "attachmentStyle": "Anxious-Preoccupied|Dismissive-Avoidant|Fearful-Avoidant|Secure|Disorganized",
+  "attachmentFuels": "2-3 sentences: how this attachment style specifically fuels the sexual behavior cycle",
+
+  "godAttachment": "2-3 sentences: how the man relates to God based on god_ selections, connecting to his human attachment style",
+  "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null",
+
+  "codependencyScore": "0-3 based on cod_ items",
+  "enmeshmentScore": "0-3 based on enm_ items",
+  "relationalVoidScore": "0-3 based on void_ items",
+  "leadershipBurdenScore": "0-3 based on lead_ items",
+  "codependencyExplanation": "1-2 sentences connecting to sexual behavior, or null if score is 0",
+  "enmeshmentExplanation": "1-2 sentences, or null",
+  "relationalVoidExplanation": "1-2 sentences, or null",
+  "leadershipBurdenExplanation": "1-2 sentences, or null",
+
+  "escalationPresent": true or false,
+  "isolationLevel": "description based on relational void selections",
+
+  "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood environment encoding the template. This should feel like someone finally turned all the lights on at once. Write directly to him.",
+  "closingStatement": "2-3 sentences: 'You are not broken. You are not perverted.' frame. Every behavior has a root, every root has an origin, every origin can be traced and restructured. But not alone."
 }`
     }],
   });
@@ -186,19 +226,34 @@ Return ONLY valid JSON, no markdown:
     if (match) return JSON.parse(match[0]);
     // Fallback
     return {
-      rootNarrativeType: "Unknown",
-      rootNarrativeStatement: "Unable to determine",
-      genreSelected: "Unknown",
-      whyYouWatch: "Your pattern is not random. The content your brain gravitates toward traces directly to a wound and a belief formed long before you ever found a screen.",
-      woundOrigin: "Further diagnostic data needed to trace the origin.",
-      shameArchitecture: "Unknown",
-      shameCycle: "The shame you feel after acting out is not stopping the cycle. It is fueling it.",
-      triggerPattern: "Further data needed.",
+      arousalTemplateType: "Unknown",
+      arousalTemplateSecondary: null,
+      rootNarrativeStatement: "Unable to determine from available data",
+      whatBrainCounterfeits: "Something your soul actually needs",
+      behaviorRootMap: [],
+      confusingPatternsDecoded: [],
+      neuropathway: "Unknown",
+      neuropathwayManages: "Unknown",
+      neuropathwayExplanation: "Further data needed.",
+      imprintingAge: "unknown",
+      imprintingContext: "unknown",
+      imprintingFusion: "Further data needed to trace the imprinting.",
+      attachmentStyle: "Unknown",
+      attachmentFuels: "Further data needed.",
+      godAttachment: null,
+      purityCultureImpact: null,
+      codependencyScore: "0",
+      enmeshmentScore: "0",
+      relationalVoidScore: "0",
+      leadershipBurdenScore: "0",
+      codependencyExplanation: null,
+      enmeshmentExplanation: null,
+      relationalVoidExplanation: null,
+      leadershipBurdenExplanation: null,
+      escalationPresent: false,
       isolationLevel: "Unknown",
-      patternDuration: "Unknown",
-      soulQuestion: "Unknown",
-      keyInsight: "Your pattern is not random. It is connected to something deeper. The content your brain craves is counterfeiting something your soul actually needs.",
-      whatsBelowSurface: "The Advanced Diagnostic reveals the WHY behind every failed strategy and builds a custom plan for your specific root.",
+      keyInsight: "Your pattern is not random. Every behavior traces to a root. Every root has an origin.",
+      closingStatement: "You are not broken. You are not perverted. Every behavior has a root, every root has an origin, and every origin can be traced, exposed, and restructured.",
     };
   }
 }
@@ -221,226 +276,304 @@ async function generatePDF(analysis, firstName) {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const W = 612;
-    const H = 792;
-    const M = 50;
-    const CW = W - M * 2;
-    const PAGE_BOTTOM = H - 50; // safe content bottom
+    const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - 50;
 
-    // Helper: add dark page with gold accent
     function newPage() {
       doc.addPage();
       doc.rect(0, 0, W, H).fill(DK_BG);
       doc.rect(0, 0, W, 3).fill(GOLD);
     }
-
-    // Helper: truncate text to fit a box width
-    function fitText(text, maxChars) {
+    function fit(text, max) {
       if (!text) return "";
-      if (text.length <= maxChars) return text;
-      return text.substring(0, maxChars - 3) + "...";
+      return text.length <= max ? text : text.substring(0, max - 3) + "...";
+    }
+    function sectionHeader(title) {
+      doc.fontSize(8).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
+      y += 14;
+      doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
+      y += 12;
+    }
+    function checkFit(needed) {
+      if (y + needed > PB) { newPage(); y = 40; }
+    }
+    function writeCard(label, title, body) {
+      const bodyH = doc.fontSize(8).font("Helvetica").heightOfString(body || "", { width: CW - 28, lineGap: 2 });
+      const cardH = Math.max(55, 40 + bodyH + 8);
+      checkFit(cardH + 10);
+      doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
+      doc.fontSize(7).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + 8, { characterSpacing: 1 });
+      doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold").text(title || "—", M + 14, y + 22);
+      if (body) doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + 38, { width: CW - 28, lineGap: 2 });
+      y += cardH + 10;
+    }
+    function writeGauge(label, score, maxScore) {
+      const pct = Math.min(1, parseInt(score || 0) / maxScore);
+      checkFit(30);
+      doc.fontSize(8).fillColor(WHITE).font("Helvetica").text(label, M, y);
+      y += 12;
+      doc.roundedRect(M, y, CW, 8, 4).fill([40, 40, 40]);
+      if (pct > 0) doc.roundedRect(M, y, CW * pct, 8, 4).fill(GOLD);
+      doc.fontSize(7).fillColor(GRAY).font("Helvetica").text(`${score || 0} / ${maxScore}`, M + CW + 6, y - 1);
+      y += 16;
     }
 
-    // ══════════════════════════════════
-    // PAGE 1 — COVER + GENRE REVEAL
-    // ══════════════════════════════════
+    let y = 0;
+
+    // ════════════════════════════════════════
+    // COVER PAGE
+    // ════════════════════════════════════════
     newPage();
-
-    let y = 50;
+    y = 120;
     doc.fontSize(10).fillColor(GOLD).font("Helvetica").text("UNCHAINED LEADER", M, y, { width: CW, align: "center", characterSpacing: 3 });
+    y += 30;
+    doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text("UNWANTED DESIRE", M, y, { width: CW, align: "center" });
     y += 26;
-    doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text("ROOT GENRE DIAGNOSTIC", M, y, { width: CW, align: "center" });
-    y += 32;
+    doc.text("ROOT MAPPING", M, y, { width: CW, align: "center" });
+    y += 36;
     doc.rect(W / 2 - 30, y, 60, 2).fill(GOLD);
-    y += 14;
-    doc.fontSize(12).fillColor(GRAY).font("Helvetica").text(`Prepared for ${firstName}`, M, y, { width: CW, align: "center" });
     y += 18;
+    doc.fontSize(12).fillColor(GRAY).font("Helvetica").text(`Personalized for ${firstName}`, M, y, { width: CW, align: "center" });
+    y += 22;
     doc.fontSize(9).text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), M, y, { width: CW, align: "center" });
-    y += 12;
+    y += 16;
     doc.fontSize(7).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 2 });
-    y += 28;
 
-    // ── WHY YOUR BRAIN CRAVES THIS ──
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("WHY YOUR BRAIN CRAVES THIS", M, y, { characterSpacing: 2 });
-    y += 14;
-    doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
-    y += 10;
+    // ════════════════════════════════════════
+    // SECTION 1 — AROUSAL TEMPLATE TYPE
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 1 — YOUR AROUSAL TEMPLATE TYPE");
 
-    doc.fontSize(9.5).fillColor(WHITE).font("Helvetica").text(
-      analysis.whyYouWatch || "Your pattern is not random.",
-      M, y, { width: CW, lineGap: 4 }
-    );
-    y = doc.y + 14;
+    writeCard("PRIMARY TYPE", analysis.arousalTemplateType || "Unknown", `Root narrative: "${analysis.rootNarrativeStatement || ""}"\n\nWhat your brain is counterfeiting: ${analysis.whatBrainCounterfeits || ""}`);
 
-    // ── Root Narrative Type Card ──
-    const rntCardY = y;
-    doc.roundedRect(M, rntCardY, CW, 58, 6).fill(CARD_BG);
-    doc.roundedRect(M, rntCardY, CW, 58, 6).strokeColor(BORDER).lineWidth(1).stroke();
-    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("YOUR ROOT NARRATIVE TYPE", M + 16, rntCardY + 10, { characterSpacing: 1.5 });
-    doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold").text(analysis.rootNarrativeType || "Unknown", M + 16, rntCardY + 24);
-    doc.fontSize(8.5).fillColor(GRAY).font("Helvetica-Oblique").text(`"${fitText(analysis.rootNarrativeStatement, 80)}"`, M + 16, rntCardY + 42, { width: CW - 32 });
-    y = rntCardY + 68;
+    if (analysis.arousalTemplateSecondary) {
+      writeCard("SECONDARY TYPE", analysis.arousalTemplateSecondary, "Multiple patterns are present in your template.");
+    }
 
-    // ── Where This Started ──
-    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text("Where This Started", M, y);
-    y += 14;
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(
-      analysis.woundOrigin || "",
+    // ════════════════════════════════════════
+    // SECTION 2 — BEHAVIOR-ROOT MAP
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 2 — THE BEHAVIOR-ROOT MAP");
+
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica-Oblique").text(
+      "Every behavior in your cycle traces to a specific root. Here is what your brain is actually trying to accomplish through each one.",
       M, y, { width: CW, lineGap: 3 }
     );
     y = doc.y + 14;
 
-    // ── Shame Cycle ── (dynamic height)
-    const shameCycleText = analysis.shameCycle || "";
-    const shameBoxTop = y;
-    // Measure text height first
-    const shameMeasure = doc.fontSize(8).font("Helvetica").heightOfString(shameCycleText, { width: CW - 28, lineGap: 2 });
-    const shameBoxH = Math.max(60, 42 + shameMeasure + 8);
-
-    if (shameBoxTop + shameBoxH > PAGE_BOTTOM - 20) {
-      // Won't fit — go to next page
-      newPage();
-      y = 40;
+    const brm = analysis.behaviorRootMap || [];
+    for (const item of brm) {
+      const rootH = doc.fontSize(8).font("Helvetica").heightOfString(item.root || "", { width: CW - 28, lineGap: 2 });
+      const rowH = Math.max(40, 24 + rootH + 8);
+      checkFit(rowH + 8);
+      doc.roundedRect(M, y, CW, rowH, 5).fill(CARD_BG);
+      doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text(item.behavior || "", M + 14, y + 8, { width: CW - 28 });
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(item.root || "", M + 14, y + 22, { width: CW - 28, lineGap: 2 });
+      y += rowH + 6;
     }
 
-    doc.roundedRect(M, y, CW, shameBoxH, 6).fill(CARD_BG);
-    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE SHAME CYCLE", M + 14, y + 8, { characterSpacing: 1 });
-    doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold").text(analysis.shameArchitecture || "Unknown", M + 14, y + 22);
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(shameCycleText, M + 14, y + 38, { width: CW - 28, lineGap: 2 });
-    y += shameBoxH + 10;
+    // ════════════════════════════════════════
+    // SECTION 3 — CONFUSING PATTERNS DECODED (conditional)
+    // ════════════════════════════════════════
+    const cpd = analysis.confusingPatternsDecoded || [];
+    if (cpd.length > 0) {
+      newPage(); y = 40;
+      sectionHeader("SECTION 3 — CONFUSING PATTERNS DECODED");
 
-    // ══════════════════════════════════
-    // PAGE 2 — KEY INSIGHT + CTA
-    // ══════════════════════════════════
-    newPage();
-    y = 40;
+      doc.fontSize(9).fillColor(GRAY).font("Helvetica-Oblique").text(
+        "These are the patterns you have likely never told anyone about. Each one has a clinical explanation that has nothing to do with your character and everything to do with how your brain was wired.",
+        M, y, { width: CW, lineGap: 3 }
+      );
+      y = doc.y + 14;
 
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE FULL PICTURE", M, y, { characterSpacing: 2 });
-    y += 16;
-    doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
-    y += 10;
-
-    doc.fontSize(9.5).fillColor(WHITE).font("Helvetica").text(
-      analysis.keyInsight || "Your pattern is not random.",
-      M, y, { width: CW, lineGap: 4 }
-    );
-    y = doc.y + 16;
-
-    // ── Why Nothing Has Worked (dynamic height) ──
-    const durationText = analysis.patternDuration || "Years of fighting this";
-    const whyText = `${durationText}. Every approach targeted the behavior. Not one reached the root narrative that says "${fitText(analysis.rootNarrativeStatement, 60)}." That is not a willpower failure. That is a targeting problem.`;
-    const whyMeasure = doc.fontSize(9).font("Helvetica").heightOfString(whyText, { width: CW - 40, lineGap: 3 });
-    const whyBoxH = Math.max(50, 28 + whyMeasure + 8);
-
-    doc.roundedRect(M, y, CW, whyBoxH, 6).fill(CARD_BG);
-    doc.roundedRect(M, y, CW, whyBoxH, 6).strokeColor(BORDER).lineWidth(1).stroke();
-    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("WHY NOTHING HAS WORKED", M + 16, y + 10, { characterSpacing: 1 });
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(whyText, M + 16, y + 26, { width: CW - 32, lineGap: 3 });
-    y += whyBoxH + 16;
-
-    // ── Flow Diagram ──
-    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text("What You Are Actually Dealing With", M, y);
-    y += 14;
-
-    const flowY = y;
-    const nodeW = 140;
-    const nodeH = 40;
-    const gap = 20;
-    const startX = M + (CW - (nodeW * 3 + gap * 2)) / 2;
-
-    // Node 1: Wound
-    doc.roundedRect(startX, flowY, nodeW, nodeH, 5).fill(CARD_BG);
-    doc.roundedRect(startX, flowY, nodeW, nodeH, 5).strokeColor(GOLD).lineWidth(1).stroke();
-    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE WOUND", startX + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
-    doc.fontSize(7).fillColor(GRAY).font("Helvetica").text("Childhood", startX + 8, flowY + 22, { width: nodeW - 16, align: "center" });
-
-    // Arrow 1
-    const a1x = startX + nodeW;
-    doc.strokeColor(GOLD).lineWidth(1).moveTo(a1x + 3, flowY + nodeH / 2).lineTo(a1x + gap - 3, flowY + nodeH / 2).stroke();
-    doc.fillColor(GOLD).moveTo(a1x + gap - 3, flowY + nodeH / 2 - 3).lineTo(a1x + gap + 1, flowY + nodeH / 2).lineTo(a1x + gap - 3, flowY + nodeH / 2 + 3).fill();
-
-    // Node 2: The Lie
-    const n2x = startX + nodeW + gap;
-    doc.roundedRect(n2x, flowY, nodeW, nodeH, 5).fill(CARD_BG);
-    doc.roundedRect(n2x, flowY, nodeW, nodeH, 5).strokeColor(GOLD).lineWidth(1).stroke();
-    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE LIE", n2x + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
-    doc.fontSize(6).fillColor(GRAY).font("Helvetica-Oblique").text(
-      `"${fitText(analysis.rootNarrativeStatement, 50)}"`,
-      n2x + 6, flowY + 22, { width: nodeW - 12, align: "center" }
-    );
-
-    // Arrow 2
-    const a2x = n2x + nodeW;
-    doc.strokeColor(GOLD).lineWidth(1).moveTo(a2x + 3, flowY + nodeH / 2).lineTo(a2x + gap - 3, flowY + nodeH / 2).stroke();
-    doc.fillColor(GOLD).moveTo(a2x + gap - 3, flowY + nodeH / 2 - 3).lineTo(a2x + gap + 1, flowY + nodeH / 2).lineTo(a2x + gap - 3, flowY + nodeH / 2 + 3).fill();
-
-    // Node 3: The Behavior
-    const n3x = n2x + nodeW + gap;
-    doc.roundedRect(n3x, flowY, nodeW, nodeH, 5).fill(CARD_BG);
-    doc.roundedRect(n3x, flowY, nodeW, nodeH, 5).strokeColor(BORDER).lineWidth(1).stroke();
-    doc.fontSize(7).fillColor([100, 100, 100]).font("Helvetica").text("THE BEHAVIOR", n3x + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
-    doc.fontSize(7).fillColor([70, 70, 70]).font("Helvetica-Oblique").text("(the symptom)", n3x + 8, flowY + 22, { width: nodeW - 16, align: "center" });
-
-    y = flowY + nodeH + 8;
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica-Oblique").text(
-      "Every strategy you have tried attacked the right side. The root is on the left.",
-      M, y, { width: CW, align: "center" }
-    );
-    y = doc.y + 16;
-
-    // ── Divider ──
-    doc.rect(M, y, CW, 1).fill(BORDER);
-    y += 14;
-
-    // ── What You Now Know / What's Hidden ──
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("WHAT YOUR DIAGNOSTIC REVEALED", M, y, { characterSpacing: 1 });
-    y += 14;
-
-    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("What you now know:", M, y);
-    y += 12;
-    const knowItems = [
-      "Why your brain craves the specific content it craves",
-      `Your Root Narrative Type (${analysis.rootNarrativeType}) and the wound underneath`,
-      "The shame cycle that fuels the behavior instead of stopping it",
-      "Why everything you have tried has missed the actual target",
-    ];
-    for (const item of knowItems) {
-      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 8, y, { width: CW - 16 });
-      y = doc.y + 4;
+      for (const cp of cpd) {
+        const expH = doc.fontSize(8).font("Helvetica").heightOfString(cp.explanation || "", { width: CW - 28, lineGap: 3 });
+        const boxH = Math.max(50, 24 + expH + 8);
+        checkFit(boxH + 8);
+        doc.roundedRect(M, y, CW, boxH, 5).fill(CARD_BG);
+        doc.roundedRect(M, y, CW, boxH, 5).strokeColor(GOLD).lineWidth(0.5).stroke();
+        doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold").text(cp.pattern || "", M + 14, y + 8, { width: CW - 28 });
+        doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(cp.explanation || "", M + 14, y + 22, { width: CW - 28, lineGap: 3 });
+        y += boxH + 8;
+      }
     }
 
-    y += 6;
-    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("What is still hidden:", M, y);
-    y += 12;
-    const hiddenItems = [
-      "Your Strategy Autopsy — why each approach failed against your pattern",
-      "Your Trigger Map — the chain that fires before you are aware of the urge",
-      "Your custom plan — built from your specific data",
-    ];
-    for (const item of hiddenItems) {
-      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 8, y, { width: CW - 16 });
-      y = doc.y + 4;
-    }
+    // ════════════════════════════════════════
+    // SECTION 4 — ADDICTION NEUROPATHWAY
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 4 — YOUR ADDICTION NEUROPATHWAY");
 
-    y += 6;
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica-Oblique").text(
-      analysis.whatsBelowSurface || "",
-      M, y, { width: CW, lineGap: 2 }
+    writeCard("NEUROPATHWAY", analysis.neuropathway || "Unknown", analysis.neuropathwayExplanation || "");
+
+    doc.fontSize(9).fillColor(WHITE).font("Helvetica").text(
+      `Your brain is not using this behavior for pleasure. It is using it to manage ${(analysis.neuropathwayManages || "pain").toLowerCase()}.`,
+      M, y, { width: CW, lineGap: 3 }
     );
     y = doc.y + 14;
 
-    // ── CTA Box ──
-    doc.roundedRect(M, y, CW, 40, 6).fill(CARD_BG);
-    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("Ready to see the full picture?", M + 16, y + 10, { width: CW - 32 });
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to continue your Advanced Diagnostic.", M + 16, y + 24, { width: CW - 32 });
-    y += 52;
+    // ════════════════════════════════════════
+    // SECTION 5 — AROUSAL TEMPLATE ORIGIN
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 5 — YOUR AROUSAL TEMPLATE ORIGIN");
 
-    // #liveunchained
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
+    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text(`First Exposure: Age ${analysis.imprintingAge || "unknown"}`, M, y);
+    y += 14;
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
+    y = doc.y + 14;
 
-    // ══════════════════════════════════
-    // FOOTERS — written last via switchToPage to avoid creating extra pages
-    // ══════════════════════════════════
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(
+      analysis.imprintingFusion || "",
+      M, y, { width: CW, lineGap: 4 }
+    );
+    y = doc.y + 14;
+
+    // ════════════════════════════════════════
+    // SECTION 6 — ATTACHMENT STYLE
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 6 — YOUR ATTACHMENT STYLE");
+
+    writeCard("ATTACHMENT STYLE", analysis.attachmentStyle || "Unknown", analysis.attachmentFuels || "");
+
+    if (analysis.godAttachment) {
+      checkFit(80);
+      doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("HOW THIS SHOWS UP WITH GOD", M, y, { characterSpacing: 1 });
+      y += 14;
+      doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 3 });
+      y = doc.y + 14;
+    }
+
+    if (analysis.purityCultureImpact) {
+      checkFit(80);
+      doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("PURITY CULTURE IMPACT", M, y, { characterSpacing: 1 });
+      y += 14;
+      doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 3 });
+      y = doc.y + 14;
+    }
+
+    // ════════════════════════════════════════
+    // SECTION 7 — RELATIONAL PATTERNS
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("SECTION 7 — RELATIONAL PATTERNS");
+
+    writeGauge("Codependency", analysis.codependencyScore, 3);
+    if (analysis.codependencyExplanation) {
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.codependencyExplanation, M, y, { width: CW, lineGap: 2 });
+      y = doc.y + 10;
+    }
+    writeGauge("Enmeshment", analysis.enmeshmentScore, 3);
+    if (analysis.enmeshmentExplanation) {
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.enmeshmentExplanation, M, y, { width: CW, lineGap: 2 });
+      y = doc.y + 10;
+    }
+    writeGauge("Relational Void", analysis.relationalVoidScore, 3);
+    if (analysis.relationalVoidExplanation) {
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.relationalVoidExplanation, M, y, { width: CW, lineGap: 2 });
+      y = doc.y + 10;
+    }
+    writeGauge("Leadership Burden", analysis.leadershipBurdenScore, 3);
+    if (analysis.leadershipBurdenExplanation) {
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.leadershipBurdenExplanation, M, y, { width: CW, lineGap: 2 });
+      y = doc.y + 10;
+    }
+
+    // ════════════════════════════════════════
+    // SECTION 8 — THE FULL PATTERN MAP (visual diagram)
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("YOUR FULL PATTERN MAP");
+
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica-Oblique").text(
+      "This diagram connects everything. Each level is populated with your actual data.",
+      M, y, { width: CW }
+    );
+    y = doc.y + 16;
+
+    // Vertical flow diagram
+    const nodeW2 = CW - 60;
+    const nodeH2 = 36;
+    const nodeX = M + 30;
+    const gapV = 8;
+    const arrowH = 16;
+
+    function drawFlowNode(label, value, highlight) {
+      const col = highlight ? GOLD : BORDER;
+      doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).fill(CARD_BG);
+      doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
+      doc.fontSize(7).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 6, { characterSpacing: 1 });
+      doc.fontSize(8).fillColor(WHITE).font("Helvetica").text(fit(value, 80), nodeX + 12, y + 18, { width: nodeW2 - 24 });
+      y += nodeH2;
+    }
+    function drawArrow() {
+      const cx = nodeX + nodeW2 / 2;
+      doc.strokeColor(GOLD).lineWidth(1).moveTo(cx, y + 2).lineTo(cx, y + arrowH - 4).stroke();
+      doc.fillColor(GOLD).moveTo(cx - 3, y + arrowH - 4).lineTo(cx, y + arrowH).lineTo(cx + 3, y + arrowH - 4).fill();
+      y += arrowH;
+    }
+
+    drawFlowNode("CHILDHOOD ENVIRONMENT + FAITH ENVIRONMENT",
+      [analysis.imprintingContext, analysis.purityCultureImpact ? "Purity culture present" : ""].filter(Boolean).join(" | ") || "Your upbringing", true);
+    drawArrow();
+    drawFlowNode("ROOT NARRATIVE FORMED", `"${fit(analysis.rootNarrativeStatement, 70)}"`, true);
+    drawArrow();
+    drawFlowNode("FIRST EXPOSURE", `Age ${analysis.imprintingAge || "?"} — ${fit(analysis.imprintingContext, 60)}`, true);
+    drawArrow();
+    drawFlowNode("AROUSAL TEMPLATE ENCODED", analysis.arousalTemplateType || "Unknown", true);
+    drawArrow();
+    drawFlowNode("ATTACHMENT STYLE SHAPES RELATIONAL + SPIRITUAL PATTERN", analysis.attachmentStyle || "Unknown", false);
+    drawArrow();
+    drawFlowNode("NEUROPATHWAY DETERMINES FUNCTION", `${analysis.neuropathway || "Unknown"} — manages ${(analysis.neuropathwayManages || "pain").toLowerCase()}`, false);
+    drawArrow();
+    drawFlowNode("SPECIFIC BEHAVIORS EMERGE", (analysis.behaviorRootMap || []).map(b => b.behavior).join(", ") || "Your pattern", false);
+    drawArrow();
+    drawFlowNode("CURRENT CYCLE", analysis.escalationPresent ? "Escalating" : "Active", false);
+
+    // ════════════════════════════════════════
+    // SECTION 9 — THE KEY INSIGHT
+    // ════════════════════════════════════════
+    newPage(); y = 40;
+    sectionHeader("THE FULL PICTURE");
+
+    doc.fontSize(10).fillColor(WHITE).font("Helvetica").text(
+      analysis.keyInsight || "Your pattern is not random.",
+      M, y, { width: CW, lineGap: 5 }
+    );
+    y = doc.y + 20;
+
+    // ════════════════════════════════════════
+    // SECTION 9 — WHAT THIS MEANS
+    // ════════════════════════════════════════
+    checkFit(200);
+    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
+    y += 16;
+
+    doc.fontSize(10).fillColor(WHITE).font("Helvetica").text(
+      analysis.closingStatement || "You are not broken. Every behavior has a root, every root has an origin, and every origin can be traced and restructured.",
+      M, y, { width: CW, lineGap: 5 }
+    );
+    y = doc.y + 20;
+
+    // ════════════════════════════════════════
+    // SECTION 10 — NEXT STEP
+    // ════════════════════════════════════════
+    checkFit(100);
+    doc.rect(M, y, CW, 1).fill(BORDER);
+    y += 14;
+
+    doc.roundedRect(M, y, CW, 50, 6).fill(CARD_BG);
+    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text("Ready to go deeper?", M + 16, y + 12, { width: CW - 32 });
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 26, { width: CW - 32 });
+    y += 62;
+
+    doc.fontSize(10).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
+
+    // ════════════════════════════════════════
+    // FOOTERS — via switchToPage
+    // ════════════════════════════════════════
     const totalPages = doc.bufferedPageRange().count;
     for (let i = 0; i < totalPages; i++) {
       doc.switchToPage(i);
@@ -473,18 +606,18 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
     body: JSON.stringify({
       from: fromEmail,
       to: email,
-      subject: `${firstName}, Your Root Genre Diagnostic`,
+      subject: `${firstName}, Your Unwanted Desire Root Mapping`,
       html: `
         <div style="background:#111;padding:40px 20px;font-family:Helvetica,Arial,sans-serif;color:#ccc;max-width:600px;margin:0 auto;">
           <div style="text-align:center;margin-bottom:30px;">
             <div style="color:#c5a55a;font-size:12px;letter-spacing:3px;margin-bottom:6px;">UNCHAINED LEADER</div>
-            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Diagnostic Report</div>
+            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Mapping Report</div>
           </div>
           <p style="font-size:15px;line-height:1.7;color:#ccc;">
             ${firstName}, your Root Genre Diagnostic report is attached.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
-            This report reveals why your brain craves the specific content it craves, the wound underneath your pattern, and the shame cycle that has been fueling the behavior instead of stopping it. It is designed to show you what is actually driving the cycle, not just the symptom.
+            This report maps every behavior in your pattern to its psychological root, decodes your attachment style, reveals your relational patterns, and connects it all to your childhood environment and first exposure. It shows you what is actually driving the cycle, not just the symptom.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
             What you see in this report is about 20% of your full diagnostic. To see the complete picture and get a custom plan, log back in with your email and PIN.
@@ -503,7 +636,7 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
       `,
       attachments: [
         {
-          filename: `Root-Genre-Diagnostic-${firstName}.pdf`,
+          filename: `UDRM-Report-${firstName}.pdf`,
           content: pdfBase64,
           type: "application/pdf",
         },
