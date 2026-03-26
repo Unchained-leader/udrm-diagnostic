@@ -507,7 +507,7 @@ function buildSystemPrompt(knowledgeBase, userContext = {}) {
     : "The user has not shared their name yet.";
 
   const diagnosticState = userContext.diagnosticComplete
-    ? `\nThis user has ALREADY completed the diagnostic. Greet them by name, remind them of key findings, and guide them toward the Clarity Call. Do not re-ask the quiz.\n`
+    ? `\nThis user has ALREADY completed the diagnostic. Greet them by name, remind them their full report was sent to their email, and encourage them to read it if they have not yet. Do not re-ask the quiz.\n`
     : "";
 
   return `${LAYER_1_IDENTITY}

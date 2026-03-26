@@ -963,19 +963,57 @@ async function generatePDF(analysis, firstName) {
     y = doc.y + 20;
 
     // ════════════════════════════════════════
-    // SECTION 10 — NEXT STEP
+    // SECTION 10 — NEXT STEPS & RESOURCES
     // ════════════════════════════════════════
-    checkFit(100);
-    doc.rect(M, y, CW, 1).fill(BORDER);
-    y += 14;
+    newPage(); y = CONTENT_TOP;
+    sectionHeader("BASED ON YOUR RESULTS, HERE ARE YOUR PRIORITIZED NEXT STEPS");
 
-    const ctaBodyH = doc.fontSize(18).font("Helvetica").heightOfString("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", { width: CW - 32 });
-    const ctaBoxH = 14 + 22 + 12 + ctaBodyH + 14;
-    doc.roundedRect(M, y, CW, ctaBoxH, 6).fill(CARD_BG);
-    doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text("Ready to go deeper?", M + 16, y + 14, { width: CW - 32 });
-    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 14 + 22 + 12, { width: CW - 32 });
-    y += ctaBoxH + 20;
+    // Helper to draw a resource card
+    function drawResourceCard(priority, label, price, title, body, link) {
+      const bodyH = doc.fontSize(16).font("Helvetica").heightOfString(body, { width: CW - 32, lineGap: 3 });
+      const cardH = 18 + 22 + 8 + bodyH + 14 + 20 + 14;
+      checkFit(cardH + 20);
 
+      doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
+      doc.roundedRect(M, y, CW, cardH, 6).strokeColor(priority === 1 ? GOLD : BORDER).lineWidth(priority === 1 ? 1.5 : 0.5).stroke();
+
+      // Priority label + price
+      const priceColor = price === "FREE" ? [80, 180, 80] : GOLD;
+      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(`PRIORITY ${priority}`, M + 16, y + 12, { characterSpacing: 1 });
+      doc.fontSize(12).fillColor(priceColor).font("Helvetica-Bold").text(price, M + CW - 80, y + 12, { width: 64, align: "right" });
+
+      // Title
+      doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(title, M + 16, y + 30, { width: CW - 32 });
+      const titleBottom = doc.y + 6;
+
+      // Body
+      _currentTextColor = GRAY; doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(body, M + 16, titleBottom, { width: CW - 32, lineGap: 3 });
+      const bodyBottom = doc.y + 10;
+
+      // Link line
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(link, M + 16, bodyBottom, { width: CW - 32, link: link });
+
+      y = bodyBottom + 20 + 14;
+    }
+
+    // Priority 1 — FREE
+    const p1Body = `Your diagnostic revealed ${sanitize(analysis.arousalTemplateType || "your primary pattern")} as your primary pattern with ${sanitize(analysis.neuropathway || "a specific neuropathway")} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`;
+    drawResourceCard(1, "PRIORITY 1", "FREE", "Watch the Art of Freedom Training", p1Body, "https://unchained-leader.com/aof");
+
+    // Priority 2 — $27
+    const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the clinical reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
+    drawResourceCard(2, "PRIORITY 2", "$27", "Book a 30-Minute Clarity Call", p2Body, "https://unchained-leader.com/clarity-call");
+
+    // Priority 3 — FREE
+    const p3Body = "A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you.";
+    drawResourceCard(3, "PRIORITY 3", "FREE", "7-Day Devotional: 7 Lies of the Divided Leader", p3Body, "https://unchained-leader.com/7-lies");
+
+    // Priority 4 — $27
+    const p4Body = "The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and clinical research.";
+    drawResourceCard(4, "PRIORITY 4", "$27", "The Unchained Leader Black Book", p4Body, "https://unchained-leader.com/black-book");
+
+    // Closing
+    checkFit(40);
     doc.fontSize(22).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
 
     doc.end();
@@ -1011,13 +1049,13 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
             <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Mapping Report</div>
           </div>
           <p style="font-size:15px;line-height:1.7;color:#ccc;">
-            ${firstName}, your Root Genre Diagnostic report is attached.
+            ${firstName}, your Unwanted Desire Root Map is attached.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
             This report maps every behavior in your pattern to its psychological root, decodes your attachment style, reveals your relational patterns, and connects it all to your childhood environment and first exposure. It shows you what is actually driving the cycle, not just the symptom.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
-            What you see in this report is about 20% of your full diagnostic. To see the complete picture and get a custom plan, log back in with your email and PIN.
+            Read this as soon as possible. It connects dots you have never seen before. Your next steps and resources are on the final page.
           </p>
           <div style="text-align:center;margin:30px 0;">
             ${reportUrl
