@@ -122,55 +122,26 @@ stayed_same|The behavior has stayed roughly the same
 
 Brief validation, then:
 
-"This section may feel uncomfortable. That is normal. Your selections here are the most diagnostic part of the entire assessment. Every pattern has a root. Select anything that resonates with your pattern, even if you have only experienced it occasionally."
+"This section may feel uncomfortable. That is normal. Your selections here are the most diagnostic part of the entire assessment. Every pattern has a root. Select anything that resonates, even occasionally."
 
-**Present ALL categories with category headers visible to the user:**
+CRITICAL: Present ALL options in ONE single [MULTI_SELECT] block. Do NOT add category headers, bold labels, or any text between options. Just the flat list of checkboxes.
 
-**Validation/Being Desired:**
 [MULTI_SELECT]
 val_desired|Scenarios where you are desired, wanted, or pursued
 val_amateur|Drawn to "amateur" or "real" content that feels personal
-[/MULTI_SELECT]
-
-**Power/Control:**
-[MULTI_SELECT]
 pow_dominance|Scenarios involving dominance, control, or aggression
 pow_degradation|Content involving degradation of others
-[/MULTI_SELECT]
-
-**Surrender/Submission:**
-[MULTI_SELECT]
 sur_someone_control|Scenarios where someone else is in control
 sur_dominated|Drawn to being dominated, humiliated, or objectified
-[/MULTI_SELECT]
-
-**Taboo/Forbidden:**
-[MULTI_SELECT]
 tab_wrong|Drawn to content specifically because it feels "wrong"
 tab_secrecy|The secrecy or risk of getting caught adds to the pull
 tab_incest|Incest-themed content (step-family or family-role scenarios)
-[/MULTI_SELECT]
-
-**Voyeurism/Watching:**
-[MULTI_SELECT]
 voy_watching|Drawn to watching others without being seen
 voy_partner|Fantasizing about watching your partner with others
-[/MULTI_SELECT]
-
-**Tenderness/Connection:**
-[MULTI_SELECT]
 ten_emotional|Drawn to content with emotional intimacy, not just physical
 ten_connection|The emotional connection matters more than the physical acts
-[/MULTI_SELECT]
-
-**Novelty/Escalation:**
-[MULTI_SELECT]
 nov_new|Constantly searching for something new
 nov_search|The search and anticipation are more consuming than the content itself
-[/MULTI_SELECT]
-
-**Confusing Patterns:**
-[MULTI_SELECT]
 conf_wife_others|Fantasies involving your wife/partner with other men
 conf_race|Drawn to content featuring a specific race or ethnicity
 conf_trans|Drawn to transgender content despite identifying as heterosexual
