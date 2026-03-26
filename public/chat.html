@@ -958,7 +958,10 @@
       });
       wrapper.appendChild(continueBtn);
       parentDiv.appendChild(wrapper);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      // Scroll to the top of this section so user sees the header and first options
+      setTimeout(() => {
+        parentDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     }
 
     // Legacy MC support
