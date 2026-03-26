@@ -803,48 +803,42 @@ async function generatePDF(analysis, firstName) {
 
     if (stratCount > 0) {
       newPage(); y = CONTENT_TOP;
-      sectionHeader("WHY NOTHING HAS WORKED");
+      sectionHeader("STRATEGY AUDIT");
 
-      checkFit(80);
-      // Summary card
-      doc.roundedRect(M, y, CW, 60, 8).fill(CARD_BG);
-      doc.roundedRect(M, y, CW, 60, 8).strokeColor(BORDER).lineWidth(0.5).stroke();
-      doc.fontSize(36).fillColor(GOLD).font("Helvetica-Bold").text(String(stratCount), M + 20, y + 8, { width: 60 });
-      doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text("strategies tried", M + 80, y + 10);
-      doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(`over ${yearsFighting}`, M + 80, y + 34);
-      y += 74;
-
+      // What You Tried — strategy list first
       checkFit(40);
-      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(
-        "Every one of them targeted the behavior. Not one of them reached the root.",
+      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("WHAT YOU TRIED", M, y, { characterSpacing: 1 });
+      y = doc.y + 10;
+
+      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(
+        `${stratCount} strategies over ${yearsFighting}.`,
         M, y, { width: CW }
       );
-      y = doc.y + 14;
+      y = doc.y + 12;
 
-      // Strategy autopsy text from Claude
-      const autopsyText = sanitize(analysis.strategyAutopsy || "");
-      if (autopsyText) {
-        checkFit(40);
-        _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(autopsyText, M, y, { width: CW, lineGap: 4 });
-        y = doc.y + 14;
-      }
-
-      // List the strategies as visual tags
-      checkFit(60);
-      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("WHAT YOU TRIED:", M, y, { characterSpacing: 1 });
-      y = doc.y + 8;
       for (const strat of strategies) {
         const stratText = sanitize(strat);
         if (!stratText) continue;
-        checkFit(30);
-        doc.roundedRect(M, y, CW, 24, 4).fill(CARD_BG);
-        doc.fontSize(14).fillColor([200, 60, 60]).font("Helvetica").text("✕", M + 8, y + 5);
-        doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(stratText, M + 24, y + 5, { width: CW - 34 });
+        checkFit(34);
+        doc.roundedRect(M, y, CW, 28, 4).fill(CARD_BG);
+        doc.fontSize(16).fillColor([200, 60, 60]).font("Helvetica").text("✕", M + 10, y + 6);
+        _currentTextColor = GRAY; doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(stratText, M + 28, y + 6, { width: CW - 38 });
         y = doc.y + 6;
       }
-      y += 10;
+      y += 20;
 
-      writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program. That program was installed by experiences you did not choose and reinforced by thousands of repetitions over ${yearsFighting}. Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
+      // Strategy Analysis — short paragraph
+      checkFit(60);
+      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("STRATEGY ANALYSIS", M, y, { characterSpacing: 1 });
+      y = doc.y + 10;
+
+      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+        `Based on the findings in this report, the behavior is a symptom of deeper root narratives, not a discipline problem. Every strategy listed above was focused on behavior management. None of them reached the root narrative that says "${sanitize(analysis.rootNarrativeStatement || "something is wrong with me")}." True transformation requires a root level process that addresses what is driving the behavior, not just the behavior itself.`,
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 14;
+
+      writeGapWidening(`Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
     }
 
     // ════════════════════════════════════════
