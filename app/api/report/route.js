@@ -3,6 +3,8 @@ import redis from "../lib/redis";
 import PDFDocument from "pdfkit";
 import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
+import fs from "fs";
+import path from "path";
 
 export const maxDuration = 300;
 
@@ -281,11 +283,24 @@ async function generatePDF(analysis, firstName) {
 
     const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - 50;
 
+    // Load logo for letterhead
+    let logoBuffer = null;
+    try {
+      const logoPath = path.join(process.cwd(), "public", "images", "unchained-logo.png");
+      logoBuffer = fs.readFileSync(logoPath);
+    } catch (e) {
+      console.log("Logo not found, continuing without letterhead:", e.message);
+    }
+
     function newPage() {
       doc.addPage();
       pageNum++;
       doc.rect(0, 0, W, H).fill(DK_BG);
       doc.rect(0, 0, W, 3).fill(GOLD);
+      // Letterhead logo on every page
+      if (logoBuffer) {
+        try { doc.image(logoBuffer, W - M - 100, 8, { width: 90, height: 22 }); } catch(e) {}
+      }
     }
     function fit(text, max) {
       if (!text) return "";
