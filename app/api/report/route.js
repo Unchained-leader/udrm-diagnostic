@@ -175,7 +175,7 @@ async function analyzeConversation(messages, userName) {
 
   const response = await client.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [{
       role: "user",
       content: `Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections.
@@ -212,6 +212,21 @@ CRITICAL FORMATTING RULES:
 2. NEVER include internal variable names, code identifiers, or selection IDs in any text. Do NOT write things like "tab_incest", "conf_wife_others", "cod_needs", "enm_parent_emotions", "god_disappointed", "void_no_one", "lead_disqualified", "val_desired", "pow_dominance", etc. These are internal system identifiers. The report is client-facing. Use plain English descriptions only. Write "incest-themed content" not "tab_incest". Write "fantasies involving your wife with others" not "conf_wife_others". Write "feeling disqualified from leadership" not "lead_disqualified".
 3. NEVER reference "selections" or "items selected" in clinical language. Write as if you know the man personally, not as if you are reading a data printout.
 
+VOICE GUIDE — SCRIPTURE + SCIENCE INTEGRATION:
+You are writing this report as Mason Cain. Every clinical insight should connect to kingdom purpose. Every Scripture reference should be grounded in neuroscience. The man reading this should feel simultaneously understood by science and seen by God. Never preach. Never lecture. Speak as a fellow traveler who has walked this road and found that faith and psychology are the same explanation viewed from two angles.
+
+VOICE PRINCIPLES:
+1. Lead with identity, not pathology. Not "your pattern indicates anxious attachment." Instead: "You were designed for deep connection, but your nervous system learned to distrust it before you had a choice. That is not a disorder. That is a misalignment between how God wired you and what your story taught you."
+2. Every clinical insight points to a kingdom truth. Connect the neuropathway to purpose: "Your brain uses this behavior to manage pain. That pain management system kept you alive as a child. But it is now standing between you and the man God is calling you to become."
+3. Every Biblical truth is grounded in clinical reality. "Romans 12:2 says be transformed by the renewing of your mind. Neuroplasticity research confirms this is literally how the brain works. Paul was not being poetic. He was being precise."
+4. Use kingdom language that connects to masculine purpose. Calling, authority, leadership, legacy, assignment. Not soft devotional language.
+5. Name the contradiction between calling and cycle. "You know God has more in store for you. You can feel the assignment on your life. But every time this cycle runs, it erodes the confidence you need to fully step into it. The cycle is not just stealing your purity. It is stealing your authority."
+6. Frame each behavior as a counterfeit of something God designed him to have. The desire underneath is not wrong. It is misdirected. Misdirected desire does not need punishment. It needs restructuring.
+7. Frame the arousal template origin as an attack on destiny. The enemy does not waste ammunition on men with no assignment.
+8. Connect attachment style to capacity for intimacy with God. The same attachment style limiting his marriage is limiting his kingdom capacity.
+9. Frame relational patterns as the environment the cycle needs to survive. Isolation, overperformance, and boundary collapse keep him from the community God designed him to heal in.
+10. The keyInsight and closingStatement should be the most direct kingdom language. "You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood."
+
 Return ONLY valid JSON, no markdown:
 {
   "arousalTemplateType": "The Invisible Man|The Controller|The Surrendered|The Shame Circuit|The Observer|The Orphan Heart|The Escalator|Complex Template",
@@ -219,39 +234,39 @@ Return ONLY valid JSON, no markdown:
   "rootNarrativeStatement": "The core lie (e.g. 'I am not enough', 'I am unsafe')",
   "whatBrainCounterfeits": "What the brain is trying to get through the behavior (1 sentence)",
 
-  "behaviorRootMap": [{"behavior": "behavior name", "root": "decoded root explanation (2-3 sentences)"}],
+  "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation (2-3 sentences). Frame as a counterfeit of something God designed him to have. The desire underneath is not wrong, it is misdirected."}],
 
-  "confusingPatternsDecoded": [{"pattern": "pattern name", "explanation": "full clinical decoder (3-5 sentences, zero shame, clinical clarity)"}],
+  "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full clinical decoder (3-5 sentences). Zero shame. Clinical clarity. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
   "neuropathway": "Arousal|Numbing|Fantasy|Deprivation",
   "neuropathwayManages": "Pain|Anxiety|Shame|Terror",
-  "neuropathwayExplanation": "2-3 sentences: what the behavior is doing for the nervous system",
+  "neuropathwayExplanation": "2-3 sentences: what the behavior is doing for the nervous system. Frame as a survival mechanism now blocking kingdom capacity. What kept him alive as a child is now keeping him small as a man.",
 
   "imprintingAge": "age range of first exposure",
-  "imprintingContext": "how exposure happened",
-  "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting, connecting childhood environment to current pattern",
+  "imprintingContext": "how exposure happened in plain English",
+  "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting. Frame the origin as an attack on destiny. The enemy targeted the template early because he knew what the man was designed to become. Include a Scripture connection.",
 
   "attachmentStyle": "Anxious-Preoccupied|Dismissive-Avoidant|Fearful-Avoidant|Secure|Disorganized",
-  "attachmentFuels": "2-3 sentences: how this attachment style specifically fuels the sexual behavior cycle",
+  "attachmentFuels": "2-3 sentences: how this attachment style fuels the cycle AND limits his kingdom capacity. Connect human attachment to his capacity for intimacy with God.",
 
-  "godAttachment": "2-3 sentences: how the man relates to God based on god_ selections, connecting to his human attachment style",
-  "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null",
+  "godAttachment": "2-3 sentences: how he relates to God through the same template as his human attachment. Include specific Scripture (Psalm 139, Romans 8:1, etc.). The barrier between him and the Father is the same barrier between him and freedom.",
+  "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null. Show how the church message fused shame with arousal rather than preventing it.",
 
   "codependencyScore": "0-3 based on cod_ items",
   "enmeshmentScore": "0-3 based on enm_ items",
   "relationalVoidScore": "0-3 based on void_ items",
   "leadershipBurdenScore": "0-3 based on lead_ items",
-  "codependencyExplanation": "1-2 sentences connecting to sexual behavior, or null if score is 0",
-  "enmeshmentExplanation": "1-2 sentences, or null",
-  "relationalVoidExplanation": "1-2 sentences, or null",
-  "leadershipBurdenExplanation": "1-2 sentences, or null",
+  "codependencyExplanation": "2-3 sentences connecting to sexual behavior AND kingdom capacity. He gives himself away to everyone. The behavior is the one place he takes something for himself. Or null if score is 0.",
+  "enmeshmentExplanation": "2-3 sentences. His boundaries were violated before he knew what boundaries were. The behavior may be the only space that feels like his own. Or null.",
+  "relationalVoidExplanation": "2-3 sentences. He has no one who truly knows him. The behavior fills the void that isolation creates. Wounds created in relational absence require relational presence to heal. Ecclesiastes 4:12. Or null.",
+  "leadershipBurdenExplanation": "2-3 sentences. He carries everyone. No one carries him. The behavior is the one place his nervous system does not have to perform. God never designed him to lead from isolation. Or null.",
 
   "escalationPresent": true or false,
   "patternYears": "estimate of how many years based on context clues, or 'many' if unknown",
   "isolationLevel": "description based on relational void selections",
 
-  "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood environment encoding the template. This should feel like someone finally turned all the lights on at once. Write directly to him.",
-  "closingStatement": "2-3 sentences: 'You are not broken. You are not perverted.' frame. Every behavior has a root, every root has an origin, every origin can be traced and restructured. But not alone."
+  "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
+  "closingStatement": "3-4 sentences. The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
 }`
     }],
   });
