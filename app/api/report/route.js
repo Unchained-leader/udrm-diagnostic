@@ -357,14 +357,18 @@ async function generatePDF(analysis, firstName) {
     // This is the permanent fix for white pages. When PDFKit's .text()
     // overflows and auto-creates a new page, this event fires and applies
     // the dark background + gold accent + logo. No page can ever be white.
+    // Track current text color so pageAdded can restore it after drawing background
+    let _currentTextColor = GRAY;
+
     doc.on("pageAdded", () => {
-      doc.save();
+      // Draw background elements without save/restore to avoid corrupting text color state
       doc.rect(0, 0, W, H).fill(DK_BG);
       doc.rect(0, 0, W, 3).fill(GOLD);
       if (logoBuffer) {
         try { doc.image(logoBuffer, W - M - 100, 8, { width: 90 }); } catch(e) {}
       }
-      doc.restore();
+      // Restore the text color that was active before the page break
+      doc.fillColor(_currentTextColor);
     });
 
     // Strip em dashes from all analysis text — replace with commas
@@ -404,7 +408,7 @@ async function generatePDF(analysis, firstName) {
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
       doc.fontSize(13).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
       doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text(title || "", M + 14, y + titleTop);
-      if (body) doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: 5 });
+      if (body) { _currentTextColor = GRAY; _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: 5 }); }
       y += cardH + 14;
     }
     function writeGapWidening(text) {
@@ -412,18 +416,18 @@ async function generatePDF(analysis, firstName) {
       checkFit(gapH + 30);
       doc.rect(M, y, CW, 0.5).fill([50, 50, 50]);
       y += 14;
-      doc.fontSize(16).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
+      _currentTextColor = [200, 60, 60]; doc.fontSize(16).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
       y = doc.y + 18;
     }
 
     function writeGauge(label, score, maxScore) {
       const pct = Math.min(1, parseInt(score || 0) / maxScore);
       checkFit(44);
-      doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(label, M, y);
+      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(label, M, y);
       y += 24;
       doc.roundedRect(M, y, CW, 12, 6).fill([40, 40, 40]);
       if (pct > 0) doc.roundedRect(M, y, CW * pct, 12, 6).fill(GOLD);
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`${score || 0} / ${maxScore}`, M + CW + 6, y - 2);
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`${score || 0} / ${maxScore}`, M + CW + 6, y - 2);
       y += 22;
     }
 
@@ -443,7 +447,7 @@ async function generatePDF(analysis, firstName) {
     y += 44;
     doc.rect(W / 2 - 30, y, 60, 2).fill(GOLD);
     y += 22;
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`Personalized for ${firstName}`, M, y, { width: CW, align: "center" });
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`Personalized for ${firstName}`, M, y, { width: CW, align: "center" });
     y += 26;
     doc.fontSize(14).text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), M, y, { width: CW, align: "center" });
     y += 20;
@@ -545,7 +549,7 @@ async function generatePDF(analysis, firstName) {
     checkFit(60);
     doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
     y += 14;
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+    _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
       `Primary Pattern: ${sanitize(analysis.arousalTemplateType || "Unknown")}  |  Neuropathway: ${sanitize(analysis.neuropathway || "Unknown")}  |  Attachment: ${sanitize(analysis.attachmentStyle || "Unknown")}`,
       M, y, { width: CW, lineGap: 4 }
     );
@@ -576,7 +580,7 @@ async function generatePDF(analysis, firstName) {
     newPage(); y = CONTENT_TOP;
     sectionHeader("SECTION 2 — THE BEHAVIOR-ROOT MAP");
 
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
       "Every behavior in your cycle traces to a specific root. Here is what your brain is actually trying to accomplish through each one.",
       M, y, { width: CW, lineGap: 3 }
     );
@@ -593,7 +597,7 @@ async function generatePDF(analysis, firstName) {
       doc.roundedRect(M, y, CW, rowH, 5).fill(CARD_BG);
       doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(beh, M + 14, y + 14, { width: CW - 28 });
       const bodyY = y + 14 + titleH + 10;
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(root, M + 14, bodyY, { width: CW - 28, lineGap: 4 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(root, M + 14, bodyY, { width: CW - 28, lineGap: 4 });
       y += rowH + 10;
     }
 
@@ -607,7 +611,7 @@ async function generatePDF(analysis, firstName) {
       newPage(); y = CONTENT_TOP;
       sectionHeader("SECTION 3 — CONFUSING PATTERNS DECODED");
 
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
         "These are the patterns you have likely never told anyone about. Each one has a clinical explanation that has nothing to do with your character and everything to do with how your brain was wired.",
         M, y, { width: CW, lineGap: 3 }
       );
@@ -624,7 +628,7 @@ async function generatePDF(analysis, firstName) {
         doc.roundedRect(M, y, CW, boxH, 5).strokeColor(GOLD).lineWidth(0.5).stroke();
         doc.fontSize(20).fillColor(GOLD).font("Helvetica-Bold").text(cpTitle, M + 14, y + 14, { width: CW - 28 });
         const cpBodyY = y + 14 + patTitleH + 10;
-        doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(cpExp, M + 14, cpBodyY, { width: CW - 28, lineGap: 4 });
+        _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(cpExp, M + 14, cpBodyY, { width: CW - 28, lineGap: 4 });
         y += boxH + 10;
       }
       writeGapWidening("If you have carried shame about any of these patterns, what you just read may be the first time it has made sense. That clarity matters. But understanding why the pattern exists is not the same as resolving it. The arousal template was encoded during a developmental window you cannot re-enter alone. Attempting to process this material without guided support often leads to destabilization rather than healing. The nervous system needs to be paced through this safely.");
@@ -638,7 +642,7 @@ async function generatePDF(analysis, firstName) {
 
     writeCard("NEUROPATHWAY", analysis.neuropathway || "Unknown", analysis.neuropathwayExplanation || "");
 
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+    _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
       `Your brain is not using this behavior for pleasure. It is using it to manage ${(analysis.neuropathwayManages || "pain").toLowerCase()}.`,
       M, y, { width: CW, lineGap: 3 }
     );
@@ -655,10 +659,10 @@ async function generatePDF(analysis, firstName) {
 
     doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(`First Exposure: Age ${analysis.imprintingAge || "unknown"}`, M, y);
     y = doc.y + 8;
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
     y = doc.y + 16;
 
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(
       analysis.imprintingFusion || "",
       M, y, { width: CW, lineGap: 4 }
     );
@@ -678,7 +682,7 @@ async function generatePDF(analysis, firstName) {
       checkFit(100);
       doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("HOW THIS SHOWS UP WITH GOD", M, y, { characterSpacing: 1 });
       y += 22;
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 4 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 4 });
       y = doc.y + 16;
     }
 
@@ -686,7 +690,7 @@ async function generatePDF(analysis, firstName) {
       checkFit(100);
       doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("PURITY CULTURE IMPACT", M, y, { characterSpacing: 1 });
       y += 22;
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 4 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 4 });
       y = doc.y + 16;
     }
 
@@ -700,22 +704,22 @@ async function generatePDF(analysis, firstName) {
 
     writeGauge("Codependency", analysis.codependencyScore, 3);
     if (analysis.codependencyExplanation) {
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.codependencyExplanation, M, y, { width: CW, lineGap: 2 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.codependencyExplanation, M, y, { width: CW, lineGap: 2 });
       y = doc.y + 10;
     }
     writeGauge("Enmeshment", analysis.enmeshmentScore, 3);
     if (analysis.enmeshmentExplanation) {
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.enmeshmentExplanation, M, y, { width: CW, lineGap: 2 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.enmeshmentExplanation, M, y, { width: CW, lineGap: 2 });
       y = doc.y + 10;
     }
     writeGauge("Relational Void", analysis.relationalVoidScore, 3);
     if (analysis.relationalVoidExplanation) {
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.relationalVoidExplanation, M, y, { width: CW, lineGap: 2 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.relationalVoidExplanation, M, y, { width: CW, lineGap: 2 });
       y = doc.y + 10;
     }
     writeGauge("Leadership Burden", analysis.leadershipBurdenScore, 3);
     if (analysis.leadershipBurdenExplanation) {
-      doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.leadershipBurdenExplanation, M, y, { width: CW, lineGap: 2 });
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(analysis.leadershipBurdenExplanation, M, y, { width: CW, lineGap: 2 });
       y = doc.y + 10;
     }
 
@@ -727,7 +731,7 @@ async function generatePDF(analysis, firstName) {
     newPage(); y = CONTENT_TOP;
     sectionHeader("YOUR FULL PATTERN MAP");
 
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
       "This diagram connects everything. Each level is populated with your actual data.",
       M, y, { width: CW }
     );
@@ -781,7 +785,7 @@ async function generatePDF(analysis, firstName) {
     newPage(); y = CONTENT_TOP;
     sectionHeader("THE FULL PICTURE");
 
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+    _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
       analysis.keyInsight || "Your pattern is not random.",
       M, y, { width: CW, lineGap: 5 }
     );
@@ -794,7 +798,7 @@ async function generatePDF(analysis, firstName) {
     doc.fontSize(16).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
     y += 24;
 
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+    _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
       analysis.closingStatement || "You are not broken. Every behavior has a root, every root has an origin, and every origin can be traced and restructured.",
       M, y, { width: CW, lineGap: 5 }
     );
@@ -811,7 +815,7 @@ async function generatePDF(analysis, firstName) {
     const ctaBoxH = 14 + 22 + 12 + ctaBodyH + 14;
     doc.roundedRect(M, y, CW, ctaBoxH, 6).fill(CARD_BG);
     doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text("Ready to go deeper?", M + 16, y + 14, { width: CW - 32 });
-    doc.fontSize(18).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 14 + 22 + 12, { width: CW - 32 });
+    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 14 + 22 + 12, { width: CW - 32 });
     y += ctaBoxH + 20;
 
     doc.fontSize(22).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
