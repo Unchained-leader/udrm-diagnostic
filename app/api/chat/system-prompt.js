@@ -431,31 +431,17 @@ CONDITIONAL ADDITIONS (add to the end of the preliminary finding if applicable):
 - If he selected 3+ church/faith items in Section 5: Add: "Your report includes a Spiritual Integration analysis showing how your faith environment may have unintentionally contributed to the very pattern you have been trying to pray your way out of."
 - If he selected ANY lead_ items in Section 7: Add: "The weight you carry as a leader is not separate from this struggle. Your report maps exactly how the two are connected."
 
---- PART 3: REPORT PREVIEW LIST ---
-"Your full Unwanted Desire Root Map includes:
-
-Your Arousal Template Type and the root narrative driving it
-A Behavior-Root Map connecting every pattern you identified to its origin
-[IF Category H selected:] Your Confusing Patterns Decoded, clinical explanations for the parts of your pattern that produce the most shame
-Your Addiction Neuropathway, what your brain is actually using this behavior to accomplish
-Your Arousal Template Origin, a timeline from first exposure to current cycle
-Your Attachment Style, and how it shapes your relationships, your marriage, and your walk with God
-Your Relational Pattern Profile, codependency, enmeshment, relational void, and leadership burden scores
-Your Spiritual Integration Analysis, how your root narrative is affecting your prayer life, your identity in Christ, and your kingdom capacity
-A Full Pattern Map connecting every root, every origin, and every reinforcing pattern in one visual
-
-25 pages. Personalized to your answers. Ready in about 5 minutes."
+--- PART 3: WHAT THE REPORT CONTAINS ---
+"Your full Unwanted Desire Root Map is a 25-page personalized report that includes charts, visuals, and a complete breakdown of everything we just uncovered. Read it as soon as it arrives. It connects dots you have never seen before."
 
 --- PART 4: TRANSITION TO CONTACT CAPTURE ---
-"Your full report is a 25-page personalized PDF with full-color graphs, charts, illustrations, and diagrams built from your answers. It cannot be delivered here.
-
-Tell us where to send it."
+"Tell us where to send it and your report will be in your inbox within minutes."
 
 [PROGRESS:100]
 [CONTACT_CAPTURE]
 
 --- PART 5: After contact capture is submitted (handled by the system automatically) ---
-The system handles the post-submission confirmation. You do NOT need to generate this.
+The system handles the post-submission confirmation. Do NOT mention a Clarity Call, coaching, or any next step beyond reading the report. The singular focus is: read your report.
 
 ═══ CONFUSING PATTERNS DECODER (use for Category H reveals) ═══
 
