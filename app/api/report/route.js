@@ -298,8 +298,7 @@ async function generatePDF(analysis, firstName) {
     const shameBoxH = Math.max(60, 42 + shameMeasure + 8);
 
     if (shameBoxTop + shameBoxH > PAGE_BOTTOM - 20) {
-      // Won't fit — add footer and go to page 2
-      doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
+      // Won't fit — go to next page
       newPage();
       y = 40;
     }
@@ -309,9 +308,6 @@ async function generatePDF(analysis, firstName) {
     doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold").text(analysis.shameArchitecture || "Unknown", M + 14, y + 22);
     doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(shameCycleText, M + 14, y + 38, { width: CW - 28, lineGap: 2 });
     y += shameBoxH + 10;
-
-    // Footer page 1
-    doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
 
     // ══════════════════════════════════
     // PAGE 2 — KEY INSIGHT + CTA
@@ -442,8 +438,15 @@ async function generatePDF(analysis, firstName) {
     // #liveunchained
     doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
 
-    // Footer page 2
-    doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 2", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
+    // ══════════════════════════════════
+    // FOOTERS — written last via switchToPage to avoid creating extra pages
+    // ══════════════════════════════════
+    const totalPages = doc.bufferedPageRange().count;
+    for (let i = 0; i < totalPages; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica")
+        .text(`UNCHAINED LEADER  |  CONFIDENTIAL  |  Page ${i + 1}`, M, H - 28, { width: CW, align: "center", characterSpacing: 1, lineBreak: false });
+    }
 
     doc.end();
   });
