@@ -214,27 +214,44 @@ Brief validation, then:
 
 "Which of these describe your upbringing? Select all that apply."
 
-CRITICAL: Present ALL options in ONE single [MULTI_SELECT] block. Do NOT add category headers or any text between options.
+Present these as FOUR separate sub-questions, each with its own brief label and MULTI_SELECT block. The user answers all four before clicking Continue.
+
+"Your home growing up:"
 
 [MULTI_SELECT]
-home_warm|Home was emotionally warm and responsive
-home_cold|Home was emotionally cold or distant
-home_unpredictable|Home was unpredictable (never knew what you would get)
-home_conflict|Home had high conflict (arguing, yelling, tension)
-home_controlled|Home was controlled and rigid
+home_warm|Emotionally warm and responsive
+home_cold|Emotionally cold or distant
+home_unpredictable|Unpredictable (never knew what you would get)
+home_conflict|High conflict (arguing, yelling, tension)
+home_controlled|Controlled and rigid
 home_conditional|Affection was conditional on performance
 home_no_emotions|Emotions were not allowed to be expressed
-dad_close|Father was close and connected
-dad_distant|Father was distant, uninvolved, or absent
-dad_critical|Father was critical, demanding, or angry
-dad_approval|I tried to earn my father's approval
-dad_sexual|Father struggled with sexual behavior (known or suspected)
-mom_close|Mother was close and connected
-mom_enmeshed|Mother was overly close or enmeshed (treated you as partner or confidant)
-mom_distant|Mother was distant or emotionally unavailable
-mom_critical|Mother was critical, controlling, or anxious
-mom_responsible|I felt responsible for my mother's emotions
-church_shameful|Sexuality was shameful or never discussed at church
+[/MULTI_SELECT]
+
+"Your father:"
+
+[MULTI_SELECT]
+dad_close|Close and connected
+dad_distant|Distant, uninvolved, or absent
+dad_critical|Critical, demanding, or angry
+dad_approval|I tried to earn his approval
+dad_sexual|He struggled with sexual behavior (known or suspected)
+[/MULTI_SELECT]
+
+"Your mother:"
+
+[MULTI_SELECT]
+mom_close|Close and connected
+mom_enmeshed|Overly close or enmeshed (treated you as partner or confidant)
+mom_distant|Distant or emotionally unavailable
+mom_critical|Critical, controlling, or anxious
+mom_responsible|I felt responsible for her emotions
+[/MULTI_SELECT]
+
+"Church and faith:"
+
+[MULTI_SELECT]
+church_shameful|Sexuality was shameful or never discussed
 church_purity|Purity culture was a significant part of my upbringing
 church_thoughts_sin|I was taught that sexual thoughts meant something was spiritually wrong with me
 church_good_kid|I felt pressure to be the "good Christian kid"
