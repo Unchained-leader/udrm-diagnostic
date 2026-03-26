@@ -401,7 +401,7 @@ async function generatePDF(analysis, firstName) {
       checkFit(gapH + 30);
       doc.rect(M, y, CW, 0.5).fill([50, 50, 50]);
       y += 14;
-      doc.fontSize(16).fillColor([140, 140, 140]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
+      doc.fontSize(16).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
       y = doc.y + 18;
     }
 
