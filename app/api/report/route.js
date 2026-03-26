@@ -839,6 +839,40 @@ async function generatePDF(analysis, firstName) {
       y = doc.y + 14;
 
       writeGapWidening(`Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
+
+      // Spiritual Bypass section — conditional on prayer/deliverance/fasting strategies
+      const spiritualStrats = strategies.filter(s => {
+        const lower = (s || "").toLowerCase();
+        return lower.includes("prayer") || lower.includes("spiritual") || lower.includes("bible") || lower.includes("fasting") || lower.includes("deliverance") || lower.includes("church");
+      });
+
+      if (spiritualStrats.length >= 2) {
+        checkFit(80);
+        y += 10;
+        doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("SPIRITUAL BYPASS INDICATOR", M, y, { characterSpacing: 1 });
+        y = doc.y + 10;
+
+        // Score: 2 spiritual strategies = moderate, 3+ = high
+        const bypassScore = spiritualStrats.length >= 3 ? "High" : "Moderate";
+        const bypassColor = spiritualStrats.length >= 3 ? [200, 60, 60] : [220, 180, 40];
+
+        doc.roundedRect(M, y, CW, 36, 6).fill(CARD_BG);
+        doc.fontSize(16).fillColor(GOLD).font("Helvetica").text("Spiritual Bypass Score:", M + 14, y + 10);
+        doc.fontSize(16).fillColor(bypassColor).font("Helvetica-Bold").text(bypassScore, M + 220, y + 10);
+        y += 48;
+
+        _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+          `You selected ${spiritualStrats.length} spiritually focused strategies. Psychologist John Welwood, who coined the term "spiritual bypass" in 1984, defined it as "using spiritual practices to avoid dealing with painful feelings, unresolved wounds, and developmental needs." This is not a critique of prayer, Scripture, or spiritual disciplines. They are essential. But when they are used as the only strategy against a neurologically encoded pattern, they become a bypass around the wound rather than a path through it.`,
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 12;
+
+        _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
+          "If your child broke their arm, you would not choose between prayer and an X-ray. You would choose both. The arm needs to be set by someone trained to set it, and God's healing power works through that process, not instead of it. Your root narrative works the same way. Prayer positions the heart. But restructuring the neuropathway requires a guided, clinical process that prayer was never designed to replace.",
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 14;
+      }
     }
 
     // ════════════════════════════════════════
