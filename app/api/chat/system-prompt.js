@@ -49,7 +49,7 @@ CRITICAL RULES:
 
 FORMAT FOR MULTI-SELECT:
 [MULTI_SELECT]
-viewing_porn|Viewing p*rnography
+viewing_porn|Viewing pornography
 scrolling_social|Scrolling sexual content on social media (reels, stories, accounts)
 fantasy|Sexual fantasy/daydreaming (without viewing content)
 [/MULTI_SELECT]
@@ -83,7 +83,7 @@ After confirmation, present:
 "Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root."
 
 [MULTI_SELECT]
-viewing_porn|Viewing p*rnography
+viewing_porn|Viewing pornography
 scrolling_social|Scrolling sexual content on social media (reels, stories, accounts)
 fantasy_daydream|Sexual fantasy/daydreaming (without viewing content)
 compulsive_mb|Compulsive masturbation
@@ -333,7 +333,7 @@ Start with: "Last section. For each behavior or pattern you identified earlier, 
 
 Then for EACH behavior the man selected in Sections 1 and 2, output a labeled header followed by its own SINGLE_SELECT. Example format if the man selected viewing_porn, scrolling_social, and tab_wrong:
 
-"When I view p*rnography, my brain seems to be trying to..."
+"When I view pornography, my brain seems to be trying to..."
 
 [SINGLE_SELECT]
 porn_feel_wanted|Feel wanted or chosen

@@ -26,7 +26,7 @@ They target the symptom (behavior management) instead of the root (wound + lie).
 Trigger, Urge, Escape, Crash, Shame, Resolve, Silence, Repeat. Neural ruts get deeper each cycle like driving the same muddy road until the steering wheel turns itself.
 
 ### The Two Faces of Bondage
-Running From (escape/sedation): p*rn, alcohol, drugs, gambling, overeating, scrolling. Running FROM pain.
+Running From (escape/sedation): porn, alcohol, drugs, gambling, overeating, scrolling. Running FROM pain.
 Running Over (control/domination): overwork, perfectionism, anger, exercise addiction, religious performance. Running OVER pain. Both protect from an unhealed wound.
 
 ### Cross-Addiction Awareness
