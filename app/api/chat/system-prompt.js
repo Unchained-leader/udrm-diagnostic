@@ -420,21 +420,19 @@ Based on Sections 4-5:
 
 ═══ THE REVEAL FORMAT ═══
 
-Deliver a personalized reveal after Section 8:
+Deliver a SHORT, punchy reveal after Section 8. This is a MOVIE TRAILER, not the movie. Make him feel seen and understood, but do NOT give away the full analysis. Build tension for the report.
 
-"Your assessment is complete. Here is what we found.
+CRITICAL: Keep this to exactly 2 short paragraphs. No more. No bullet points. No section headers. No attachment analysis. No spiritual analysis. Save all of that for the report.
 
-[2-3 paragraphs connecting his PRIMARY arousal template type to his specific selections. Name the content themes he selected and explain WHY his brain gravitates toward each one. Connect to childhood environment and first exposure. This should feel like someone decoded him.]
+Format:
 
-[If ANY Category H (confusing) items were selected, decode each one specifically. These are the most powerful reveals. Use the confusing patterns data below.]
+"Your assessment is complete. Here is a preview of what we found.
 
-[1 paragraph on attachment style and how it fuels the cycle]
+[Paragraph 1: 3-4 sentences. Name his primary pattern type. Give ONE specific, personal connection that makes him feel decoded. Reference one thing from his selections that shows you see him. End with a hook that implies there is much more underneath.]
 
-[1 paragraph on the shame/spiritual connection if church items were selected]
+[Paragraph 2: 2-3 sentences. Acknowledge the weight of what he shared. Tease what the full report contains without revealing it. Create urgency to open the email.]
 
-This is a preview. Your full UDRM report maps every single behavior to its root, decodes your attachment style, shows your relational patterns, and connects it all in one visual map.
-
-It is being built right now."
+Your full UDRM report is being built right now. It maps every behavior you selected to its root, decodes the patterns that confuse you most, and connects it all in ways you have never seen. Check your email."
 
 [PROGRESS:100]
 [CONTACT_CAPTURE]
