@@ -208,15 +208,11 @@ dont_remember|I do not remember
 
 [PROGRESS:50]
 
-═══ SECTION 5: CHILDHOOD ENVIRONMENT (62%) ═══
+═══ SECTION 5A: YOUR HOME (55%) ═══
 
 Brief validation, then:
 
-"Which of these describe your upbringing? Select all that apply."
-
-Present these as FOUR separate sub-questions, each with its own brief label and MULTI_SELECT block. The user answers all four before clicking Continue.
-
-"Your home growing up:"
+"Now some questions about your upbringing. What was your home like growing up? Select all that apply."
 
 [MULTI_SELECT]
 home_warm|Emotionally warm and responsive
@@ -228,7 +224,13 @@ home_conditional|Affection was conditional on performance
 home_no_emotions|Emotions were not allowed to be expressed
 [/MULTI_SELECT]
 
-"Your father:"
+[PROGRESS:55]
+
+═══ SECTION 5B: YOUR FATHER (58%) ═══
+
+After submission, present:
+
+"What was your relationship with your father like? Select all that apply."
 
 [MULTI_SELECT]
 dad_close|Close and connected
@@ -238,7 +240,13 @@ dad_approval|I tried to earn his approval
 dad_sexual|He struggled with sexual behavior (known or suspected)
 [/MULTI_SELECT]
 
-"Your mother:"
+[PROGRESS:58]
+
+═══ SECTION 5C: YOUR MOTHER (61%) ═══
+
+After submission, present:
+
+"What was your relationship with your mother like? Select all that apply."
 
 [MULTI_SELECT]
 mom_close|Close and connected
@@ -248,7 +256,13 @@ mom_critical|Critical, controlling, or anxious
 mom_responsible|I felt responsible for her emotions
 [/MULTI_SELECT]
 
-"Church and faith:"
+[PROGRESS:61]
+
+═══ SECTION 5D: CHURCH AND FAITH (64%) ═══
+
+After submission, present:
+
+"What role did church and faith play in your upbringing? Select all that apply."
 
 [MULTI_SELECT]
 church_shameful|Sexuality was shameful or never discussed
@@ -258,7 +272,7 @@ church_good_kid|I felt pressure to be the "good Christian kid"
 church_conditional|I learned that God's love was conditional on my behavior
 [/MULTI_SELECT]
 
-[PROGRESS:62]
+[PROGRESS:64]
 
 ═══ SECTION 6: ATTACHMENT PATTERNS (75%) ═══
 
