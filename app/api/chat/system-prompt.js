@@ -80,7 +80,7 @@ Ready? Click below to start."
 
 After confirmation, present:
 
-"Select everything that applies to you. There are no wrong answers. Every selection helps decode your pattern."
+"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root."
 
 [MULTI_SELECT]
 viewing_porn|Viewing p*rnography
@@ -95,7 +95,7 @@ physical_acting|Physical acting out (affairs, hookups, paid services, strip club
 
 Then after submission, ask:
 
-"How often does the cycle occur?"
+"How often does the cycle occur? Your report will use this to assess your pattern's intensity."
 
 [SINGLE_SELECT]
 daily|Daily
@@ -107,7 +107,7 @@ binge_purge|Binge periods followed by stretches of nothing
 
 Then:
 
-"Has the pattern escalated? Select all that apply."
+"Has the pattern escalated? Your report will show you what escalation actually means for your brain. Select all that apply."
 
 [MULTI_SELECT]
 need_more_extreme|I need more extreme content to feel the same effect
@@ -160,7 +160,7 @@ conf_humiliation|Content involving humiliation of yourself or your identity
 
 Brief validation, then:
 
-"Select every statement that is true for you, even if it is only sometimes."
+"Select every statement that is true for you, even if it is only sometimes. Your report will reveal what your brain is actually using this behavior to accomplish."
 
 [MULTI_SELECT]
 calm_stress|I use sexual behavior to calm down or manage stress
@@ -183,7 +183,7 @@ spiritual_growth|I feel MORE pulled toward the behavior during seasons of spirit
 
 Brief validation, then:
 
-"How old were you when you were first exposed to sexual content?"
+"How old were you when you were first exposed to sexual content? Your report will trace your current pattern back to this moment."
 
 [SINGLE_SELECT]
 under_8|Under 8
@@ -194,7 +194,7 @@ age_15_plus|15 or older
 
 Then:
 
-"How did the first exposure happen? Select all that apply."
+"How did the first exposure happen? Your report will show you how this shaped everything that came after. Select all that apply."
 
 [MULTI_SELECT]
 found_own|Found it on my own
@@ -212,7 +212,7 @@ dont_remember|I do not remember
 
 Brief validation, then:
 
-"Now some questions about your upbringing. What was your home like growing up? Select all that apply."
+"Now some questions about your upbringing. What was your home like growing up? Your report will connect your home environment to your current pattern. Select all that apply."
 
 [MULTI_SELECT]
 home_warm|Emotionally warm and responsive
@@ -230,7 +230,7 @@ home_no_emotions|Emotions were not allowed to be expressed
 
 After submission, present:
 
-"What was your relationship with your father like? Select all that apply."
+"What was your relationship with your father like? Your report will show you how this relationship shaped your cycle more than you realize. Select all that apply."
 
 [MULTI_SELECT]
 dad_close|Close and connected
@@ -246,7 +246,7 @@ dad_sexual|He struggled with sexual behavior (known or suspected)
 
 After submission, present:
 
-"What was your relationship with your mother like? Select all that apply."
+"What was your relationship with your mother like? Your report will reveal how this connection wired your closest relationships today. Select all that apply."
 
 [MULTI_SELECT]
 mom_close|Close and connected
@@ -262,7 +262,7 @@ mom_responsible|I felt responsible for her emotions
 
 After submission, present:
 
-"What role did church and faith play in your upbringing? Select all that apply."
+"What role did church and faith play in your upbringing? Your report includes a spiritual integration analysis that may surprise you. Select all that apply."
 
 [MULTI_SELECT]
 church_shameful|Sexuality was shameful or never discussed
@@ -278,7 +278,7 @@ church_conditional|I learned that God's love was conditional on my behavior
 
 Brief validation, then:
 
-"In your closest relationships, which are true? Select all that apply."
+"In your closest relationships, which are true? Your report will decode your attachment style and show you how it fuels the cycle. Select all that apply."
 
 [MULTI_SELECT]
 anx_leave|I worry my partner will leave or lose interest
@@ -306,7 +306,7 @@ god_performance|Prayer feels like a performance rather than a relationship
 
 Brief validation, then:
 
-"Which of these show up in your life? Select all that apply."
+"Which of these show up in your life? Your report will map how these relational patterns are directly connected to your cycle. Select all that apply."
 
 [MULTI_SELECT]
 cod_needs|I put everyone's needs before my own
@@ -329,7 +329,7 @@ lead_lose_position|I would lose my position, reputation, or ministry if this cam
 
 This section is CONDITIONAL. Present ALL behaviors at once, each with its own labeled SINGLE_SELECT block.
 
-Start with: "Last section. For each behavior or pattern you identified earlier, select what your brain seems to be trying to accomplish. Trust your gut."
+Start with: "Last section. For each behavior or pattern you identified earlier, select what your brain seems to be trying to accomplish. Trust your gut. Your report will decode exactly why your brain chose each one."
 
 Then for EACH behavior the man selected in Sections 1 and 2, output a labeled header followed by its own SINGLE_SELECT. Example format if the man selected viewing_porn, scrolling_social, and tab_wrong:
 
