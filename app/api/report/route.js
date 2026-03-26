@@ -276,6 +276,11 @@ Return ONLY valid JSON, no markdown:
   "scorecardSpiritualDisconnect": "1-5: based on god_ items. 1=connected, 5=severely disconnected",
   "scorecardRelationalBurden": "1-5: combined codependency+enmeshment+void+leadership score",
 
+  "strategiesTried": ["Array of strategy names the man selected in Section 8 (e.g. 'Apps, blockers, or internet filters', 'Accountability partner', etc.)"],
+  "strategiesCount": "number of strategies selected",
+  "yearsFighting": "from the duration question (e.g. '10 to 20 years', 'Over 20 years')",
+  "strategyAutopsy": "For EACH strategy he selected, write 1-2 sentences explaining why that specific strategy failed against HIS specific root narrative type. Be direct. Example: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Write this as one flowing section with each strategy addressed. Use the Scripture + Science voice. Do NOT use internal code names. Use plain language for each strategy.",
+
   "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
   "closingStatement": "3-4 sentences. The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
 }`
@@ -790,7 +795,60 @@ async function generatePDF(analysis, firstName) {
     writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Enmeshment distorts your boundaries. Codependency drains you until the behavior becomes the only thing that is yours. And the leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently, in a community of men who understand them firsthand.");
 
     // ════════════════════════════════════════
-    // SECTION 8 — THE FULL PATTERN MAP (visual diagram)
+    // SECTION 8 — STRATEGY AUTOPSY
+    // ════════════════════════════════════════
+    const strategies = analysis.strategiesTried || [];
+    const stratCount = parseInt(analysis.strategiesCount) || strategies.length || 0;
+    const yearsFighting = sanitize(analysis.yearsFighting || "years");
+
+    if (stratCount > 0) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("WHY NOTHING HAS WORKED");
+
+      checkFit(80);
+      // Summary card
+      doc.roundedRect(M, y, CW, 60, 8).fill(CARD_BG);
+      doc.roundedRect(M, y, CW, 60, 8).strokeColor(BORDER).lineWidth(0.5).stroke();
+      doc.fontSize(36).fillColor(GOLD).font("Helvetica-Bold").text(String(stratCount), M + 20, y + 8, { width: 60 });
+      doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text("strategies tried", M + 80, y + 10);
+      doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(`over ${yearsFighting}`, M + 80, y + 34);
+      y += 74;
+
+      checkFit(40);
+      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(
+        "Every one of them targeted the behavior. Not one of them reached the root.",
+        M, y, { width: CW }
+      );
+      y = doc.y + 14;
+
+      // Strategy autopsy text from Claude
+      const autopsyText = sanitize(analysis.strategyAutopsy || "");
+      if (autopsyText) {
+        checkFit(40);
+        _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(autopsyText, M, y, { width: CW, lineGap: 4 });
+        y = doc.y + 14;
+      }
+
+      // List the strategies as visual tags
+      checkFit(60);
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("WHAT YOU TRIED:", M, y, { characterSpacing: 1 });
+      y = doc.y + 8;
+      for (const strat of strategies) {
+        const stratText = sanitize(strat);
+        if (!stratText) continue;
+        checkFit(30);
+        doc.roundedRect(M, y, CW, 24, 4).fill(CARD_BG);
+        doc.fontSize(14).fillColor([200, 60, 60]).font("Helvetica").text("✕", M + 8, y + 5);
+        doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(stratText, M + 24, y + 5, { width: CW - 34 });
+        y = doc.y + 6;
+      }
+      y += 10;
+
+      writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program. That program was installed by experiences you did not choose and reinforced by thousands of repetitions over ${yearsFighting}. Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
+    }
+
+    // ════════════════════════════════════════
+    // SECTION 9 — THE FULL PATTERN MAP (visual diagram)
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
     sectionHeader("YOUR FULL PATTERN MAP");
