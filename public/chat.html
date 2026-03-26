@@ -94,6 +94,20 @@
     #sign-out-btn:hover { border-color: #444; color: #888; }
 
     /* ========== QUIZ UI — CHECKBOXES, RADIO, TEXT INPUT ========== */
+    .quiz-label {
+      font-size: 14px;
+      color: var(--gold-light);
+      font-weight: 500;
+      margin-top: 16px;
+      margin-bottom: 4px;
+      padding: 8px 0 4px;
+      border-top: 1px solid var(--border-gold);
+      line-height: 1.4;
+    }
+    .quiz-label:first-child {
+      margin-top: 0;
+      border-top: none;
+    }
     .quiz-block {
       display: flex;
       flex-direction: column;
@@ -847,13 +861,42 @@
         .trim();
     }
 
+    // Get only the intro text before first quiz block (for bubble display when quiz is rendered)
+    function getTextBeforeQuizBlocks(text) {
+      const firstBlock = text.search(/\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]/);
+      if (firstBlock <= 0) return cleanDisplayText(text);
+      const before = text.substring(0, firstBlock);
+      return cleanDisplayText(before);
+    }
+
     // ========== QUIZ UI RENDERING ==========
     function parseQuizBlocks(text) {
       const blocks = [];
       // Find all MULTI_SELECT, SINGLE_SELECT, and TEXT_INPUT blocks in order
-      const regex = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      // Also capture text BETWEEN blocks as labels (needed for Section 8)
+      const blockRegex = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      let lastIndex = 0;
       let match;
-      while ((match = regex.exec(text)) !== null) {
+
+      // Strip progress/control tags before parsing for labels
+      const cleanForLabels = text
+        .replace(/\[PROGRESS:\d+\]/g, "")
+        .replace(/\[CONTACT_CAPTURE\]/g, "")
+        .replace(/\[CRISIS_DETECTED\]/g, "")
+        .replace(/\[BOOKING_CTA\]/g, "");
+
+      // Reset regex for clean text
+      const regex2 = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      while ((match = regex2.exec(cleanForLabels)) !== null) {
+        // Capture interstitial text as a label
+        const between = cleanForLabels.substring(lastIndex, match.index).trim();
+        if (between && between.length > 2) {
+          // Clean up quotes and extra whitespace
+          const labelText = between.replace(/^["']+|["']+$/g, "").trim();
+          if (labelText) blocks.push({ type: "label", text: labelText });
+        }
+        lastIndex = match.index + match[0].length;
+
         const type = match[1];
         const content = match[2].trim();
         if (type === "TEXT_INPUT") {
@@ -880,6 +923,13 @@
       let textInputValue = "";
 
       blocks.forEach((block, blockIdx) => {
+        if (block.type === "label") {
+          const label = document.createElement("div");
+          label.className = "quiz-label";
+          label.textContent = block.text;
+          wrapper.appendChild(label);
+          return;
+        }
         if (block.type === "text_input") {
           const input = document.createElement("textarea");
           input.className = "quiz-text-input";
@@ -1159,10 +1209,16 @@
             }
             parseProgressFromResponse(fullResponse);
             messages.push({ role: "assistant", content: fullResponse.trim() });
-            bubble.textContent = cleanDisplayText(fullResponse);
             const quizBlocks = parseQuizBlocks(fullResponse);
-            if (quizBlocks) { renderQuizBlocks(quizBlocks, assistantDiv); }
-            else { const mcOpts = parseMCOptions(fullResponse); if (mcOpts) renderMCButtons(mcOpts, assistantDiv); }
+            if (quizBlocks) {
+              bubble.textContent = getTextBeforeQuizBlocks(fullResponse);
+              renderQuizBlocks(quizBlocks, assistantDiv);
+              assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+              bubble.textContent = cleanDisplayText(fullResponse);
+              const mcOpts = parseMCOptions(fullResponse);
+              if (mcOpts) renderMCButtons(mcOpts, assistantDiv);
+            }
             saveHistoryToServer();
             if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
             isStreaming = false;
@@ -1376,6 +1432,7 @@
       messages = [];
       addMessage("assistant", WELCOME_MESSAGE);
       messages.push({ role: "assistant", content: WELCOME_MESSAGE });
+      addStartButton();
     }
 
     function saveHistoryToServer() {
@@ -1508,6 +1565,25 @@
       return div.innerHTML;
     }
 
+    function addStartButton() {
+      const btnDiv = document.createElement("div");
+      btnDiv.id = "start-btn-container";
+      btnDiv.style.cssText = "display:flex;justify-content:center;padding:12px 0;";
+      const btn = document.createElement("button");
+      btn.className = "quiz-continue-btn";
+      btn.textContent = "Yes, I'm Ready";
+      btn.style.cssText = "max-width:300px;";
+      btn.addEventListener("click", () => {
+        btnDiv.remove();
+        addMessage("user", "Yes");
+        messages.push({ role: "user", content: "Yes" });
+        sendToAI();
+      });
+      btnDiv.appendChild(btn);
+      messagesEl.appendChild(btnDiv);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
     function showTyping() {
       const div = document.createElement("div");
       div.className = "msg assistant";
@@ -1597,14 +1673,15 @@
         // Store full response with tags for history
         messages.push({ role: "assistant", content: fullResponse.trim() });
 
-        // Clean display
-        bubble.textContent = cleanDisplayText(fullResponse);
-
         // Render quiz blocks (multi-select, single-select, text inputs)
         const quizBlocks2 = parseQuizBlocks(fullResponse);
         if (quizBlocks2) {
+          bubble.textContent = getTextBeforeQuizBlocks(fullResponse);
           renderQuizBlocks(quizBlocks2, assistantDiv);
+          // Auto-scroll to top of this section
+          assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
+          bubble.textContent = cleanDisplayText(fullResponse);
           const mcOptions = parseMCOptions(fullResponse);
           if (mcOptions) renderMCButtons(mcOptions, assistantDiv);
         }
@@ -1681,12 +1758,13 @@
         }
         parseProgressFromResponse(fullResponse);
         messages.push({ role: "assistant", content: fullResponse.trim() });
-        bubble.textContent = cleanDisplayText(fullResponse);
 
         // Render quiz blocks (multi-select, single-select, text inputs)
         const quizBlocks = parseQuizBlocks(fullResponse);
         if (quizBlocks) {
+          bubble.textContent = getTextBeforeQuizBlocks(fullResponse);
           renderQuizBlocks(quizBlocks, assistantDiv);
+          assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" });
         } else {
           // Fallback to old MC buttons if no quiz blocks
           const mcOptions = parseMCOptions(fullResponse);
