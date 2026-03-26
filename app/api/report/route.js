@@ -746,11 +746,15 @@ async function generatePDF(analysis, firstName) {
 
     function drawFlowNode(label, value, highlight) {
       const col = highlight ? GOLD : BORDER;
-      doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).fill(CARD_BG);
-      doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
+      const valText = sanitize(value || "");
+      const valH = doc.fontSize(16).font("Helvetica").heightOfString(valText, { width: nodeW2 - 24 });
+      const boxH = Math.max(nodeH2, 28 + valH + 10);
+      checkFit(boxH + arrowH + 4);
+      doc.roundedRect(nodeX, y, nodeW2, boxH, 5).fill(CARD_BG);
+      doc.roundedRect(nodeX, y, nodeW2, boxH, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
       doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 8, { characterSpacing: 1 });
-      _currentTextColor = WHITE; doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(fit(value, 60), nodeX + 12, y + 26, { width: nodeW2 - 24 });
-      y += nodeH2;
+      _currentTextColor = WHITE; doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(valText, nodeX + 12, y + 28, { width: nodeW2 - 24 });
+      y += boxH;
     }
     function drawArrow() {
       const cx = nodeX + nodeW2 / 2;
