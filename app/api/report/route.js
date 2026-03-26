@@ -738,9 +738,9 @@ async function generatePDF(analysis, firstName) {
     y = doc.y + 16;
 
     // Vertical flow diagram
-    const nodeW2 = CW - 60;
-    const nodeH2 = 42;
-    const nodeX = M + 30;
+    const nodeW2 = CW - 40;
+    const nodeH2 = 52;
+    const nodeX = M + 20;
     const gapV = 8;
     const arrowH = 16;
 
@@ -748,8 +748,8 @@ async function generatePDF(analysis, firstName) {
       const col = highlight ? GOLD : BORDER;
       doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).fill(CARD_BG);
       doc.roundedRect(nodeX, y, nodeW2, nodeH2, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
-      doc.fontSize(9).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 6, { characterSpacing: 1 });
-      doc.fontSize(10).fillColor(WHITE).font("Helvetica").text(fit(value, 70), nodeX + 12, y + 20, { width: nodeW2 - 24 });
+      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 8, { characterSpacing: 1 });
+      _currentTextColor = WHITE; doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(fit(value, 60), nodeX + 12, y + 26, { width: nodeW2 - 24 });
       y += nodeH2;
     }
     function drawArrow() {
