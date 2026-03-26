@@ -770,9 +770,9 @@ async function generatePDF(analysis, firstName) {
     drawFlowNode("CHILDHOOD ENVIRONMENT + FAITH ENVIRONMENT",
       [analysis.imprintingContext, analysis.purityCultureImpact ? "Purity culture present" : ""].filter(Boolean).join(" | ") || "Your upbringing", true);
     drawArrow();
-    drawFlowNode("ROOT NARRATIVE FORMED", `"${fit(analysis.rootNarrativeStatement, 70)}"`, true);
+    drawFlowNode("ROOT NARRATIVE FORMED", `"${sanitize(analysis.rootNarrativeStatement || "")}"`, true);
     drawArrow();
-    drawFlowNode("FIRST EXPOSURE", `Age ${analysis.imprintingAge || "?"} — ${fit(analysis.imprintingContext, 60)}`, true);
+    drawFlowNode("FIRST EXPOSURE", `Age ${sanitize(analysis.imprintingAge || "?")}, ${sanitize(analysis.imprintingContext || "")}`, true);
     drawArrow();
     drawFlowNode("AROUSAL TEMPLATE ENCODED", analysis.arousalTemplateType || "Unknown", true);
     drawArrow();
