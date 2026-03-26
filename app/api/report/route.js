@@ -262,8 +262,19 @@ Return ONLY valid JSON, no markdown:
   "leadershipBurdenExplanation": "2-3 sentences. He carries everyone. No one carries him. The behavior is the one place his nervous system does not have to perform. God never designed him to lead from isolation. Or null.",
 
   "escalationPresent": true or false,
+  "escalationSeverity": "1-5 scale: 1=stable, 2=mild, 3=moderate, 4=significant, 5=severe",
   "patternYears": "estimate of how many years based on context clues, or 'many' if unknown",
   "isolationLevel": "description based on relational void selections",
+  "isolationScore": "1-5 scale based on void items and disclosure level",
+
+  "scorecardBehaviorCount": "number of behaviors selected in Section 1",
+  "scorecardContentThemeCount": "number of content themes selected in Section 2",
+  "scorecardConfusingPatternCount": "number of confusing patterns (Category H) selected",
+  "scorecardEmotionalFunctionCount": "number of emotional functions selected in Section 3",
+  "scorecardChildhoodWoundScore": "1-5 severity: based on home/father/mother/church selections. 1=minimal, 5=severe across all areas",
+  "scorecardAttachmentSeverity": "1-5: 1=secure, 2=mild insecure, 3=moderate, 4=significant, 5=disorganized",
+  "scorecardSpiritualDisconnect": "1-5: based on god_ items. 1=connected, 5=severely disconnected",
+  "scorecardRelationalBurden": "1-5: combined codependency+enmeshment+void+leadership score",
 
   "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
   "closingStatement": "3-4 sentences. The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
@@ -441,6 +452,109 @@ async function generatePDF(analysis, firstName) {
     // Disclaimer
     const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
     doc.fontSize(9).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 110, { width: CW - 20, align: "center", lineGap: 2 });
+
+    // ════════════════════════════════════════
+    // SCORECARD PAGE — Results Overview
+    // ════════════════════════════════════════
+    newPage(); y = CONTENT_TOP;
+    sectionHeader("YOUR RESULTS AT A GLANCE");
+
+    // Color coding function: 1-2 green, 3 yellow, 4-5 red
+    function scoreColor(score) {
+      const s = parseInt(score) || 0;
+      if (s <= 2) return [80, 180, 80];   // green
+      if (s <= 3) return [220, 180, 40];  // yellow
+      return [200, 60, 60];               // red
+    }
+    function scoreLabelColor(score) {
+      const s = parseInt(score) || 0;
+      if (s <= 2) return "Low";
+      if (s <= 3) return "Moderate";
+      return "Elevated";
+    }
+
+    // Summary cards row
+    const summW = (CW - 20) / 3;
+    const summH = 60;
+    const summCards = [
+      { label: "BEHAVIORS", value: analysis.scorecardBehaviorCount || "0", sub: "identified" },
+      { label: "CONTENT THEMES", value: analysis.scorecardContentThemeCount || "0", sub: "active" },
+      { label: "CONFUSING PATTERNS", value: analysis.scorecardConfusingPatternCount || "0", sub: "decoded" },
+    ];
+    for (let i = 0; i < 3; i++) {
+      const sx = M + i * (summW + 10);
+      doc.roundedRect(sx, y, summW, summH, 6).fill(CARD_BG);
+      doc.fontSize(10).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
+      doc.fontSize(28).fillColor(WHITE).font("Helvetica-Bold").text(String(summCards[i].value), sx + 10, y + 26, { width: summW - 20, align: "center" });
+    }
+    y += summH + 20;
+
+    // Scored dimensions with bar chart
+    const dimensions = [
+      { label: "Childhood Wound Severity", score: analysis.scorecardChildhoodWoundScore, max: 5 },
+      { label: "Attachment Insecurity", score: analysis.scorecardAttachmentSeverity, max: 5 },
+      { label: "Escalation Risk", score: analysis.escalationSeverity, max: 5 },
+      { label: "Spiritual Disconnect", score: analysis.scorecardSpiritualDisconnect, max: 5 },
+      { label: "Relational Burden", score: analysis.scorecardRelationalBurden, max: 5 },
+      { label: "Isolation Level", score: analysis.isolationScore, max: 5 },
+    ];
+
+    const barH = 14;
+    const barGap = 38;
+    for (const dim of dimensions) {
+      const s = parseInt(dim.score) || 0;
+      const pct = Math.min(1, s / dim.max);
+      const col = scoreColor(s);
+      const sLabel = scoreLabelColor(s);
+
+      checkFit(barGap + 10);
+      // Label
+      doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(dim.label, M, y);
+      doc.fontSize(14).fillColor(col).font("Helvetica-Bold").text(`${s} / ${dim.max}  (${sLabel})`, M + CW - 120, y, { width: 120, align: "right" });
+      y += 20;
+      // Bar background
+      doc.roundedRect(M, y, CW, barH, 7).fill([40, 40, 40]);
+      // Bar fill
+      if (pct > 0) doc.roundedRect(M, y, CW * pct, barH, 7).fill(col);
+      y += barH + (barGap - 20 - barH);
+    }
+
+    y += 10;
+    // Relational pattern scores mini-row
+    doc.fontSize(12).fillColor(GOLD).font("Helvetica").text("RELATIONAL PATTERN BREAKDOWN", M, y, { characterSpacing: 1 });
+    y += 18;
+
+    const relScores = [
+      { label: "Codependency", score: analysis.codependencyScore, max: 3 },
+      { label: "Enmeshment", score: analysis.enmeshmentScore, max: 3 },
+      { label: "Relational Void", score: analysis.relationalVoidScore, max: 3 },
+      { label: "Leadership Burden", score: analysis.leadershipBurdenScore, max: 3 },
+    ];
+    const relW = (CW - 30) / 4;
+    for (let i = 0; i < 4; i++) {
+      const rx = M + i * (relW + 10);
+      const rs = parseInt(relScores[i].score) || 0;
+      const rc = rs <= 1 ? [80, 180, 80] : rs <= 2 ? [220, 180, 40] : [200, 60, 60];
+      doc.roundedRect(rx, y, relW, 50, 6).fill(CARD_BG);
+      doc.fontSize(9).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
+      doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 24, { width: relW - 12, align: "center" });
+    }
+    y += 70;
+
+    // Key findings summary
+    checkFit(60);
+    doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
+    y += 14;
+    doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+      `Primary Pattern: ${sanitize(analysis.arousalTemplateType || "Unknown")}  |  Neuropathway: ${sanitize(analysis.neuropathway || "Unknown")}  |  Attachment: ${sanitize(analysis.attachmentStyle || "Unknown")}`,
+      M, y, { width: CW, lineGap: 4 }
+    );
+    y = doc.y + 14;
+
+    doc.fontSize(16).fillColor(GRAY).font("Helvetica-Oblique").text(
+      "The sections that follow break down each of these results in detail.",
+      M, y, { width: CW }
+    );
 
     // ════════════════════════════════════════
     // SECTION 1 — AROUSAL TEMPLATE TYPE
