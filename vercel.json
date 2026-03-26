@@ -4,7 +4,7 @@
       "maxDuration": 60
     },
     "app/api/report/route.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   }
 }

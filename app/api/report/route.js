@@ -4,6 +4,8 @@ import PDFDocument from "pdfkit";
 import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 
+export const maxDuration = 300;
+
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
 // Purpose: Increase awareness that the behavior is a SYMPTOM,
