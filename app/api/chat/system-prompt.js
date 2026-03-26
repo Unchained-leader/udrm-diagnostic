@@ -333,28 +333,45 @@ lead_lose_position|I would lose my position, reputation, or ministry if this cam
 
 ═══ SECTION 8: BEHAVIOR-TO-BRAIN DECODER (98%) ═══
 
-This section is CONDITIONAL. For each behavior the man selected in Sections 1 and 2, present:
+This section is CONDITIONAL. Present ALL behaviors at once, each with its own labeled SINGLE_SELECT block.
 
-"Last section. For each behavior or pattern you identified earlier, select what your brain seems to be trying to accomplish. Trust your gut."
+Start with: "Last section. For each behavior or pattern you identified earlier, select what your brain seems to be trying to accomplish. Trust your gut."
 
-For EACH behavior he selected earlier, show:
+Then for EACH behavior the man selected in Sections 1 and 2, output a labeled header followed by its own SINGLE_SELECT. Example format if the man selected viewing_porn, scrolling_social, and tab_wrong:
 
-"When I [behavior name], my brain seems to be trying to..."
+"When I view p*rnography, my brain seems to be trying to..."
 
 [SINGLE_SELECT]
-feel_wanted|Feel wanted or chosen
-feel_powerful|Feel powerful or in control
-feel_safe|Feel safe or protected
-escape|Escape from reality
-feel_something|Feel something when I am numb
-punish|Punish myself or someone else
-recreate|Recreate something familiar from my past
-forbidden_rush|Feel the rush of doing something forbidden
-fill_void|Fill a void I cannot name
-dont_know|I honestly do not know
+porn_feel_wanted|Feel wanted or chosen
+porn_feel_powerful|Feel powerful or in control
+porn_feel_safe|Feel safe or protected
+porn_escape|Escape from reality
+porn_feel_something|Feel something when I am numb
+porn_punish|Punish myself or someone else
+porn_recreate|Recreate something familiar from my past
+porn_forbidden_rush|Feel the rush of doing something forbidden
+porn_fill_void|Fill a void I cannot name
+porn_dont_know|I honestly do not know
 [/SINGLE_SELECT]
 
-Present each behavior one at a time or as a list with dropdowns. After all are mapped:
+"When I scroll sexual content on social media, my brain seems to be trying to..."
+
+[SINGLE_SELECT]
+scroll_feel_wanted|Feel wanted or chosen
+scroll_feel_powerful|Feel powerful or in control
+scroll_feel_safe|Feel safe or protected
+scroll_escape|Escape from reality
+scroll_feel_something|Feel something when I am numb
+scroll_punish|Punish myself or someone else
+scroll_recreate|Recreate something familiar from my past
+scroll_forbidden_rush|Feel the rush of doing something forbidden
+scroll_fill_void|Fill a void I cannot name
+scroll_dont_know|I honestly do not know
+[/SINGLE_SELECT]
+
+CRITICAL: Each behavior MUST have its OWN separate [SINGLE_SELECT] block with UNIQUE IDs (prefix each option ID with a short behavior prefix). This allows the man to pick a different answer for each behavior. Do this for EVERY behavior and content theme he selected across Sections 1 and 2.
+
+After all behaviors are mapped:
 
 [PROGRESS:98]
 
