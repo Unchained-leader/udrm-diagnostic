@@ -1016,14 +1016,14 @@
       captureDiv.id = "contact-capture";
       captureDiv.style.display = "block";
       captureDiv.innerHTML = `
-        <h3>Receive Your Report</h3>
-        <p class="capture-subtitle">This also creates a secure login so you can access your results anytime.</p>
+        <h3>Where should we send your report?</h3>
+        <p class="capture-subtitle">Unchained Leader exists because of trust. Your information is 100% confidential. We never share it. Ever.</p>
         <input type="text" id="capture-name" placeholder="Your first name" autocomplete="given-name" />
         <input type="email" id="capture-email" placeholder="Your email address" autocomplete="email" />
-        <input type="tel" id="capture-phone" placeholder="Phone number (optional — for discreet text link)" autocomplete="tel" />
-        <input type="password" id="capture-pin" placeholder="Choose a 4-digit PIN" maxlength="4" pattern="\\d{4}" inputmode="numeric" autocomplete="off" />
+        <input type="tel" id="capture-phone" placeholder="Phone number (we'll text you a discreet private link)" autocomplete="tel" />
+        <input type="password" id="capture-pin" placeholder="Choose a 4-digit PIN (secures your report)" maxlength="4" pattern="\\d{4}" inputmode="numeric" autocomplete="off" />
         <div id="capture-error"></div>
-        <button id="capture-submit">Lock It In</button>
+        <button id="capture-submit">Build My Report</button>
       `;
       messagesEl.appendChild(captureDiv);
       messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -1103,7 +1103,7 @@
         captureEl.innerHTML = `
           <div style="text-align:center; padding: 8px 0;">
             <div style="color: var(--gold); font-size: 16px; font-weight: 600; margin-bottom: 8px;">Locked in.</div>
-            <div style="color: #888; font-size: 13px; line-height: 1.5;">Your report is on its way to your email. You can log back in anytime with your email and PIN.</div>
+            <div style="color: #888; font-size: 13px; line-height: 1.5;">Your 25-page Unwanted Desire Root Map is being generated now and will arrive at ${email} within the next few minutes. A discreet link is being texted to you as well.<br><br>You can log back in anytime using your email and PIN.</div>
           </div>
         `;
 
