@@ -543,7 +543,71 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(11).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
       doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 32, { width: relW - 12, align: "center" });
     }
-    y += 80;
+    y += 70;
+
+    // Relational pattern explanations
+    const relExplanations = [
+      {
+        label: "Codependency",
+        score: parseInt(analysis.codependencyScore) || 0,
+        max: 3,
+        explain: {
+          0: "No significant codependent patterns detected.",
+          1: "Mild codependent tendencies. You may occasionally prioritize others' needs at the expense of your own.",
+          2: "Moderate codependency. You regularly suppress your own needs to manage others' emotions or perceptions. This pattern drains the emotional reserves your brain then tries to replenish through the cycle.",
+          3: "Significant codependency. You consistently abandon your own needs for others. The behavior has become the only thing that feels like it belongs to you. Your report's relational section maps exactly how this fuels the cycle."
+        }
+      },
+      {
+        label: "Enmeshment",
+        score: parseInt(analysis.enmeshmentScore) || 0,
+        max: 3,
+        explain: {
+          0: "No significant enmeshment patterns detected.",
+          1: "Mild enmeshment indicators. Boundaries may have been blurred in one key relationship growing up.",
+          2: "Moderate enmeshment. You likely carried emotional weight for a parent that was never yours to carry. This distorted your understanding of where you end and others begin, which directly shapes your sexual and relational patterns.",
+          3: "Significant enmeshment. You were a parent's emotional partner, therapist, or protector. This rewired how your brain processes intimacy, boundaries, and desire. Your report maps the direct connection to your cycle."
+        }
+      },
+      {
+        label: "Relational Void",
+        score: parseInt(analysis.relationalVoidScore) || 0,
+        max: 3,
+        explain: {
+          0: "You have meaningful connection and disclosure in your life.",
+          1: "Some isolation present. Parts of your story remain hidden from the people closest to you.",
+          2: "Significant relational void. You perform a version of yourself for most people. The gap between who they see and who you are feeds the shame cycle directly.",
+          3: "Severe isolation. No one in your life knows the full truth. You have been carrying this entirely alone. Isolation is not a side effect of the behavior. It is the soil it grows in."
+        }
+      },
+      {
+        label: "Leadership Burden",
+        score: parseInt(analysis.leadershipBurdenScore) || 0,
+        max: 3,
+        explain: {
+          0: "Leadership pressure is not a significant factor in your pattern.",
+          1: "Some leadership tension. The gap between your public role and private struggle creates friction.",
+          2: "Significant leadership burden. You serve others while no one serves you. The weight of maintaining your image while fighting this battle compounds the cycle.",
+          3: "Severe leadership burden. You feel disqualified from your calling and fear discovery would cost you everything. This pressure is not separate from the behavior. It is directly connected."
+        }
+      }
+    ];
+
+    for (const rel of relExplanations) {
+      if (rel.score > 0) {
+        const explanationText = rel.explain[Math.min(rel.score, rel.max)] || "";
+        if (explanationText) {
+          checkFit(60);
+          const rc = rel.score <= 1 ? GOLD : rel.score <= 2 ? [220, 180, 40] : [200, 60, 60];
+          doc.fontSize(16).fillColor(rc).font("Helvetica-Bold").text(`${rel.label}: ${rel.score}/${rel.max}`, M, y);
+          y = doc.y + 4;
+          _currentTextColor = GRAY; doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(sanitize(explanationText), M, y, { width: CW, lineGap: 3 });
+          y = doc.y + 14;
+        }
+      }
+    }
+
+    y += 10;
 
     // Key findings summary
     checkFit(60);
