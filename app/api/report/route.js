@@ -76,15 +76,27 @@ export async function POST(request) {
     // Analyze with Claude
     const rawAnalysis = await analyzeConversation(messages, userName);
 
-    // Sanitize all string values in analysis — replace em dashes with commas
+    // Sanitize all string values: strip em dashes + internal code identifiers
+    function cleanStr(s) {
+      if (!s) return s;
+      return s
+        // Em dashes to commas
+        .replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",")
+        // Strip internal identifiers like (tab_incest), (conf_wife_others), etc.
+        .replace(/\s*\((?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\)/gi, "")
+        // Strip standalone identifiers like "tab_incest" without parens
+        .replace(/\b(?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\b/gi, "")
+        // Clean up double spaces left behind
+        .replace(/  +/g, " ").trim();
+    }
     function sanitizeObj(obj) {
       if (!obj) return obj;
       const result = {};
       for (const [k, v] of Object.entries(obj)) {
         if (typeof v === "string") {
-          result[k] = v.replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",");
+          result[k] = cleanStr(v);
         } else if (Array.isArray(v)) {
-          result[k] = v.map(item => typeof item === "object" && item !== null ? sanitizeObj(item) : typeof item === "string" ? item.replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",") : item);
+          result[k] = v.map(item => typeof item === "object" && item !== null ? sanitizeObj(item) : typeof item === "string" ? cleanStr(item) : item);
         } else {
           result[k] = v;
         }
@@ -195,7 +207,10 @@ ATTACHMENT STYLES (based on Section 6):
 - sec_ items → Secure (but hijacked)
 - Both anxious + avoidant high → Disorganized
 
-CRITICAL FORMATTING RULE: NEVER use em dashes (the long dash character) in any text. Use commas instead. Write "meaning, the brain" not "meaning — the brain."
+CRITICAL FORMATTING RULES:
+1. NEVER use em dashes (the long dash character) in any text. Use commas instead.
+2. NEVER include internal variable names, code identifiers, or selection IDs in any text. Do NOT write things like "tab_incest", "conf_wife_others", "cod_needs", "enm_parent_emotions", "god_disappointed", "void_no_one", "lead_disqualified", "val_desired", "pow_dominance", etc. These are internal system identifiers. The report is client-facing. Use plain English descriptions only. Write "incest-themed content" not "tab_incest". Write "fantasies involving your wife with others" not "conf_wife_others". Write "feeling disqualified from leadership" not "lead_disqualified".
+3. NEVER reference "selections" or "items selected" in clinical language. Write as if you know the man personally, not as if you are reading a data printout.
 
 Return ONLY valid JSON, no markdown:
 {
