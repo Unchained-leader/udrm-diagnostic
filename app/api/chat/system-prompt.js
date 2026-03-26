@@ -122,7 +122,9 @@ stayed_same|The behavior has stayed roughly the same
 
 Brief validation, then:
 
-"This section may feel uncomfortable. That is normal. Your selections here are the most diagnostic part of the entire assessment. Every pattern has a root. Select anything that resonates, even occasionally."
+"This section may feel uncomfortable. That is normal. If you have ever wondered why your brain desires these things, your detailed report will finally give you the answer you have been looking for. And it will finally make sense.
+
+Select anything that resonates, even occasionally."
 
 CRITICAL: Present ALL options in ONE single [MULTI_SELECT] block. Do NOT add category headers, bold labels, or any text between options. Just the flat list of checkboxes.
 
