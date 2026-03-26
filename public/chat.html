@@ -93,6 +93,54 @@
     }
     #sign-out-btn:hover { border-color: #444; color: #888; }
 
+    /* ========== MULTIPLE CHOICE BUTTONS ========== */
+    .mc-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .mc-btn {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      color: #e0e0e0;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1.4;
+    }
+    .mc-btn:hover {
+      background: rgba(185, 156, 79, 0.1);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+    .mc-btn:active {
+      background: rgba(185, 156, 79, 0.2);
+    }
+    .mc-btn.selected {
+      background: rgba(185, 156, 79, 0.15);
+      border-color: var(--gold);
+      color: var(--gold-light);
+      pointer-events: none;
+    }
+    .mc-btn.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .mc-btn .mc-label {
+      color: var(--gold);
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
     /* ========== PROGRESS BAR ========== */
     #progress-container {
       width: 100%;
@@ -602,14 +650,14 @@
   </div>
 
   <script>
-    const BASE_URL = window.UNCHAINED_MKT_API_URL || "https://unchained-marketing-coach.vercel.app";
+    const BASE_URL = window.UNCHAINED_MKT_API_URL || (window.location.hostname === 'localhost' ? '' : "https://unchained-marketing-coach.vercel.app");
     const API_URL = BASE_URL + "/api/chat";
     const AUTH_URL = BASE_URL + "/api/auth";
     const HISTORY_URL = BASE_URL + "/api/history";
     const RESET_URL = BASE_URL + "/api/reset-pin";
     const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
     const CTA_URL = ""; // Set later for Art of Freedom documentary
-    const WELCOME_MESSAGE = "Welcome, brother.\n\nMost approaches to this battle focus on stopping the behavior. Accountability, willpower, filters, white-knuckling it. You have probably tried some of those. And they probably worked for a while before the cycle came back.\n\nThis diagnostic takes a completely different approach. The type of content your brain gravitates toward is not random. It is a fingerprint. The specific themes, the dynamics, the pull, all of it traces directly back to a wound and a lie you believed about that wound, usually long before you ever found a screen.\n\nBy identifying your pattern, we can trace the root that is actually driving the cycle. Not the behavior. The thing underneath it. That is what makes this different from everything you have tried.\n\n100% private. 100% confidential. No one sees your answers but you.\n\n10 questions. About 5 minutes. The more honest you are, the more accurate your report will be.\n\nReady? Type yes below to get started.";
+    const WELCOME_MESSAGE = "Welcome, brother.\n\nMost approaches to this battle focus on stopping the behavior. Accountability, willpower, filters, white-knuckling it. You have probably tried some of those. And they probably worked for a while before the cycle came back.\n\nThis diagnostic takes a completely different approach. The type of content your brain gravitates toward is not random. It is a fingerprint. It traces directly back to a wound and a lie you believed about that wound, usually long before you ever found a screen.\n\nBy identifying your pattern, we can trace the root that is actually driving the cycle. Not the behavior. The thing underneath it. That is what makes this different from everything you have tried.\n\n100% private. 100% confidential. No one sees your answers but you.\n\n9 questions. About 2 minutes. Multiple choice. The more honest you are, the more your report will reveal.\n\nReady? Type yes below to get started.";
     const SESSION_KEY = "unchained_mkt_session";
     const SAVE_DEBOUNCE_MS = 2000;
 
@@ -677,7 +725,50 @@
         .replace(/\[CONTACT_CAPTURE\]/g, "")
         .replace(/\[CTA_PLACEHOLDER\]/g, "")
         .replace(/\[BOOKING_CTA\]/g, "")
+        .replace(/\[MC_OPTIONS\][\s\S]*?\[\/MC_OPTIONS\]/g, "")
         .trim();
+    }
+
+    // ========== MULTIPLE CHOICE RENDERING ==========
+    function parseMCOptions(text) {
+      const match = text.match(/\[MC_OPTIONS\]([\s\S]*?)\[\/MC_OPTIONS\]/);
+      if (!match) return null;
+      const lines = match[1].trim().split("\n").filter(l => l.trim());
+      return lines.map(line => {
+        const parts = line.split("|");
+        if (parts.length >= 2) {
+          return { label: parts[0].trim(), text: parts.slice(1).join("|").trim() };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    function renderMCButtons(options, parentDiv) {
+      const container = document.createElement("div");
+      container.className = "mc-options";
+      options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "mc-btn";
+        btn.innerHTML = `<span class="mc-label">${opt.label}</span>${opt.text}`;
+        btn.addEventListener("click", () => {
+          // Mark selected and disable all
+          container.querySelectorAll(".mc-btn").forEach(b => {
+            if (b === btn) {
+              b.classList.add("selected");
+            } else {
+              b.classList.add("disabled");
+            }
+          });
+          // Send the selection as user message
+          const userMsg = `${opt.label}) ${opt.text}`;
+          addMessage("user", userMsg);
+          messages.push({ role: "user", content: userMsg });
+          sendToAI();
+        });
+        container.appendChild(btn);
+      });
+      parentDiv.appendChild(container);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     // ========== CTA ==========
@@ -839,6 +930,8 @@
             parseProgressFromResponse(fullResponse);
             messages.push({ role: "assistant", content: fullResponse.trim() });
             bubble.textContent = cleanDisplayText(fullResponse);
+            const mcOpts = parseMCOptions(fullResponse);
+            if (mcOpts) renderMCButtons(mcOpts, assistantDiv);
             saveHistoryToServer();
             if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
             isStreaming = false;
@@ -1253,6 +1346,12 @@
         // Clean display
         bubble.textContent = cleanDisplayText(fullResponse);
 
+        // Render MC buttons if present
+        const mcOptions = parseMCOptions(fullResponse);
+        if (mcOptions) {
+          renderMCButtons(mcOptions, assistantDiv);
+        }
+
         if (currentUser) saveHistoryToServer();
 
         // Check for contact capture trigger
@@ -1273,6 +1372,77 @@
       isStreaming = false;
       sendBtn.disabled = false;
       inputEl.focus();
+    }
+
+    // ========== SEND TO AI (used by MC buttons) ==========
+    function sendToAI() {
+      if (isStreaming) return;
+      isStreaming = true;
+      sendBtn.disabled = true;
+      showTyping();
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages,
+          userId: currentUser ? currentUser.email : null,
+          userName: currentUser ? currentUser.name : null,
+          conversationSummary,
+        }),
+      }).then(async (response) => {
+        if (!response.ok) throw new Error("API error");
+        removeTyping();
+        const assistantDiv = document.createElement("div");
+        assistantDiv.className = "msg assistant";
+        const bubble = document.createElement("div");
+        bubble.className = "msg-bubble";
+        assistantDiv.appendChild(bubble);
+        messagesEl.appendChild(assistantDiv);
+        let fullResponse = "";
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") break;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.text) {
+                  fullResponse += parsed.text;
+                  bubble.textContent = cleanDisplayText(fullResponse);
+                  messagesEl.scrollTop = messagesEl.scrollHeight;
+                }
+              } catch(e) {}
+            }
+          }
+        }
+        parseProgressFromResponse(fullResponse);
+        messages.push({ role: "assistant", content: fullResponse.trim() });
+        bubble.textContent = cleanDisplayText(fullResponse);
+
+        // Render MC buttons if present
+        const mcOptions = parseMCOptions(fullResponse);
+        if (mcOptions) {
+          renderMCButtons(mcOptions, assistantDiv);
+        }
+
+        if (currentUser) saveHistoryToServer();
+        if (fullResponse.includes("[CONTACT_CAPTURE]") && !currentUser) showContactCapture();
+        if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
+        isStreaming = false;
+        sendBtn.disabled = false;
+      }).catch(() => {
+        removeTyping();
+        addMessage("assistant", "I'm having trouble connecting. Please try again.");
+        isStreaming = false;
+        sendBtn.disabled = false;
+      });
     }
 
     // ========== SAVE DIAGNOSTIC DATA ==========

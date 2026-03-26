@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import redis from "../lib/redis";
 import PDFDocument from "pdfkit";
 import { put } from "@vercel/blob";
-import { ghlDiagnosticComplete } from "../lib/ghl";
+import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
@@ -98,7 +98,8 @@ export async function POST(request) {
     await redis.set(`mkt:report:${normalizedEmail}`, {
       generatedAt: new Date().toISOString(),
       rootNarrativeType: analysis.rootNarrativeType,
-      neuropathway: analysis.neuropathway,
+      shameArchitecture: analysis.shameArchitecture,
+      genreSelected: analysis.genreSelected,
       reportUrl: reportUrl || null,
     });
 
@@ -110,6 +111,15 @@ export async function POST(request) {
       analysis,
       reportUrl,
     }).catch((e) => console.error("GHL webhook error:", e.message));
+
+    // Send report data to Reports | Root Diagnostic workflow (separate webhook)
+    ghlSendReportData({
+      email: normalizedEmail,
+      name: userName,
+      messages,
+      analysis,
+      reportUrl,
+    }).catch((e) => console.error("GHL report webhook error:", e.message));
 
     return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
   } catch (error) {
@@ -135,27 +145,34 @@ async function analyzeConversation(messages, userName) {
     max_tokens: 2048,
     messages: [{
       role: "user",
-      content: `Analyze this Root Genre Diagnostic conversation and extract structured data. Return ONLY valid JSON, no markdown.
+      content: `Analyze this Root Genre Diagnostic conversation and extract structured data. The quiz uses multiple-choice questions. Pay close attention to what the man selected for each question.
 
 CONVERSATION:
 ${conversationText}
 
-Return this JSON structure:
+GENRE-TO-WOUND MAPPING (use this to generate the whyYouWatch field):
+- Power/BDSM → Felt powerless or unsafe as a child. Brain craves control in fantasy because real life felt dangerously out of control.
+- Taboo/forbidden → Shame was fused with arousal early. The "wrongness" IS the draw. Brain eroticized shame itself.
+- Wife with others/cuckold/voyeur → Deep belief of being unworthy, not enough. Watching someone else have what you feel you cannot provide.
+- Tender/romantic → Emotionally starved. Brain is chasing intimacy and connection, not sex.
+- Same-sex (straight man) → Craving masculine validation/approval that was missing from father or key male figures.
+- Escalation/novelty → Numbing. Brain building tolerance, needing bigger doses to escape the same pain.
+
+Return ONLY valid JSON, no markdown:
 {
   "rootNarrativeType": "The Invisible Man|The Performer|The Shame Bearer|The Escapist|The Controller|The Orphan",
-  "rootNarrativeStatement": "The core lie (e.g., 'I don't matter', 'No one would love me as I am')",
-  "originSummary": "1-2 sentences connecting first exposure to the root narrative",
-  "ageFirstExposure": "number or 'unknown'",
-  "patternDescription": "2-3 sentences describing what the man's brain gravitates toward and WHY — connecting genre to the emotional need being counterfeited",
-  "neuropathway": "Arousal|Numbing|Fantasy|Deprivation",
-  "neuropathwayFunction": "1 sentence: what the behavior is DOING for the nervous system",
-  "coreEmotionManaged": "Pain|Anxiety|Shame|Terror",
+  "rootNarrativeStatement": "The core lie in the man's own emotional language (e.g., 'I am not enough', 'I do not matter', 'Something is fundamentally wrong with me')",
+  "genreSelected": "What the man selected for Q1 — the content type his brain gravitates toward",
+  "whyYouWatch": "3-4 sentences explaining WHY his brain craves this specific content. Connect the genre to the wound. This is the centerpiece of the report. Be direct, specific, and make the man feel decoded. Do NOT use clinical language. Write like a perceptive friend who finally sees the connection the man has never seen.",
+  "woundOrigin": "2-3 sentences connecting his childhood home environment (Q5) and age of first exposure (Q4) to the root narrative. How the wound was formed.",
   "shameArchitecture": "Performance Shame|Identity Shame|Silence Shame",
-  "shameDescription": "1-2 sentences connecting childhood conditioning to current shame pattern",
-  "strategiesCount": "number",
-  "yearsFighting": "number or estimate",
-  "keyInsight": "The single most important thing the man needs to understand — why his pattern is not a moral failure but a symptom of a wound. 2-3 sentences. This should land like a gut punch of clarity.",
-  "whatsBelowSurface": "1-2 sentences previewing what the Advanced Diagnostic reveals that this report does not — to create the open loop"
+  "shameCycle": "2-3 sentences explaining how the shame voice he identified (Q6) actually FUELS the cycle rather than stopping it. Connect the shame to his childhood home. The shame that was supposed to stop the behavior is the same shame that drives it.",
+  "triggerPattern": "1-2 sentences about what triggers him (Q3) and how that trigger connects to the root wound",
+  "isolationLevel": "Based on Q8 — how many people know",
+  "patternDuration": "Based on Q7 — how long and what he has tried",
+  "soulQuestion": "What he selected for Q9 — the real question underneath",
+  "keyInsight": "The single most powerful paragraph for this specific man. 3-4 sentences. Connect ALL the dots: why he watches what he watches, why shame makes it worse not better, why nothing has worked, and why it actually makes perfect sense once you see the wound. This should feel like someone turned the lights on. Write it directly to him.",
+  "whatsBelowSurface": "1-2 sentences previewing what the Advanced Diagnostic and Clarity Call reveals — the strategy autopsy, custom plan, and the full WHY behind every failed approach"
 }`
     }],
   });
@@ -171,17 +188,16 @@ Return this JSON structure:
     return {
       rootNarrativeType: "Unknown",
       rootNarrativeStatement: "Unable to determine",
-      originSummary: "Diagnostic data was insufficient for full analysis.",
-      ageFirstExposure: "unknown",
-      patternDescription: "Further diagnostic conversation needed.",
-      neuropathway: "Unknown",
-      neuropathwayFunction: "Unable to determine from available data.",
-      coreEmotionManaged: "Unknown",
+      genreSelected: "Unknown",
+      whyYouWatch: "Your pattern is not random. The content your brain gravitates toward traces directly to a wound and a belief formed long before you ever found a screen.",
+      woundOrigin: "Further diagnostic data needed to trace the origin.",
       shameArchitecture: "Unknown",
-      shameDescription: "Further data needed.",
-      strategiesCount: "0",
-      yearsFighting: "unknown",
-      keyInsight: "Your pattern is not random. It is connected to something deeper.",
+      shameCycle: "The shame you feel after acting out is not stopping the cycle. It is fueling it.",
+      triggerPattern: "Further data needed.",
+      isolationLevel: "Unknown",
+      patternDuration: "Unknown",
+      soulQuestion: "Unknown",
+      keyInsight: "Your pattern is not random. It is connected to something deeper. The content your brain craves is counterfeiting something your soul actually needs.",
       whatsBelowSurface: "The Advanced Diagnostic reveals the WHY behind every failed strategy and builds a custom plan for your specific root.",
     };
   }
@@ -240,57 +256,43 @@ async function generatePDF(analysis, firstName) {
     doc.fontSize(8).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 3 });
     y += 40;
 
+    // ── WHY YOU WATCH WHAT YOU WATCH — the main reveal ──
+    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHY YOUR BRAIN CRAVES THIS", M, y, { characterSpacing: 2 });
+    y += 20;
+
+    doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
+    y += 16;
+
+    doc.fontSize(10.5).fillColor(WHITE).font("Helvetica").text(
+      analysis.whyYouWatch || "Your pattern is not random.",
+      M, y, { width: CW, lineGap: 5 }
+    );
+    y = doc.y + 20;
+
     // ── Root Narrative Type Card ──
-    doc.roundedRect(M, y, CW, 90, 8).fill(CARD_BG);
-    doc.roundedRect(M, y, CW, 90, 8).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.roundedRect(M, y, CW, 70, 8).fill(CARD_BG);
+    doc.roundedRect(M, y, CW, 70, 8).strokeColor(BORDER).lineWidth(1).stroke();
 
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("YOUR ROOT NARRATIVE TYPE", M + 20, y + 14, { characterSpacing: 2 });
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(analysis.rootNarrativeType || "Unknown", M + 20, y + 32);
-    doc.fontSize(11).fillColor(GRAY).font("Helvetica-Oblique").text(`"${analysis.rootNarrativeStatement || ""}"`, M + 20, y + 58, { width: CW - 40 });
-    y += 110;
+    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("YOUR ROOT NARRATIVE TYPE", M + 20, y + 12, { characterSpacing: 2 });
+    doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text(analysis.rootNarrativeType || "Unknown", M + 20, y + 28);
+    doc.fontSize(10).fillColor(GRAY).font("Helvetica-Oblique").text(`"${analysis.rootNarrativeStatement || ""}"`, M + 20, y + 50, { width: CW - 40 });
+    y += 90;
 
-    // ── The key paragraph — this is the awareness driver ──
-    doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold").text("What This Means", M, y);
+    // ── Where the wound came from ──
+    doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold").text("Where This Started", M, y);
     y += 16;
     doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(
-      analysis.originSummary || "",
-      M, y, { width: CW, lineGap: 4 }
-    );
-    y = doc.y + 14;
-
-    doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(
-      analysis.patternDescription || "",
+      analysis.woundOrigin || "",
       M, y, { width: CW, lineGap: 4 }
     );
     y = doc.y + 20;
 
-    // ── Neuropathway + Core Emotion — two info boxes side by side ──
-    const boxW = (CW - 16) / 2;
-    // Left box: Neuropathway
-    doc.roundedRect(M, y, boxW, 65, 6).fill(CARD_BG);
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("YOUR NEUROPATHWAY", M + 14, y + 10, { characterSpacing: 1 });
-    doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold").text(analysis.neuropathway || "Unknown", M + 14, y + 26);
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.neuropathwayFunction || "", M + 14, y + 44, { width: boxW - 28 });
-
-    // Right box: Core Emotion
-    const rx = M + boxW + 16;
-    doc.roundedRect(rx, y, boxW, 65, 6).fill(CARD_BG);
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("CORE EMOTION MANAGED", rx + 14, y + 10, { characterSpacing: 1 });
-    doc.fontSize(13).fillColor(WHITE).font("Helvetica-Bold").text(analysis.coreEmotionManaged || "Unknown", rx + 14, y + 26);
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(
-      analysis.coreEmotionManaged === "Pain" ? "Your brain uses intensity to override pain."
-      : analysis.coreEmotionManaged === "Anxiety" ? "Your brain uses sedation to manage anxiety."
-      : analysis.coreEmotionManaged === "Shame" ? "Your brain uses escape to avoid shame."
-      : analysis.coreEmotionManaged === "Terror" ? "Your brain uses control to manage terror."
-      : "", rx + 14, y + 44, { width: boxW - 28 });
-    y += 85;
-
-    // ── Shame Architecture ──
-    doc.roundedRect(M, y, CW, 55, 6).fill(CARD_BG);
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("YOUR SHAME ARCHITECTURE", M + 14, y + 10, { characterSpacing: 1 });
+    // ── Shame Cycle — how shame fuels the behavior ──
+    doc.roundedRect(M, y, CW, 75, 6).fill(CARD_BG);
+    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE SHAME CYCLE", M + 14, y + 10, { characterSpacing: 1 });
     doc.fontSize(12).fillColor(WHITE).font("Helvetica-Bold").text(analysis.shameArchitecture || "Unknown", M + 14, y + 26);
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.shameDescription || "", M + 14, y + 42, { width: CW - 28 });
-    y += 70;
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(analysis.shameCycle || "", M + 14, y + 44, { width: CW - 28, lineGap: 3 });
+    y += 95;
 
     // Footer
     doc.fontSize(7).fillColor([80, 80, 80]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 35, { width: CW, align: "center", characterSpacing: 1 });
@@ -306,37 +308,30 @@ async function generatePDF(analysis, firstName) {
     y = 50;
 
     // Section header
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("THE REAL ISSUE", M, y, { characterSpacing: 3 });
+    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("THE FULL PICTURE", M, y, { characterSpacing: 3 });
     y += 24;
 
     // The key insight — this is the most important content on the report
     doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
     y += 16;
 
-    doc.fontSize(12).fillColor(WHITE).font("Helvetica-Bold").text(
-      "This is not a behavior problem.",
-      M, y, { width: CW }
-    );
-    y = doc.y + 12;
-
-    doc.fontSize(10.5).fillColor(GRAY).font("Helvetica").text(
+    doc.fontSize(10.5).fillColor(WHITE).font("Helvetica").text(
       analysis.keyInsight || "Your pattern is not random. It is connected to a wound that happened long before the behavior started.",
       M, y, { width: CW, lineGap: 5 }
     );
     y = doc.y + 20;
 
-    // Strategy count callout
-    const strats = analysis.strategiesCount || "several";
-    const years = analysis.yearsFighting || "years";
-    doc.roundedRect(M, y, CW, 70, 8).fill(CARD_BG);
-    doc.roundedRect(M, y, CW, 70, 8).strokeColor(BORDER).lineWidth(1).stroke();
+    // Pattern duration callout
+    const duration = analysis.patternDuration || "years of fighting this";
+    doc.roundedRect(M, y, CW, 60, 8).fill(CARD_BG);
+    doc.roundedRect(M, y, CW, 60, 8).strokeColor(BORDER).lineWidth(1).stroke();
 
     doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHY NOTHING HAS WORKED", M + 20, y + 12, { characterSpacing: 1 });
     doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(
-      `You have tried ${strats} approaches over ${years} years. Every one of them targeted the behavior. Not one of them reached the root narrative that says "${analysis.rootNarrativeStatement || 'something is wrong with me'}." That is not a willpower failure. That is a targeting problem.`,
-      M + 20, y + 30, { width: CW - 40, lineGap: 4 }
+      `${duration}. Every approach targeted the behavior. Not one of them reached the root narrative that says "${analysis.rootNarrativeStatement || 'something is wrong with me'}." That is not a willpower failure. That is a targeting problem.`,
+      M + 20, y + 28, { width: CW - 40, lineGap: 4 }
     );
-    y += 90;
+    y = doc.y + 20;
 
     // The behavior-as-symptom visual metaphor
     doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold").text("What You Are Actually Dealing With", M, y);
@@ -420,10 +415,10 @@ async function generatePDF(analysis, firstName) {
     y += 16;
 
     const knowItems = [
-      `Your Root Narrative Type (${analysis.rootNarrativeType})`,
-      `The neuropathway your brain uses to manage ${(analysis.coreEmotionManaged || "pain").toLowerCase()}`,
-      `The shame architecture built in childhood that the behavior plugged into`,
-      `Why ${strats} strategies over ${years} years never reached the root`,
+      `Why your brain craves the specific content it craves`,
+      `Your Root Narrative Type (${analysis.rootNarrativeType}) and the wound underneath`,
+      `The shame cycle that fuels the behavior instead of stopping it`,
+      `Why everything you have tried has missed the actual target`,
     ];
     for (const item of knowItems) {
       doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 10, y, { width: CW - 20, lineGap: 2 });
@@ -435,9 +430,9 @@ async function generatePDF(analysis, firstName) {
     y += 16;
 
     const hiddenItems = [
-      "Your complete Strategy Autopsy — the clinical reason each approach was designed to fail against your specific pattern",
-      "Your Addiction Matrix Profile — the intersection of your neuropathway and the emotional function",
-      "Your custom plan — exactly what needs to happen to address the root, not the symptom",
+      "Your complete Strategy Autopsy — why each specific approach you tried was designed to fail against your pattern",
+      "Your full Trigger Map — the emotional and physical chain that fires before you are even aware of the urge",
+      "Your custom plan — exactly what needs to happen to address the root, built from your specific data",
     ];
     for (const item of hiddenItems) {
       doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 10, y, { width: CW - 20, lineGap: 2 });
@@ -505,7 +500,7 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
             ${firstName}, your Root Genre Diagnostic report is attached.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
-            This report reveals your Root Narrative Type, the neuropathway your brain is using, and the shame architecture that was built long before the behavior started. It is designed to show you what is actually driving the cycle, not just the symptom.
+            This report reveals why your brain craves the specific content it craves, the wound underneath your pattern, and the shame cycle that has been fueling the behavior instead of stopping it. It is designed to show you what is actually driving the cycle, not just the symptom.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
             What you see in this report is about 20% of your full diagnostic. To see the complete picture and get a custom plan, log back in with your email and PIN.

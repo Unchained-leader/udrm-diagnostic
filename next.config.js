@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // PDFKit needs access to font files on disk
+  serverExternalPackages: ["pdfkit"],
+  experimental: {
+    serverComponentsExternalPackages: ["pdfkit"],
+  },
   // Allow CORS for GoHighLevel embedding
   async headers() {
     return [

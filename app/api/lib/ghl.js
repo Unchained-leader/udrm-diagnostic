@@ -135,3 +135,112 @@ export async function ghlBookingConfirmed({ email, name }) {
     tags: ["Clarity Call Booked", "$27 Paid"],
   });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// REPORT DELIVERY WEBHOOK — Separate workflow for diagnostic data
+// Sends formatted note + report URL to contact profile
+// ═══════════════════════════════════════════════════════════════
+
+function buildDiagnosticNote(analysis, reportUrl, messages) {
+  const a = analysis || {};
+  const lines = [
+    `=== ROOT GENRE DIAGNOSTIC ===`,
+    `Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
+    ``,
+    `--- ROOT NARRATIVE ---`,
+    `Type: ${a.rootNarrativeType || "Unknown"}`,
+    `Statement: "${a.rootNarrativeStatement || "N/A"}"`,
+    `Origin: ${a.originSummary || "N/A"}`,
+    `Age First Exposure: ${a.ageFirstExposure || "Unknown"}`,
+    ``,
+    `--- NEUROPATHWAY ---`,
+    `Pathway: ${a.neuropathway || "Unknown"}`,
+    `Function: ${a.neuropathwayFunction || "N/A"}`,
+    `Core Emotion Managed: ${a.coreEmotionManaged || "Unknown"}`,
+    ``,
+    `--- SHAME ARCHITECTURE ---`,
+    `Type: ${a.shameArchitecture || "Unknown"}`,
+    `Description: ${a.shameDescription || "N/A"}`,
+    ``,
+    `--- PATTERN ---`,
+    `${a.patternDescription || "N/A"}`,
+    ``,
+    `--- KEY INSIGHT ---`,
+    `${a.keyInsight || "N/A"}`,
+    ``,
+    `--- HISTORY ---`,
+    `Strategies Tried: ${a.strategiesCount || "Unknown"}`,
+    `Years Fighting: ${a.yearsFighting || "Unknown"}`,
+    ``,
+    `--- REPORT ---`,
+    `Report 1 URL: ${reportUrl || "Not generated"}`,
+    `What's Below Surface: ${a.whatsBelowSurface || "N/A"}`,
+  ];
+
+  // Add conversation summary if messages available
+  if (messages && Array.isArray(messages)) {
+    const userAnswers = messages
+      .filter((m) => m.role === "user")
+      .map((m) =>
+        m.content
+          .replace(/\[PROGRESS:\d+\]/g, "")
+          .replace(/\[CRISIS_DETECTED\]/g, "")
+          .trim()
+      )
+      .filter(Boolean);
+
+    if (userAnswers.length > 0) {
+      lines.push(``);
+      lines.push(`--- CONVERSATION (User Answers) ---`);
+      userAnswers.forEach((answer, i) => {
+        lines.push(`${i + 1}. ${answer}`);
+      });
+    }
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Send report data to the Reports | Root Diagnostic workflow
+ * Uses a separate webhook URL (GHL_REPORT_WEBHOOK_URL)
+ */
+export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl }) {
+  const webhookUrl = process.env.GHL_REPORT_WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.log("GHL_REPORT_WEBHOOK_URL not configured — skipping report delivery");
+    return;
+  }
+
+  const note = buildDiagnosticNote(analysis, reportUrl, messages);
+
+  const payload = {
+    event: "report_delivery",
+    timestamp: new Date().toISOString(),
+    contact: {
+      email: email || "",
+      firstName: (name || "").split(" ")[0] || "",
+      lastName: (name || "").split(" ").slice(1).join(" ") || "",
+      phone: phone || "",
+      name: name || "",
+    },
+    tags: [
+      "Diagnostic Complete",
+      "Report 1 Sent",
+      `RNT: ${analysis?.rootNarrativeType || "Unknown"}`,
+    ],
+    reportUrl: reportUrl || null,
+    note,
+  };
+
+  try {
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    console.log(`GHL report webhook sent: ${res.status}`);
+  } catch (e) {
+    console.error("GHL report webhook failed:", e.message);
+  }
+}
