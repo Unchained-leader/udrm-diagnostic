@@ -459,17 +459,17 @@ async function generatePDF(analysis, firstName) {
     newPage(); y = CONTENT_TOP;
     sectionHeader("YOUR RESULTS AT A GLANCE");
 
-    // Color coding function: 1-2 green, 3 yellow, 4-5 red
+    // Color coding: 1-2 green, 3-4 yellow, 5 red
     function scoreColor(score) {
       const s = parseInt(score) || 0;
       if (s <= 2) return [80, 180, 80];   // green
-      if (s <= 3) return [220, 180, 40];  // yellow
+      if (s <= 4) return [220, 180, 40];  // yellow
       return [200, 60, 60];               // red
     }
     function scoreLabelColor(score) {
       const s = parseInt(score) || 0;
       if (s <= 2) return "Low";
-      if (s <= 3) return "Moderate";
+      if (s <= 4) return "Moderate";
       return "Elevated";
     }
 
@@ -534,7 +534,7 @@ async function generatePDF(analysis, firstName) {
     for (let i = 0; i < 4; i++) {
       const rx = M + i * (relW + 10);
       const rs = parseInt(relScores[i].score) || 0;
-      const rc = rs <= 1 ? [80, 180, 80] : rs <= 2 ? [220, 180, 40] : [200, 60, 60];
+      const rc = rs <= 1 ? [80, 180, 80] : rs <= 2 ? [220, 180, 40] : [200, 60, 60]; // 3/3 = red, 2/3 = yellow, 1/3 or 0 = green
       doc.roundedRect(rx, y, relW, 50, 6).fill(CARD_BG);
       doc.fontSize(9).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
       doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 24, { width: relW - 12, align: "center" });
