@@ -211,8 +211,9 @@ async function generatePDF(analysis, firstName) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: "letter",
-      margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      margins: { top: 40, bottom: 40, left: 50, right: 50 },
       bufferPages: true,
+      autoFirstPage: false,
     });
 
     const chunks = [];
@@ -220,249 +221,229 @@ async function generatePDF(analysis, firstName) {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    const W = 612; // letter width
-    const H = 792; // letter height
-    const M = 50;  // margin
-    const CW = W - M * 2; // content width
+    const W = 612;
+    const H = 792;
+    const M = 50;
+    const CW = W - M * 2;
+    const PAGE_BOTTOM = H - 50; // safe content bottom
+
+    // Helper: add dark page with gold accent
+    function newPage() {
+      doc.addPage();
+      doc.rect(0, 0, W, H).fill(DK_BG);
+      doc.rect(0, 0, W, 3).fill(GOLD);
+    }
+
+    // Helper: truncate text to fit a box width
+    function fitText(text, maxChars) {
+      if (!text) return "";
+      if (text.length <= maxChars) return text;
+      return text.substring(0, maxChars - 3) + "...";
+    }
 
     // ══════════════════════════════════
-    // PAGE 1 — COVER + ROOT NARRATIVE
+    // PAGE 1 — COVER + GENRE REVEAL
     // ══════════════════════════════════
+    newPage();
 
-    // Dark background
-    doc.rect(0, 0, W, H).fill(DK_BG);
+    let y = 50;
+    doc.fontSize(10).fillColor(GOLD).font("Helvetica").text("UNCHAINED LEADER", M, y, { width: CW, align: "center", characterSpacing: 3 });
+    y += 26;
+    doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text("ROOT GENRE DIAGNOSTIC", M, y, { width: CW, align: "center" });
+    y += 32;
+    doc.rect(W / 2 - 30, y, 60, 2).fill(GOLD);
+    y += 14;
+    doc.fontSize(12).fillColor(GRAY).font("Helvetica").text(`Prepared for ${firstName}`, M, y, { width: CW, align: "center" });
+    y += 18;
+    doc.fontSize(9).text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), M, y, { width: CW, align: "center" });
+    y += 12;
+    doc.fontSize(7).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 2 });
+    y += 28;
 
-    // Top accent line
-    doc.rect(0, 0, W, 4).fill(GOLD);
+    // ── WHY YOUR BRAIN CRAVES THIS ──
+    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("WHY YOUR BRAIN CRAVES THIS", M, y, { characterSpacing: 2 });
+    y += 14;
+    doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
+    y += 10;
 
-    // Title block
-    let y = 60;
-    doc.fontSize(11).fillColor(GOLD).font("Helvetica").text("UNCHAINED LEADER", M, y, { width: CW, align: "center", characterSpacing: 4 });
-    y += 30;
-    doc.fontSize(24).fillColor(WHITE).font("Helvetica-Bold").text("ROOT GENRE", M, y, { width: CW, align: "center" });
-    y += 30;
-    doc.text("DIAGNOSTIC", M, y, { width: CW, align: "center" });
-    y += 40;
-
-    // Gold divider
-    doc.rect(W / 2 - 40, y, 80, 2).fill(GOLD);
-    y += 20;
-
-    // Name and date
-    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(`Prepared for ${firstName}`, M, y, { width: CW, align: "center" });
-    y += 22;
-    doc.fontSize(10).text(new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }), M, y, { width: CW, align: "center" });
-    y += 16;
-    doc.fontSize(8).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 3 });
-    y += 40;
-
-    // ── WHY YOU WATCH WHAT YOU WATCH — the main reveal ──
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHY YOUR BRAIN CRAVES THIS", M, y, { characterSpacing: 2 });
-    y += 20;
-
-    doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
-    y += 16;
-
-    doc.fontSize(10.5).fillColor(WHITE).font("Helvetica").text(
+    doc.fontSize(9.5).fillColor(WHITE).font("Helvetica").text(
       analysis.whyYouWatch || "Your pattern is not random.",
-      M, y, { width: CW, lineGap: 5 }
-    );
-    y = doc.y + 20;
-
-    // ── Root Narrative Type Card ──
-    doc.roundedRect(M, y, CW, 70, 8).fill(CARD_BG);
-    doc.roundedRect(M, y, CW, 70, 8).strokeColor(BORDER).lineWidth(1).stroke();
-
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("YOUR ROOT NARRATIVE TYPE", M + 20, y + 12, { characterSpacing: 2 });
-    doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text(analysis.rootNarrativeType || "Unknown", M + 20, y + 28);
-    doc.fontSize(10).fillColor(GRAY).font("Helvetica-Oblique").text(`"${analysis.rootNarrativeStatement || ""}"`, M + 20, y + 50, { width: CW - 40 });
-    y += 90;
-
-    // ── Where the wound came from ──
-    doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold").text("Where This Started", M, y);
-    y += 16;
-    doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(
-      analysis.woundOrigin || "",
       M, y, { width: CW, lineGap: 4 }
     );
-    y = doc.y + 20;
+    y = doc.y + 14;
 
-    // ── Shame Cycle — how shame fuels the behavior ──
-    doc.roundedRect(M, y, CW, 75, 6).fill(CARD_BG);
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE SHAME CYCLE", M + 14, y + 10, { characterSpacing: 1 });
-    doc.fontSize(12).fillColor(WHITE).font("Helvetica-Bold").text(analysis.shameArchitecture || "Unknown", M + 14, y + 26);
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(analysis.shameCycle || "", M + 14, y + 44, { width: CW - 28, lineGap: 3 });
-    y += 95;
+    // ── Root Narrative Type Card ──
+    const rntCardY = y;
+    doc.roundedRect(M, rntCardY, CW, 58, 6).fill(CARD_BG);
+    doc.roundedRect(M, rntCardY, CW, 58, 6).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("YOUR ROOT NARRATIVE TYPE", M + 16, rntCardY + 10, { characterSpacing: 1.5 });
+    doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold").text(analysis.rootNarrativeType || "Unknown", M + 16, rntCardY + 24);
+    doc.fontSize(8.5).fillColor(GRAY).font("Helvetica-Oblique").text(`"${fitText(analysis.rootNarrativeStatement, 80)}"`, M + 16, rntCardY + 42, { width: CW - 32 });
+    y = rntCardY + 68;
 
-    // Footer
-    doc.fontSize(7).fillColor([80, 80, 80]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 35, { width: CW, align: "center", characterSpacing: 1 });
+    // ── Where This Started ──
+    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text("Where This Started", M, y);
+    y += 14;
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(
+      analysis.woundOrigin || "",
+      M, y, { width: CW, lineGap: 3 }
+    );
+    y = doc.y + 14;
+
+    // ── Shame Cycle ── (dynamic height)
+    const shameCycleText = analysis.shameCycle || "";
+    const shameBoxTop = y;
+    // Measure text height first
+    const shameMeasure = doc.fontSize(8).font("Helvetica").heightOfString(shameCycleText, { width: CW - 28, lineGap: 2 });
+    const shameBoxH = Math.max(60, 42 + shameMeasure + 8);
+
+    if (shameBoxTop + shameBoxH > PAGE_BOTTOM - 20) {
+      // Won't fit — add footer and go to page 2
+      doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
+      newPage();
+      y = 40;
+    }
+
+    doc.roundedRect(M, y, CW, shameBoxH, 6).fill(CARD_BG);
+    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE SHAME CYCLE", M + 14, y + 8, { characterSpacing: 1 });
+    doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold").text(analysis.shameArchitecture || "Unknown", M + 14, y + 22);
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(shameCycleText, M + 14, y + 38, { width: CW - 28, lineGap: 2 });
+    y += shameBoxH + 10;
+
+    // Footer page 1
+    doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 1", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
 
     // ══════════════════════════════════
-    // PAGE 2 — THE KEY INSIGHT + WHAT'S NEXT
+    // PAGE 2 — KEY INSIGHT + CTA
     // ══════════════════════════════════
+    newPage();
+    y = 40;
 
-    doc.addPage();
-    doc.rect(0, 0, W, H).fill(DK_BG);
-    doc.rect(0, 0, W, 4).fill(GOLD);
-
-    y = 50;
-
-    // Section header
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("THE FULL PICTURE", M, y, { characterSpacing: 3 });
-    y += 24;
-
-    // The key insight — this is the most important content on the report
-    doc.roundedRect(M, y, CW, 3, 0).fill(GOLD);
+    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE FULL PICTURE", M, y, { characterSpacing: 2 });
     y += 16;
+    doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
+    y += 10;
 
-    doc.fontSize(10.5).fillColor(WHITE).font("Helvetica").text(
-      analysis.keyInsight || "Your pattern is not random. It is connected to a wound that happened long before the behavior started.",
-      M, y, { width: CW, lineGap: 5 }
+    doc.fontSize(9.5).fillColor(WHITE).font("Helvetica").text(
+      analysis.keyInsight || "Your pattern is not random.",
+      M, y, { width: CW, lineGap: 4 }
     );
-    y = doc.y + 20;
+    y = doc.y + 16;
 
-    // Pattern duration callout
-    const duration = analysis.patternDuration || "years of fighting this";
-    doc.roundedRect(M, y, CW, 60, 8).fill(CARD_BG);
-    doc.roundedRect(M, y, CW, 60, 8).strokeColor(BORDER).lineWidth(1).stroke();
+    // ── Why Nothing Has Worked (dynamic height) ──
+    const durationText = analysis.patternDuration || "Years of fighting this";
+    const whyText = `${durationText}. Every approach targeted the behavior. Not one reached the root narrative that says "${fitText(analysis.rootNarrativeStatement, 60)}." That is not a willpower failure. That is a targeting problem.`;
+    const whyMeasure = doc.fontSize(9).font("Helvetica").heightOfString(whyText, { width: CW - 40, lineGap: 3 });
+    const whyBoxH = Math.max(50, 28 + whyMeasure + 8);
 
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHY NOTHING HAS WORKED", M + 20, y + 12, { characterSpacing: 1 });
-    doc.fontSize(10).fillColor(GRAY).font("Helvetica").text(
-      `${duration}. Every approach targeted the behavior. Not one of them reached the root narrative that says "${analysis.rootNarrativeStatement || 'something is wrong with me'}." That is not a willpower failure. That is a targeting problem.`,
-      M + 20, y + 28, { width: CW - 40, lineGap: 4 }
-    );
-    y = doc.y + 20;
+    doc.roundedRect(M, y, CW, whyBoxH, 6).fill(CARD_BG);
+    doc.roundedRect(M, y, CW, whyBoxH, 6).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("WHY NOTHING HAS WORKED", M + 16, y + 10, { characterSpacing: 1 });
+    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(whyText, M + 16, y + 26, { width: CW - 32, lineGap: 3 });
+    y += whyBoxH + 16;
 
-    // The behavior-as-symptom visual metaphor
-    doc.fontSize(10).fillColor(WHITE).font("Helvetica-Bold").text("What You Are Actually Dealing With", M, y);
-    y += 18;
+    // ── Flow Diagram ──
+    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text("What You Are Actually Dealing With", M, y);
+    y += 14;
 
-    // Simple flow diagram: Wound → Lie → Behavior
     const flowY = y;
-    const nodeW = 130;
-    const nodeH = 45;
-    const gap = 30;
+    const nodeW = 140;
+    const nodeH = 40;
+    const gap = 20;
     const startX = M + (CW - (nodeW * 3 + gap * 2)) / 2;
 
     // Node 1: Wound
-    doc.roundedRect(startX, flowY, nodeW, nodeH, 6).fill(CARD_BG);
-    doc.roundedRect(startX, flowY, nodeW, nodeH, 6).strokeColor(GOLD).lineWidth(1).stroke();
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE WOUND", startX + 10, flowY + 8, { width: nodeW - 20, align: "center", characterSpacing: 1 });
-    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(
-      `Age ${analysis.ageFirstExposure || "?"}`,
-      startX + 10, flowY + 24, { width: nodeW - 20, align: "center" }
-    );
+    doc.roundedRect(startX, flowY, nodeW, nodeH, 5).fill(CARD_BG);
+    doc.roundedRect(startX, flowY, nodeW, nodeH, 5).strokeColor(GOLD).lineWidth(1).stroke();
+    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE WOUND", startX + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
+    doc.fontSize(7).fillColor(GRAY).font("Helvetica").text("Childhood", startX + 8, flowY + 22, { width: nodeW - 16, align: "center" });
 
     // Arrow 1
     const a1x = startX + nodeW;
-    doc.strokeColor(GOLD).lineWidth(1.5)
-      .moveTo(a1x + 4, flowY + nodeH / 2)
-      .lineTo(a1x + gap - 4, flowY + nodeH / 2)
-      .stroke();
-    doc.fillColor(GOLD)
-      .moveTo(a1x + gap - 4, flowY + nodeH / 2 - 4)
-      .lineTo(a1x + gap + 2, flowY + nodeH / 2)
-      .lineTo(a1x + gap - 4, flowY + nodeH / 2 + 4)
-      .fill();
+    doc.strokeColor(GOLD).lineWidth(1).moveTo(a1x + 3, flowY + nodeH / 2).lineTo(a1x + gap - 3, flowY + nodeH / 2).stroke();
+    doc.fillColor(GOLD).moveTo(a1x + gap - 3, flowY + nodeH / 2 - 3).lineTo(a1x + gap + 1, flowY + nodeH / 2).lineTo(a1x + gap - 3, flowY + nodeH / 2 + 3).fill();
 
     // Node 2: The Lie
     const n2x = startX + nodeW + gap;
-    doc.roundedRect(n2x, flowY, nodeW, nodeH, 6).fill(CARD_BG);
-    doc.roundedRect(n2x, flowY, nodeW, nodeH, 6).strokeColor(GOLD).lineWidth(1).stroke();
-    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("THE LIE", n2x + 10, flowY + 8, { width: nodeW - 20, align: "center", characterSpacing: 1 });
-    doc.fontSize(7).fillColor(GRAY).font("Helvetica-Oblique").text(
-      `"${(analysis.rootNarrativeStatement || "").substring(0, 30)}"`,
-      n2x + 6, flowY + 24, { width: nodeW - 12, align: "center" }
+    doc.roundedRect(n2x, flowY, nodeW, nodeH, 5).fill(CARD_BG);
+    doc.roundedRect(n2x, flowY, nodeW, nodeH, 5).strokeColor(GOLD).lineWidth(1).stroke();
+    doc.fontSize(7).fillColor(GOLD).font("Helvetica").text("THE LIE", n2x + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
+    doc.fontSize(6).fillColor(GRAY).font("Helvetica-Oblique").text(
+      `"${fitText(analysis.rootNarrativeStatement, 50)}"`,
+      n2x + 6, flowY + 22, { width: nodeW - 12, align: "center" }
     );
 
     // Arrow 2
     const a2x = n2x + nodeW;
-    doc.strokeColor(GOLD).lineWidth(1.5)
-      .moveTo(a2x + 4, flowY + nodeH / 2)
-      .lineTo(a2x + gap - 4, flowY + nodeH / 2)
-      .stroke();
-    doc.fillColor(GOLD)
-      .moveTo(a2x + gap - 4, flowY + nodeH / 2 - 4)
-      .lineTo(a2x + gap + 2, flowY + nodeH / 2)
-      .lineTo(a2x + gap - 4, flowY + nodeH / 2 + 4)
-      .fill();
+    doc.strokeColor(GOLD).lineWidth(1).moveTo(a2x + 3, flowY + nodeH / 2).lineTo(a2x + gap - 3, flowY + nodeH / 2).stroke();
+    doc.fillColor(GOLD).moveTo(a2x + gap - 3, flowY + nodeH / 2 - 3).lineTo(a2x + gap + 1, flowY + nodeH / 2).lineTo(a2x + gap - 3, flowY + nodeH / 2 + 3).fill();
 
     // Node 3: The Behavior
     const n3x = n2x + nodeW + gap;
-    doc.roundedRect(n3x, flowY, nodeW, nodeH, 6).fill(CARD_BG);
-    doc.roundedRect(n3x, flowY, nodeW, nodeH, 6).strokeColor(BORDER).lineWidth(1).stroke();
-    doc.fontSize(8).fillColor([120, 120, 120]).font("Helvetica").text("THE BEHAVIOR", n3x + 10, flowY + 8, { width: nodeW - 20, align: "center", characterSpacing: 1 });
-    doc.fontSize(8).fillColor([80, 80, 80]).font("Helvetica-Oblique").text("(the symptom)", n3x + 10, flowY + 24, { width: nodeW - 20, align: "center" });
+    doc.roundedRect(n3x, flowY, nodeW, nodeH, 5).fill(CARD_BG);
+    doc.roundedRect(n3x, flowY, nodeW, nodeH, 5).strokeColor(BORDER).lineWidth(1).stroke();
+    doc.fontSize(7).fillColor([100, 100, 100]).font("Helvetica").text("THE BEHAVIOR", n3x + 8, flowY + 8, { width: nodeW - 16, align: "center", characterSpacing: 1 });
+    doc.fontSize(7).fillColor([70, 70, 70]).font("Helvetica-Oblique").text("(the symptom)", n3x + 8, flowY + 22, { width: nodeW - 16, align: "center" });
 
-    y = flowY + nodeH + 14;
-
-    // Caption under the diagram
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica-Oblique").text(
-      "Every strategy you have tried attacked the right side of this diagram. The root is on the left.",
-      M, y, { width: CW, align: "center", lineGap: 3 }
+    y = flowY + nodeH + 8;
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica-Oblique").text(
+      "Every strategy you have tried attacked the right side. The root is on the left.",
+      M, y, { width: CW, align: "center" }
     );
-    y += 30;
+    y = doc.y + 16;
 
-    // Gold divider
+    // ── Divider ──
     doc.rect(M, y, CW, 1).fill(BORDER);
-    y += 20;
+    y += 14;
 
-    // ── What's Still Hidden — the open loop ──
-    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("WHAT YOUR DIAGNOSTIC REVEALED — AND WHAT IS STILL HIDDEN", M, y, { characterSpacing: 1 });
-    y += 20;
+    // ── What You Now Know / What's Hidden ──
+    doc.fontSize(8).fillColor(GOLD).font("Helvetica").text("WHAT YOUR DIAGNOSTIC REVEALED", M, y, { characterSpacing: 1 });
+    y += 14;
 
-    doc.fontSize(10).fillColor(WHITE).font("Helvetica").text("What you now know:", M, y);
-    y += 16;
-
+    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("What you now know:", M, y);
+    y += 12;
     const knowItems = [
-      `Why your brain craves the specific content it craves`,
+      "Why your brain craves the specific content it craves",
       `Your Root Narrative Type (${analysis.rootNarrativeType}) and the wound underneath`,
-      `The shame cycle that fuels the behavior instead of stopping it`,
-      `Why everything you have tried has missed the actual target`,
+      "The shame cycle that fuels the behavior instead of stopping it",
+      "Why everything you have tried has missed the actual target",
     ];
     for (const item of knowItems) {
-      doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 10, y, { width: CW - 20, lineGap: 2 });
-      y = doc.y + 6;
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 8, y, { width: CW - 16 });
+      y = doc.y + 4;
     }
 
-    y += 8;
-    doc.fontSize(10).fillColor(WHITE).font("Helvetica").text("What is still hidden:", M, y);
-    y += 16;
-
+    y += 6;
+    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("What is still hidden:", M, y);
+    y += 12;
     const hiddenItems = [
-      "Your complete Strategy Autopsy — why each specific approach you tried was designed to fail against your pattern",
-      "Your full Trigger Map — the emotional and physical chain that fires before you are even aware of the urge",
-      "Your custom plan — exactly what needs to happen to address the root, built from your specific data",
+      "Your Strategy Autopsy — why each approach failed against your pattern",
+      "Your Trigger Map — the chain that fires before you are aware of the urge",
+      "Your custom plan — built from your specific data",
     ];
     for (const item of hiddenItems) {
-      doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 10, y, { width: CW - 20, lineGap: 2 });
-      y = doc.y + 6;
+      doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(`•  ${item}`, M + 8, y, { width: CW - 16 });
+      y = doc.y + 4;
     }
 
-    y += 8;
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica-Oblique").text(
-      analysis.whatsBelowSurface || "The Advanced Diagnostic reveals the WHY behind every failed strategy and builds a custom plan for your specific root.",
-      M, y, { width: CW, lineGap: 3 }
+    y += 6;
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica-Oblique").text(
+      analysis.whatsBelowSurface || "",
+      M, y, { width: CW, lineGap: 2 }
     );
-    y = doc.y + 20;
+    y = doc.y + 14;
 
-    // ── Soft CTA ──
-    doc.roundedRect(M, y, CW, 50, 8).fill(CARD_BG);
-    doc.fontSize(9).fillColor(WHITE).font("Helvetica-Bold").text(
-      "Ready to see the full picture?",
-      M + 20, y + 12, { width: CW - 40 }
-    );
-    doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(
-      "Log back in with your email and PIN to continue your Advanced Diagnostic.",
-      M + 20, y + 28, { width: CW - 40 }
-    );
-    y += 70;
+    // ── CTA Box ──
+    doc.roundedRect(M, y, CW, 40, 6).fill(CARD_BG);
+    doc.fontSize(8.5).fillColor(WHITE).font("Helvetica-Bold").text("Ready to see the full picture?", M + 16, y + 10, { width: CW - 32 });
+    doc.fontSize(8).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to continue your Advanced Diagnostic.", M + 16, y + 24, { width: CW - 32 });
+    y += 52;
 
-    // Closing
-    doc.fontSize(10).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
+    // #liveunchained
+    doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
 
-    // Footer
-    doc.fontSize(7).fillColor([80, 80, 80]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 2", M, H - 35, { width: CW, align: "center", characterSpacing: 1 });
+    // Footer page 2
+    doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica").text("UNCHAINED LEADER  |  CONFIDENTIAL  |  Page 2", M, H - 30, { width: CW, align: "center", characterSpacing: 1 });
 
     doc.end();
   });
