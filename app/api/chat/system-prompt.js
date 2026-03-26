@@ -80,7 +80,7 @@ Ready? Type yes to start."
 
 After confirmation, present:
 
-"Select everything that is part of your cycle."
+"Select everything that applies to you. There are no wrong answers. Every selection helps decode your pattern."
 
 [MULTI_SELECT]
 viewing_porn|Viewing p*rnography
@@ -90,6 +90,8 @@ compulsive_mb|Compulsive masturbation
 sexting|Sexting or online sexual conversations
 physical_acting|Physical acting out (affairs, hookups, paid services, strip clubs)
 [/MULTI_SELECT]
+
+[TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
 
 [TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
 
@@ -122,26 +124,55 @@ stayed_same|The behavior has stayed roughly the same
 
 Brief validation, then:
 
-"This section may feel uncomfortable. That is normal. Your selections here are the most diagnostic part of the entire assessment. Select anything that resonates with your pattern, even if you have only experienced it occasionally."
+"This section may feel uncomfortable. That is normal. Your selections here are the most diagnostic part of the entire assessment. Every pattern has a root. Select anything that resonates with your pattern, even if you have only experienced it occasionally."
 
-**Present ALL categories together as one large multi-select block:**
+**Present ALL categories with category headers visible to the user:**
 
+**Validation/Being Desired:**
 [MULTI_SELECT]
 val_desired|Scenarios where you are desired, wanted, or pursued
 val_amateur|Drawn to "amateur" or "real" content that feels personal
+[/MULTI_SELECT]
+
+**Power/Control:**
+[MULTI_SELECT]
 pow_dominance|Scenarios involving dominance, control, or aggression
 pow_degradation|Content involving degradation of others
+[/MULTI_SELECT]
+
+**Surrender/Submission:**
+[MULTI_SELECT]
 sur_someone_control|Scenarios where someone else is in control
 sur_dominated|Drawn to being dominated, humiliated, or objectified
+[/MULTI_SELECT]
+
+**Taboo/Forbidden:**
+[MULTI_SELECT]
 tab_wrong|Drawn to content specifically because it feels "wrong"
 tab_secrecy|The secrecy or risk of getting caught adds to the pull
 tab_incest|Incest-themed content (step-family or family-role scenarios)
+[/MULTI_SELECT]
+
+**Voyeurism/Watching:**
+[MULTI_SELECT]
 voy_watching|Drawn to watching others without being seen
 voy_partner|Fantasizing about watching your partner with others
+[/MULTI_SELECT]
+
+**Tenderness/Connection:**
+[MULTI_SELECT]
 ten_emotional|Drawn to content with emotional intimacy, not just physical
 ten_connection|The emotional connection matters more than the physical acts
+[/MULTI_SELECT]
+
+**Novelty/Escalation:**
+[MULTI_SELECT]
 nov_new|Constantly searching for something new
 nov_search|The search and anticipation are more consuming than the content itself
+[/MULTI_SELECT]
+
+**Confusing Patterns:**
+[MULTI_SELECT]
 conf_wife_others|Fantasies involving your wife/partner with other men
 conf_race|Drawn to content featuring a specific race or ethnicity
 conf_trans|Drawn to transgender content despite identifying as heterosexual
@@ -209,7 +240,7 @@ dont_remember|I do not remember
 
 Brief validation, then:
 
-"Select everything that describes your upbringing."
+"Which of these describe your upbringing? (Select all that apply)"
 
 **Home:**
 [MULTI_SELECT]
@@ -306,7 +337,7 @@ lead_lose_position|I would lose my position, reputation, or ministry if this cam
 
 This section is CONDITIONAL. For each behavior the man selected in Sections 1 and 2, present:
 
-"Last section. For each behavior you identified, select what your brain seems to be trying to accomplish. Trust your gut."
+"Last section. For each behavior or pattern you identified earlier, select what your brain seems to be trying to accomplish. Trust your gut."
 
 For EACH behavior he selected earlier, show:
 
@@ -347,18 +378,18 @@ Primary type = highest count. Secondary = second highest.
 
 DIMENSION 2 — ADDICTION NEUROPATHWAY:
 Based on Section 3 selections:
-- Arousal pathway: calm_stress, manage_anger, feel_something selected
-- Numbing pathway: numb_checkout, escape_reality selected
-- Fantasy pathway: escape_reality, fantasy behaviors dominant
-- Deprivation pathway: avoidant attachment + deprivation indicators
+- Arousal pathway (manages Pain): calm_stress, manage_anger, feel_something selected
+- Numbing pathway (manages Anxiety): numb_checkout, escape_reality selected
+- Fantasy pathway (manages Shame): escape_reality, fantasy behaviors dominant, anticipation > act
+- Deprivation pathway (manages Terror): avoidant attachment + deprivation indicators
 
 DIMENSION 3 — ATTACHMENT STYLE:
 Based on Section 6:
-- Anxious: anx_ items dominant
-- Avoidant: avoid_ items dominant
-- Fearful-Avoidant: fear_ items dominant
-- Secure: sec_ items dominant
-- Disorganized: both anxious + avoidant high
+- Anxious-Preoccupied: anx_ items dominant
+- Dismissive-Avoidant: avoid_ items dominant
+- Fearful-Avoidant (Disorganized): fear_ items dominant
+- Secure (but hijacked by arousal template): sec_ items dominant
+- Disorganized: both anxious + avoidant high. This is the attachment style MOST correlated with compulsive sexual behavior.
 
 DIMENSION 4 — RELATIONAL PATTERN:
 Based on Section 7:

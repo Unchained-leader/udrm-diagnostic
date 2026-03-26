@@ -211,6 +211,7 @@ Return ONLY valid JSON, no markdown:
   "leadershipBurdenExplanation": "1-2 sentences, or null",
 
   "escalationPresent": true or false,
+  "patternYears": "estimate of how many years based on context clues, or 'many' if unknown",
   "isolationLevel": "description based on relational void selections",
 
   "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood environment encoding the template. This should feel like someone finally turned all the lights on at once. Write directly to him.",
@@ -309,6 +310,15 @@ async function generatePDF(analysis, firstName) {
       if (body) doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + 38, { width: CW - 28, lineGap: 2 });
       y += cardH + 10;
     }
+    function writeGapWidening(text) {
+      const gapH = doc.fontSize(8).font("Helvetica-Oblique").heightOfString(text, { width: CW - 20, lineGap: 3 });
+      checkFit(gapH + 24);
+      doc.rect(M, y, CW, 0.5).fill([50, 50, 50]);
+      y += 10;
+      doc.fontSize(8).fillColor([140, 140, 140]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 3 });
+      y = doc.y + 14;
+    }
+
     function writeGauge(label, score, maxScore) {
       const pct = Math.min(1, parseInt(score || 0) / maxScore);
       checkFit(30);
@@ -342,6 +352,10 @@ async function generatePDF(analysis, firstName) {
     y += 16;
     doc.fontSize(7).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 2 });
 
+    // Disclaimer
+    const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
+    doc.fontSize(6).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 20, H - 100, { width: CW - 40, align: "center", lineGap: 2 });
+
     // ════════════════════════════════════════
     // SECTION 1 — AROUSAL TEMPLATE TYPE
     // ════════════════════════════════════════
@@ -353,6 +367,8 @@ async function generatePDF(analysis, firstName) {
     if (analysis.arousalTemplateSecondary) {
       writeCard("SECONDARY TYPE", analysis.arousalTemplateSecondary, "Multiple patterns are present in your template.");
     }
+
+    writeGapWidening("You now have a name for the story that has been running beneath your cycle. Most men never get this far. But naming the narrative does not restructure it. Root narratives operate below conscious awareness. You cannot think your way out of a belief system your brain does not know it is running. Restructuring requires a guided process that can access what self-analysis cannot.");
 
     // ════════════════════════════════════════
     // SECTION 2 — BEHAVIOR-ROOT MAP
@@ -376,6 +392,8 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(item.root || "", M + 14, y + 22, { width: CW - 28, lineGap: 2 });
       y += rowH + 6;
     }
+
+    writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You can see the connections now. But seeing the wiring does not rewire it. The neural pathways that encode these patterns require sustained, guided, experiential work to restructure. Information about the pattern has never changed the pattern. If it could, you would already be free.");
 
     // ════════════════════════════════════════
     // SECTION 3 — CONFUSING PATTERNS DECODED (conditional)
@@ -401,6 +419,7 @@ async function generatePDF(analysis, firstName) {
         doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(cp.explanation || "", M + 14, y + 22, { width: CW - 28, lineGap: 3 });
         y += boxH + 8;
       }
+      writeGapWidening("If you have carried shame about any of these patterns, what you just read may be the first time it has made sense. That clarity matters. But understanding why the pattern exists is not the same as resolving it. The arousal template was encoded during a developmental window you cannot re-enter alone. Attempting to process this material without guided support often leads to destabilization rather than healing. The nervous system needs to be paced through this safely.");
     }
 
     // ════════════════════════════════════════
@@ -416,6 +435,9 @@ async function generatePDF(analysis, firstName) {
       M, y, { width: CW, lineGap: 3 }
     );
     y = doc.y + 14;
+
+    const yearsData = analysis.patternYears || "many";
+    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program. That program was installed by experiences you did not choose and reinforced by thousands of repetitions over ${yearsData} years. Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
 
     // ════════════════════════════════════════
     // SECTION 5 — AROUSAL TEMPLATE ORIGIN
@@ -433,6 +455,8 @@ async function generatePDF(analysis, firstName) {
       M, y, { width: CW, lineGap: 4 }
     );
     y = doc.y + 14;
+
+    writeGapWidening("You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. But here is what the research makes clear: you cannot excavate your own root. You cannot see the story you are operating inside of. The brain that was conditioned in isolation and secrecy requires the opposite, guided truth in relationship, to recondition.");
 
     // ════════════════════════════════════════
     // SECTION 6 — ATTACHMENT STYLE
@@ -457,6 +481,8 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(9).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 3 });
       y = doc.y + 14;
     }
+
+    writeGapWidening("Your attachment style shapes how you connect with people, how you connect with God, and how you relate to the behavior. It was encoded before age five. It has operated as your relational operating system for your entire life. And it cannot be updated by reading about it. Attachment patterns were formed in relationship. They can only be restructured in relationship. That is not a theory. That is peer-reviewed neuroscience and the consistent testimony of Scripture.");
 
     // ════════════════════════════════════════
     // SECTION 7 — RELATIONAL PATTERNS
@@ -484,6 +510,8 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(8).fillColor(GRAY).font("Helvetica").text(analysis.leadershipBurdenExplanation, M, y, { width: CW, lineGap: 2 });
       y = doc.y + 10;
     }
+
+    writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Enmeshment distorts your boundaries. Codependency drains you until the behavior becomes the only thing that is yours. And the leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently, in a community of men who understand them firsthand.");
 
     // ════════════════════════════════════════
     // SECTION 8 — THE FULL PATTERN MAP (visual diagram)
@@ -535,6 +563,9 @@ async function generatePDF(analysis, firstName) {
     drawFlowNode("SPECIFIC BEHAVIORS EMERGE", (analysis.behaviorRootMap || []).map(b => b.behavior).join(", ") || "Your pattern", false);
     drawArrow();
     drawFlowNode("CURRENT CYCLE", analysis.escalationPresent ? "Escalating" : "Active", false);
+
+    y += 16;
+    writeGapWidening("This is the full architecture of your cycle. Every connection. Every root. Every origin. Every reinforcing pattern.\n\nYou can see the prison now. Most men never do.\n\nBut seeing the prison does not open the door.");
 
     // ════════════════════════════════════════
     // SECTION 9 — THE KEY INSIGHT
