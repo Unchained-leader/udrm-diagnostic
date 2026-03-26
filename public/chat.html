@@ -1597,10 +1597,13 @@
         // Clean display
         bubble.textContent = cleanDisplayText(fullResponse);
 
-        // Render MC buttons if present
-        const mcOptions = parseMCOptions(fullResponse);
-        if (mcOptions) {
-          renderMCButtons(mcOptions, assistantDiv);
+        // Render quiz blocks (multi-select, single-select, text inputs)
+        const quizBlocks2 = parseQuizBlocks(fullResponse);
+        if (quizBlocks2) {
+          renderQuizBlocks(quizBlocks2, assistantDiv);
+        } else {
+          const mcOptions = parseMCOptions(fullResponse);
+          if (mcOptions) renderMCButtons(mcOptions, assistantDiv);
         }
 
         if (currentUser) saveHistoryToServer();
@@ -1677,10 +1680,14 @@
         messages.push({ role: "assistant", content: fullResponse.trim() });
         bubble.textContent = cleanDisplayText(fullResponse);
 
-        // Render MC buttons if present
-        const mcOptions = parseMCOptions(fullResponse);
-        if (mcOptions) {
-          renderMCButtons(mcOptions, assistantDiv);
+        // Render quiz blocks (multi-select, single-select, text inputs)
+        const quizBlocks = parseQuizBlocks(fullResponse);
+        if (quizBlocks) {
+          renderQuizBlocks(quizBlocks, assistantDiv);
+        } else {
+          // Fallback to old MC buttons if no quiz blocks
+          const mcOptions = parseMCOptions(fullResponse);
+          if (mcOptions) renderMCButtons(mcOptions, assistantDiv);
         }
 
         if (currentUser) saveHistoryToServer();
