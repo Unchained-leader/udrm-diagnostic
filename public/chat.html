@@ -866,7 +866,7 @@
       const firstBlock = text.search(/\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]/);
       if (firstBlock <= 0) return cleanDisplayText(text);
       const before = text.substring(0, firstBlock);
-      return cleanDisplayText(before);
+      return cleanDisplayText(before).replace(/^["']+|["']+$/g, "").trim();
     }
 
     // ========== QUIZ UI RENDERING ==========
@@ -887,14 +887,15 @@
 
       // Reset regex for clean text
       const regex2 = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      let isFirstBlock = true;
       while ((match = regex2.exec(cleanForLabels)) !== null) {
-        // Capture interstitial text as a label
+        // Capture interstitial text as a label (skip text BEFORE first block — that's shown in the bubble)
         const between = cleanForLabels.substring(lastIndex, match.index).trim();
-        if (between && between.length > 2) {
-          // Clean up quotes and extra whitespace
+        if (!isFirstBlock && between && between.length > 2) {
           const labelText = between.replace(/^["']+|["']+$/g, "").trim();
           if (labelText) blocks.push({ type: "label", text: labelText });
         }
+        isFirstBlock = false;
         lastIndex = match.index + match[0].length;
 
         const type = match[1];
