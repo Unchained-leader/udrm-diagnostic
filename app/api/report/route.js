@@ -491,7 +491,7 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
       doc.fontSize(28).fillColor(WHITE).font("Helvetica-Bold").text(String(summCards[i].value), sx + 10, y + 26, { width: summW - 20, align: "center" });
     }
-    y += summH + 20;
+    y += summH + 30;
 
     // Scored dimensions with bar chart
     const dimensions = [
@@ -504,7 +504,7 @@ async function generatePDF(analysis, firstName) {
     ];
 
     const barH = 14;
-    const barGap = 38;
+    const barGap = 48;
     for (const dim of dimensions) {
       const s = parseInt(dim.score) || 0;
       const pct = Math.min(1, s / dim.max);
@@ -523,10 +523,10 @@ async function generatePDF(analysis, firstName) {
       y += barH + (barGap - 20 - barH);
     }
 
-    y += 10;
+    y += 24;
     // Relational pattern scores mini-row
     doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("RELATIONAL PATTERN BREAKDOWN", M, y, { characterSpacing: 1 });
-    y += 18;
+    y += 22;
 
     const relScores = [
       { label: "Codependency", score: analysis.codependencyScore, max: 3 },
@@ -543,7 +543,7 @@ async function generatePDF(analysis, firstName) {
       doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
       doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 24, { width: relW - 12, align: "center" });
     }
-    y += 70;
+    y += 80;
 
     // Key findings summary
     checkFit(60);
