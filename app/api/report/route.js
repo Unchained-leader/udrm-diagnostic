@@ -301,9 +301,9 @@ async function generatePDF(analysis, firstName) {
     doc.on("error", reject);
 
     const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - 60;
-    const CONTENT_TOP = 50; // Standard top margin for content below logo
+    const CONTENT_TOP = 50;
 
-    // Load logo for letterhead
+    // Load logo FIRST so the pageAdded handler can reference it
     let logoBuffer = null;
     try {
       const logoPath = path.join(process.cwd(), "public", "images", "unchained-logo.png");
@@ -311,6 +311,20 @@ async function generatePDF(analysis, firstName) {
     } catch (e) {
       console.log("Logo not found, continuing without letterhead:", e.message);
     }
+
+    // CRITICAL: Catch ALL page creation events (including auto-pagination).
+    // This is the permanent fix for white pages. When PDFKit's .text()
+    // overflows and auto-creates a new page, this event fires and applies
+    // the dark background + gold accent + logo. No page can ever be white.
+    doc.on("pageAdded", () => {
+      doc.save();
+      doc.rect(0, 0, W, H).fill(DK_BG);
+      doc.rect(0, 0, W, 3).fill(GOLD);
+      if (logoBuffer) {
+        try { doc.image(logoBuffer, W - M - 100, 8, { width: 90 }); } catch(e) {}
+      }
+      doc.restore();
+    });
 
     // Strip em dashes from all analysis text — replace with commas
     function sanitize(text) {
@@ -321,12 +335,7 @@ async function generatePDF(analysis, firstName) {
     function newPage() {
       doc.addPage();
       pageNum++;
-      doc.rect(0, 0, W, H).fill(DK_BG);
-      doc.rect(0, 0, W, 3).fill(GOLD);
-      // Letterhead logo — small, top-right, with padding
-      if (logoBuffer) {
-        try { doc.image(logoBuffer, W - M - 100, 8, { width: 90 }); } catch(e) {}
-      }
+      // Background + logo are handled by the pageAdded event listener
     }
     function fit(text, max) {
       if (!text) return "";
