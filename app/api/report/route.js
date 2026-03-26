@@ -966,7 +966,8 @@ async function generatePDF(analysis, firstName) {
     // SECTION 10 — NEXT STEPS & RESOURCES
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
-    sectionHeader("BASED ON YOUR RESULTS, HERE ARE YOUR PRIORITIZED NEXT STEPS");
+    doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("BASED ON YOUR RESULTS, HERE ARE YOUR PRIORITIZED NEXT STEPS", M, y, { characterSpacing: 2 });
+    y = doc.y + 30;
 
     // Helper to draw a resource card
     function drawResourceCard(priority, label, price, title, body, link) {
