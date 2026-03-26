@@ -146,6 +146,7 @@ nov_new|Constantly searching for something new
 nov_search|The search and anticipation are more consuming than the content itself
 conf_wife_others|Fantasies involving your wife/partner with other men
 conf_race|Drawn to content featuring a specific race or ethnicity
+conf_samesex|Drawn to same-sex content despite identifying as heterosexual
 conf_trans|Drawn to transgender content despite identifying as heterosexual
 conf_pain|Content involving pain, either giving or receiving
 conf_humiliation|Content involving humiliation of yourself or your identity
@@ -448,6 +449,9 @@ Three possible roots:
 1. Masochistic shame eroticization. If shame was fused with arousal during imprinting, the brain converts humiliation into sexual energy. The shame IS the neurochemical payload.
 2. Compersive anxiety management. For men with anxious attachment, the deepest fear is abandonment. The brain may "master" this fear by creating a controlled scenario of the feared event. Like a person afraid of heights becoming a skydiver.
 3. Self-worth narrative. If the root narrative says "I am not enough," watching your partner choose someone else confirms the belief while providing arousal. The behavior is the root narrative playing out sexually.
+
+SAME-SEX CONTENT / STRAIGHT MAN (conf_samesex):
+The brain is seeking masculine validation, approval, attention, or closeness that was missing from a father or key male figure. That need for masculine connection is legitimate. Every boy needs it. When it does not come, the brain does not stop needing it. It finds another way to pursue it. The arousal system hijacked that unmet need and sexualized it. This does NOT define orientation. It defines an unmet developmental need that was never given a safe, non-sexual outlet. For some men it also connects to the taboo circuit, adding the neurochemical escalator of transgression on top of the core need.
 
 SPECIFIC RACE/ETHNICITY (conf_race):
 Traces to one of two origins: the race/ethnicity was present during the imprinting experience (first exposure context), OR the brain has eroticized the cultural "other" as forbidden/exotic/taboo. In some cases connects to power dynamics the brain maps onto racial categories absorbed from culture. Not a reflection of character. A reflection of what was encoded.
