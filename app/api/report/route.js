@@ -747,13 +747,17 @@ async function generatePDF(analysis, firstName) {
     function drawFlowNode(label, value, highlight) {
       const col = highlight ? GOLD : BORDER;
       const valText = sanitize(value || "");
-      const valH = doc.fontSize(18).font("Helvetica").heightOfString(valText, { width: nodeW2 - 24 });
-      const boxH = Math.max(nodeH2, 28 + valH + 10);
+      // Measure both label and value heights to prevent overlap
+      const labelH = doc.fontSize(12).font("Helvetica").heightOfString(label, { width: nodeW2 - 24, characterSpacing: 1 });
+      const valH = doc.fontSize(16).font("Helvetica").heightOfString(valText, { width: nodeW2 - 24 });
+      const contentH = labelH + 6 + valH; // 6px gap between label and value
+      const boxH = Math.max(nodeH2, 16 + contentH + 10); // 16px top padding, 10px bottom padding
       checkFit(boxH + arrowH + 4);
       doc.roundedRect(nodeX, y, nodeW2, boxH, 5).fill(CARD_BG);
       doc.roundedRect(nodeX, y, nodeW2, boxH, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
-      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 8, { characterSpacing: 1 });
-      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(valText, nodeX + 12, y + 28, { width: nodeW2 - 24 });
+      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 10, { width: nodeW2 - 24, characterSpacing: 1 });
+      const valTop = y + 10 + labelH + 6; // position value after measured label height + gap
+      _currentTextColor = WHITE; doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(valText, nodeX + 12, valTop, { width: nodeW2 - 24 });
       y += boxH;
     }
     function drawArrow() {
