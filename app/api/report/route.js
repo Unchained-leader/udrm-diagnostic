@@ -269,7 +269,7 @@ async function generatePDF(analysis, firstName) {
     const doc = new PDFDocument({
       size: "letter",
       margins: { top: 40, bottom: 40, left: 50, right: 50 },
-      bufferPages: true,
+      bufferPages: false,
       autoFirstPage: false,
     });
 
@@ -282,6 +282,7 @@ async function generatePDF(analysis, firstName) {
 
     function newPage() {
       doc.addPage();
+      pageNum++;
       doc.rect(0, 0, W, H).fill(DK_BG);
       doc.rect(0, 0, W, 3).fill(GOLD);
     }
@@ -320,6 +321,7 @@ async function generatePDF(analysis, firstName) {
     }
 
     let y = 0;
+    let pageNum = 0;
 
     // ════════════════════════════════════════
     // COVER PAGE
@@ -572,16 +574,6 @@ async function generatePDF(analysis, firstName) {
     y += 62;
 
     doc.fontSize(10).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
-
-    // ════════════════════════════════════════
-    // FOOTERS — via switchToPage
-    // ════════════════════════════════════════
-    const totalPages = doc.bufferedPageRange().count;
-    for (let i = 0; i < totalPages; i++) {
-      doc.switchToPage(i);
-      doc.fontSize(6).fillColor([60, 60, 60]).font("Helvetica")
-        .text(`UNCHAINED LEADER  |  CONFIDENTIAL  |  Page ${i + 1}`, M, H - 28, { width: CW, align: "center", characterSpacing: 1, lineBreak: false });
-    }
 
     doc.end();
   });
