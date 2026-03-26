@@ -316,13 +316,17 @@ async function generatePDF(analysis, firstName) {
       if (y + needed > PB) { newPage(); y = 40; }
     }
     function writeCard(label, title, body) {
-      const bodyH = doc.fontSize(14).font("Helvetica").heightOfString(body || "", { width: CW - 28, lineGap: 4 });
-      const cardH = Math.max(70, 50 + bodyH + 10);
+      const titleH = doc.fontSize(18).font("Helvetica-Bold").heightOfString(title || "—", { width: CW - 28 });
+      const bodyH = body ? doc.fontSize(14).font("Helvetica").heightOfString(body, { width: CW - 28, lineGap: 4 }) : 0;
+      const labelTop = 14;
+      const titleTop = labelTop + 18;
+      const bodyTop = titleTop + titleH + 8;
+      const cardH = Math.max(70, bodyTop + bodyH + 14);
       checkFit(cardH + 12);
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
-      doc.fontSize(11).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + 10, { characterSpacing: 1 });
-      doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(title || "—", M + 14, y + 26);
-      if (body) doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + 48, { width: CW - 28, lineGap: 4 });
+      doc.fontSize(11).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
+      doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(title || "—", M + 14, y + titleTop);
+      if (body) doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: 4 });
       y += cardH + 12;
     }
     function writeGapWidening(text) {
@@ -399,13 +403,15 @@ async function generatePDF(analysis, firstName) {
 
     const brm = analysis.behaviorRootMap || [];
     for (const item of brm) {
-      const rootH = doc.fontSize(14).font("Helvetica").heightOfString(item.root || "", { width: CW - 28, lineGap: 2 });
-      const rowH = Math.max(40, 24 + rootH + 8);
-      checkFit(rowH + 8);
+      const titleH = doc.fontSize(16).font("Helvetica-Bold").heightOfString(item.behavior || "", { width: CW - 28 });
+      const rootH = doc.fontSize(14).font("Helvetica").heightOfString(item.root || "", { width: CW - 28, lineGap: 4 });
+      const rowH = Math.max(60, 14 + titleH + 10 + rootH + 14);
+      checkFit(rowH + 10);
       doc.roundedRect(M, y, CW, rowH, 5).fill(CARD_BG);
-      doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(item.behavior || "", M + 14, y + 8, { width: CW - 28 });
-      doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(item.root || "", M + 14, y + 22, { width: CW - 28, lineGap: 2 });
-      y += rowH + 6;
+      doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text(item.behavior || "", M + 14, y + 14, { width: CW - 28 });
+      const bodyY = y + 14 + titleH + 10;
+      doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(item.root || "", M + 14, bodyY, { width: CW - 28, lineGap: 4 });
+      y += rowH + 10;
     }
 
     writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You can see the connections now. But seeing the wiring does not rewire it. The neural pathways that encode these patterns require sustained, guided, experiential work to restructure. Information about the pattern has never changed the pattern. If it could, you would already be free.");
@@ -425,14 +431,16 @@ async function generatePDF(analysis, firstName) {
       y = doc.y + 14;
 
       for (const cp of cpd) {
-        const expH = doc.fontSize(14).font("Helvetica").heightOfString(cp.explanation || "", { width: CW - 28, lineGap: 3 });
-        const boxH = Math.max(50, 24 + expH + 8);
-        checkFit(boxH + 8);
+        const patTitleH = doc.fontSize(16).font("Helvetica-Bold").heightOfString(cp.pattern || "", { width: CW - 28 });
+        const expH = doc.fontSize(14).font("Helvetica").heightOfString(cp.explanation || "", { width: CW - 28, lineGap: 4 });
+        const boxH = Math.max(70, 14 + patTitleH + 10 + expH + 14);
+        checkFit(boxH + 10);
         doc.roundedRect(M, y, CW, boxH, 5).fill(CARD_BG);
         doc.roundedRect(M, y, CW, boxH, 5).strokeColor(GOLD).lineWidth(0.5).stroke();
-        doc.fontSize(16).fillColor(GOLD).font("Helvetica-Bold").text(cp.pattern || "", M + 14, y + 8, { width: CW - 28 });
-        doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(cp.explanation || "", M + 14, y + 22, { width: CW - 28, lineGap: 3 });
-        y += boxH + 8;
+        doc.fontSize(16).fillColor(GOLD).font("Helvetica-Bold").text(cp.pattern || "", M + 14, y + 14, { width: CW - 28 });
+        const cpBodyY = y + 14 + patTitleH + 10;
+        doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(cp.explanation || "", M + 14, cpBodyY, { width: CW - 28, lineGap: 4 });
+        y += boxH + 10;
       }
       writeGapWidening("If you have carried shame about any of these patterns, what you just read may be the first time it has made sense. That clarity matters. But understanding why the pattern exists is not the same as resolving it. The arousal template was encoded during a developmental window you cannot re-enter alone. Attempting to process this material without guided support often leads to destabilization rather than healing. The nervous system needs to be paced through this safely.");
     }
@@ -461,9 +469,9 @@ async function generatePDF(analysis, firstName) {
     sectionHeader("SECTION 5 — YOUR AROUSAL TEMPLATE ORIGIN");
 
     doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text(`First Exposure: Age ${analysis.imprintingAge || "unknown"}`, M, y);
-    y += 14;
-    doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
-    y = doc.y + 14;
+    y = doc.y + 8;
+    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
+    y = doc.y + 16;
 
     doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(
       analysis.imprintingFusion || "",
@@ -482,19 +490,19 @@ async function generatePDF(analysis, firstName) {
     writeCard("ATTACHMENT STYLE", analysis.attachmentStyle || "Unknown", analysis.attachmentFuels || "");
 
     if (analysis.godAttachment) {
-      checkFit(80);
+      checkFit(100);
       doc.fontSize(12).fillColor(GOLD).font("Helvetica").text("HOW THIS SHOWS UP WITH GOD", M, y, { characterSpacing: 1 });
-      y += 14;
-      doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 3 });
-      y = doc.y + 14;
+      y += 22;
+      doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 4 });
+      y = doc.y + 16;
     }
 
     if (analysis.purityCultureImpact) {
-      checkFit(80);
+      checkFit(100);
       doc.fontSize(12).fillColor(GOLD).font("Helvetica").text("PURITY CULTURE IMPACT", M, y, { characterSpacing: 1 });
-      y += 14;
-      doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 3 });
-      y = doc.y + 14;
+      y += 22;
+      doc.fontSize(14).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 4 });
+      y = doc.y + 16;
     }
 
     writeGapWidening("Your attachment style shapes how you connect with people, how you connect with God, and how you relate to the behavior. It was encoded before age five. It has operated as your relational operating system for your entire life. And it cannot be updated by reading about it. Attachment patterns were formed in relationship. They can only be restructured in relationship. That is not a theory. That is peer-reviewed neuroscience and the consistent testimony of Scripture.");
@@ -599,7 +607,7 @@ async function generatePDF(analysis, firstName) {
     // ════════════════════════════════════════
     checkFit(200);
     doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
-    y += 16;
+    y += 24;
 
     doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(
       analysis.closingStatement || "You are not broken. Every behavior has a root, every root has an origin, and every origin can be traced and restructured.",
@@ -614,9 +622,9 @@ async function generatePDF(analysis, firstName) {
     doc.rect(M, y, CW, 1).fill(BORDER);
     y += 14;
 
-    doc.roundedRect(M, y, CW, 50, 6).fill(CARD_BG);
-    doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text("Ready to go deeper?", M + 16, y + 12, { width: CW - 32 });
-    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 26, { width: CW - 32 });
+    doc.roundedRect(M, y, CW, 80, 6).fill(CARD_BG);
+    doc.fontSize(18).fillColor(WHITE).font("Helvetica-Bold").text("Ready to go deeper?", M + 16, y + 14, { width: CW - 32 });
+    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text("Log back in with your email and PIN to book a 30-minute Clarity Call with a certified coach who has your full data.", M + 16, y + 40, { width: CW - 32 });
     y += 62;
 
     doc.fontSize(18).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
