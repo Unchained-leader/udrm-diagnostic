@@ -479,7 +479,7 @@ async function generatePDF(analysis, firstName) {
 
     // Summary cards row
     const summW = (CW - 20) / 3;
-    const summH = 60;
+    const summH = 75;
     const summCards = [
       { label: "BEHAVIORS", value: analysis.scorecardBehaviorCount || "0", sub: "identified" },
       { label: "CONTENT THEMES", value: analysis.scorecardContentThemeCount || "0", sub: "active" },
@@ -488,8 +488,8 @@ async function generatePDF(analysis, firstName) {
     for (let i = 0; i < 3; i++) {
       const sx = M + i * (summW + 10);
       doc.roundedRect(sx, y, summW, summH, 6).fill(CARD_BG);
-      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
-      doc.fontSize(28).fillColor(WHITE).font("Helvetica-Bold").text(String(summCards[i].value), sx + 10, y + 26, { width: summW - 20, align: "center" });
+      doc.fontSize(11).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
+      doc.fontSize(28).fillColor(WHITE).font("Helvetica-Bold").text(String(summCards[i].value), sx + 10, y + 36, { width: summW - 20, align: "center" });
     }
     y += summH + 30;
 
@@ -539,9 +539,9 @@ async function generatePDF(analysis, firstName) {
       const rx = M + i * (relW + 10);
       const rs = parseInt(relScores[i].score) || 0;
       const rc = rs <= 1 ? [80, 180, 80] : rs <= 2 ? [220, 180, 40] : [200, 60, 60]; // 3/3 = red, 2/3 = yellow, 1/3 or 0 = green
-      doc.roundedRect(rx, y, relW, 50, 6).fill(CARD_BG);
-      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
-      doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 24, { width: relW - 12, align: "center" });
+      doc.roundedRect(rx, y, relW, 60, 6).fill(CARD_BG);
+      doc.fontSize(11).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
+      doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 32, { width: relW - 12, align: "center" });
     }
     y += 80;
 
