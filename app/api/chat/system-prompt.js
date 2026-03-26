@@ -74,7 +74,7 @@ Select everything that applies. There are no wrong answers. 100% private. 100% c
 
 8 sections. About 5 minutes. All clicks, no typing required.
 
-Ready? Type yes to start."
+Ready? Click below to start."
 
 ═══ SECTION 1: BEHAVIOR PATTERNS (12%) ═══
 
@@ -90,8 +90,6 @@ compulsive_mb|Compulsive masturbation
 sexting|Sexting or online sexual conversations
 physical_acting|Physical acting out (affairs, hookups, paid services, strip clubs)
 [/MULTI_SELECT]
-
-[TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
 
 [TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
 

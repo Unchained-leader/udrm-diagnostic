@@ -387,7 +387,7 @@ async function generatePDF(analysis, firstName) {
       return sanitize(text.length <= max ? text : text.substring(0, max - 3) + "...");
     }
     function sectionHeader(title) {
-      doc.fontSize(16).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
+      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
       y += 22;
       doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
       y += 18;
@@ -406,17 +406,17 @@ async function generatePDF(analysis, firstName) {
       const cardH = Math.max(80, bodyTop + bodyH + 16);
       checkFit(cardH + 14);
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
-      doc.fontSize(13).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
       doc.fontSize(22).fillColor(WHITE).font("Helvetica-Bold").text(title || "", M + 14, y + titleTop);
       if (body) { _currentTextColor = GRAY; _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: 5 }); }
       y += cardH + 14;
     }
     function writeGapWidening(text) {
-      const gapH = doc.fontSize(16).font("Helvetica-Oblique").heightOfString(text, { width: CW - 20, lineGap: 4 });
+      const gapH = doc.fontSize(18).font("Helvetica-Oblique").heightOfString(text, { width: CW - 20, lineGap: 4 });
       checkFit(gapH + 30);
       doc.rect(M, y, CW, 0.5).fill([50, 50, 50]);
       y += 14;
-      _currentTextColor = [200, 60, 60]; doc.fontSize(16).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
+      _currentTextColor = [200, 60, 60]; doc.fontSize(18).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
       y = doc.y + 18;
     }
 
@@ -455,7 +455,7 @@ async function generatePDF(analysis, firstName) {
 
     // Disclaimer
     const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
-    doc.fontSize(9).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 110, { width: CW - 20, align: "center", lineGap: 2 });
+    doc.fontSize(12).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 120, { width: CW - 20, align: "center", lineGap: 2 });
 
     // ════════════════════════════════════════
     // SCORECARD PAGE — Results Overview
@@ -488,7 +488,7 @@ async function generatePDF(analysis, firstName) {
     for (let i = 0; i < 3; i++) {
       const sx = M + i * (summW + 10);
       doc.roundedRect(sx, y, summW, summH, 6).fill(CARD_BG);
-      doc.fontSize(10).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(summCards[i].label, sx + 10, y + 10, { width: summW - 20, align: "center", characterSpacing: 1 });
       doc.fontSize(28).fillColor(WHITE).font("Helvetica-Bold").text(String(summCards[i].value), sx + 10, y + 26, { width: summW - 20, align: "center" });
     }
     y += summH + 20;
@@ -525,7 +525,7 @@ async function generatePDF(analysis, firstName) {
 
     y += 10;
     // Relational pattern scores mini-row
-    doc.fontSize(12).fillColor(GOLD).font("Helvetica").text("RELATIONAL PATTERN BREAKDOWN", M, y, { characterSpacing: 1 });
+    doc.fontSize(14).fillColor(GOLD).font("Helvetica").text("RELATIONAL PATTERN BREAKDOWN", M, y, { characterSpacing: 1 });
     y += 18;
 
     const relScores = [
@@ -540,7 +540,7 @@ async function generatePDF(analysis, firstName) {
       const rs = parseInt(relScores[i].score) || 0;
       const rc = rs <= 1 ? [80, 180, 80] : rs <= 2 ? [220, 180, 40] : [200, 60, 60]; // 3/3 = red, 2/3 = yellow, 1/3 or 0 = green
       doc.roundedRect(rx, y, relW, 50, 6).fill(CARD_BG);
-      doc.fontSize(9).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(relScores[i].label, rx + 6, y + 8, { width: relW - 12, align: "center" });
       doc.fontSize(22).fillColor(rc).font("Helvetica-Bold").text(`${rs}/${relScores[i].max}`, rx + 6, y + 24, { width: relW - 12, align: "center" });
     }
     y += 70;
@@ -747,13 +747,13 @@ async function generatePDF(analysis, firstName) {
     function drawFlowNode(label, value, highlight) {
       const col = highlight ? GOLD : BORDER;
       const valText = sanitize(value || "");
-      const valH = doc.fontSize(16).font("Helvetica").heightOfString(valText, { width: nodeW2 - 24 });
+      const valH = doc.fontSize(18).font("Helvetica").heightOfString(valText, { width: nodeW2 - 24 });
       const boxH = Math.max(nodeH2, 28 + valH + 10);
       checkFit(boxH + arrowH + 4);
       doc.roundedRect(nodeX, y, nodeW2, boxH, 5).fill(CARD_BG);
       doc.roundedRect(nodeX, y, nodeW2, boxH, 5).strokeColor(col).lineWidth(highlight ? 1 : 0.5).stroke();
-      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 8, { characterSpacing: 1 });
-      _currentTextColor = WHITE; doc.fontSize(16).fillColor(WHITE).font("Helvetica").text(valText, nodeX + 12, y + 28, { width: nodeW2 - 24 });
+      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(label, nodeX + 12, y + 8, { characterSpacing: 1 });
+      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(valText, nodeX + 12, y + 28, { width: nodeW2 - 24 });
       y += boxH;
     }
     function drawArrow() {

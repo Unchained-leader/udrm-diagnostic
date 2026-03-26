@@ -772,7 +772,7 @@
     const RESET_URL = BASE_URL + "/api/reset-pin";
     const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
     const CTA_URL = ""; // Set later for Art of Freedom documentary
-    const WELCOME_MESSAGE = "Welcome, brother.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Type yes to start.";
+    const WELCOME_MESSAGE = "Welcome, brother.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Click below to start.";
     const SESSION_KEY = "unchained_mkt_session";
     const SAVE_DEBOUNCE_MS = 2000;
 
@@ -1336,6 +1336,7 @@
       messagesEl.innerHTML = "";
       addMessage("assistant", WELCOME_MESSAGE);
       messages.push({ role: "assistant", content: WELCOME_MESSAGE });
+      addStartButton();
       addWelcomeBackLink();
     }
     signOutBtn.addEventListener("click", signOut);
@@ -1404,6 +1405,28 @@
         }
       }
       if (lastProgress > 0) updateProgress(lastProgress);
+    }
+
+    // ========== START BUTTON (replaces "type yes") ==========
+    function addStartButton() {
+      const btnDiv = document.createElement("div");
+      btnDiv.id = "start-button-container";
+      btnDiv.style.cssText = "padding: 8px 0; text-align: center;";
+      const btn = document.createElement("button");
+      btn.textContent = "Yes, I'm Ready";
+      btn.className = "quiz-continue-btn";
+      btn.style.cssText = "max-width: 320px; margin: 0 auto; display: block;";
+      btn.addEventListener("click", () => {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btnDiv.remove();
+        addMessage("user", "Yes");
+        messages.push({ role: "user", content: "Yes" });
+        sendToAI();
+      });
+      messagesEl.appendChild(btnDiv);
+      btnDiv.appendChild(btn);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     // ========== WELCOME BACK LINK ==========
@@ -1773,6 +1796,7 @@
       messagesEl.innerHTML = "";
       addMessage("assistant", WELCOME_MESSAGE);
       messages.push({ role: "assistant", content: WELCOME_MESSAGE });
+      addStartButton();
       addWelcomeBackLink();
     })();
   </script>
