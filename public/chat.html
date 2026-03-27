@@ -1160,10 +1160,19 @@
         // Save conversation history to server
         saveHistoryToServer();
 
-        // Save diagnostic data
-        saveDiagnosticData();
+        // Save diagnostic data first, then generate report
+        // Must await diagnostic save so report endpoint can authenticate and find data
+        try {
+          await saveDiagnosticData();
+          console.log("Diagnostic data saved. Triggering report generation...");
+        } catch(e) {
+          console.log("Diagnostic save error (continuing anyway):", e.message);
+        }
 
-        // Generate and send Report 1 PDF via email (fire and forget)
+        // Small delay to ensure Redis write is propagated
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Generate and send Report 1 PDF via email (fire and forget — Opus takes 60-90s)
         generateAndSendReport();
 
         // Hide the capture form and show confirmation
