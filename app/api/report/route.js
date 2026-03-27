@@ -538,6 +538,13 @@ async function generatePDF(analysis, firstName) {
     y += 20;
     doc.fontSize(12).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 3 });
 
+    // LegitScript Certified badge
+    try {
+      const badgePath = path.join(process.cwd(), "public", "legitscript-badge.png");
+      const badgeSize = 60;
+      doc.image(badgePath, W / 2 - badgeSize / 2, y + 30, { width: badgeSize, height: badgeSize });
+    } catch(e) { console.log("LegitScript badge not found, skipping:", e.message); }
+
     // Disclaimer
     const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
     doc.fontSize(12).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 120, { width: CW - 20, align: "center", lineGap: 2 });
