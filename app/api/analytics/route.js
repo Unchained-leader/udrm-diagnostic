@@ -179,7 +179,6 @@ export async function GET(request) {
         reportsGenerated: reports[0]?.total || 0,
         conversionRate: total[0]?.total > 0 ? ((completed[0]?.total / total[0]?.total) * 100).toFixed(1) : "0",
       }, { headers: CORS_HEADERS });
-    }
 
     } else if (view === "devices") {
       // Device breakdown
