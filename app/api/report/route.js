@@ -641,7 +641,7 @@ async function generatePDF(analysis, firstName) {
       writeCard("SECONDARY TYPE", analysis.arousalTemplateSecondary, "Multiple patterns are present in your template.");
     }
 
-    writeGapWidening("You now have a name for the story that has been running beneath your cycle. Most men never get this far. But naming the narrative does not restructure it. Root narratives operate below conscious awareness. You cannot think your way out of a belief system your brain does not know it is running. Restructuring requires a guided process that can access what self-analysis cannot.");
+    writeGapWidening("You now have a name for the story that has been running beneath your cycle. Most men never get this far. Sit with that for a moment. The pages ahead are going to show you how deep this goes.");
 
     // ════════════════════════════════════════
     // SECTION 2 — BEHAVIOR-ROOT MAP
@@ -670,7 +670,7 @@ async function generatePDF(analysis, firstName) {
       y += rowH + 10;
     }
 
-    writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You can see the connections now. But seeing the wiring does not rewire it. The neural pathways that encode these patterns require sustained, guided, experiential work to restructure. Information about the pattern has never changed the pattern. If it could, you would already be free.");
+    writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You did not choose these patterns. They chose you. And now, for the first time, you can see them.");
 
     // ════════════════════════════════════════
     // SECTION 3 — CONFUSING PATTERNS DECODED (conditional)
@@ -700,7 +700,7 @@ async function generatePDF(analysis, firstName) {
         _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(cpExp, M + 14, cpBodyY, { width: CW - 28, lineGap: 4 });
         y += boxH + 10;
       }
-      writeGapWidening("If you have carried shame about any of these patterns, what you just read may be the first time it has made sense. That clarity matters. But understanding why the pattern exists is not the same as resolving it. The arousal template was encoded during a developmental window you cannot re-enter alone. Attempting to process this material without guided support often leads to destabilization rather than healing. The nervous system needs to be paced through this safely.");
+      writeGapWidening("If you have carried shame about any of these patterns, what you just read may be the first time it has made sense. You are not depraved. You are not uniquely broken. There is a reason for every part of this, and now you are starting to see it.");
     }
 
     // ════════════════════════════════════════
@@ -718,7 +718,7 @@ async function generatePDF(analysis, firstName) {
     y = doc.y + 14;
 
     const yearsData = analysis.patternYears || "many";
-    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program. That program was installed by experiences you did not choose and reinforced by thousands of repetitions over ${yearsData} years. Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
+    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
 
     // ════════════════════════════════════════
     // SECTION 5 — AROUSAL TEMPLATE ORIGIN
@@ -737,7 +737,7 @@ async function generatePDF(analysis, firstName) {
     );
     y = doc.y + 14;
 
-    writeGapWidening("You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. But here is what the research makes clear: you cannot excavate your own root. You cannot see the story you are operating inside of. The brain that was conditioned in isolation and secrecy requires the opposite, guided truth in relationship, to recondition.");
+    writeGapWidening(`You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. And it raises a question most men eventually ask: if this has been running beneath the surface for ${yearsData} years without me seeing it, what else is down there that I still cannot see?`);
 
     // ════════════════════════════════════════
     // SECTION 6 — ATTACHMENT STYLE
@@ -763,7 +763,7 @@ async function generatePDF(analysis, firstName) {
       y = doc.y + 16;
     }
 
-    writeGapWidening("Your attachment style shapes how you connect with people, how you connect with God, and how you relate to the behavior. It was encoded before age five. It has operated as your relational operating system for your entire life. And it cannot be updated by reading about it. Attachment patterns were formed in relationship. They can only be restructured in relationship. That is not a theory. That is peer-reviewed neuroscience and the consistent testimony of Scripture.");
+    writeGapWidening("Your attachment style has been your relational operating system since before you could speak. It shapes how you love, how you hide, how you connect with God, and how you relate to the behavior. Patterns this deep do not change through understanding alone. They were formed in relationship. The research is clear that they restructure the same way.");
 
     // ════════════════════════════════════════
     // SECTION 7 — RELATIONAL PATTERNS
@@ -792,7 +792,7 @@ async function generatePDF(analysis, firstName) {
       y = doc.y + 10;
     }
 
-    writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Enmeshment distorts your boundaries. Codependency drains you until the behavior becomes the only thing that is yours. And the leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently, in a community of men who understand them firsthand.");
+    writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Codependency drains you until the behavior becomes the only thing that is yours. The leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently.");
 
     // ════════════════════════════════════════
     // SECTION 8 — STRATEGY AUTOPSY
@@ -838,7 +838,7 @@ async function generatePDF(analysis, firstName) {
       );
       y = doc.y + 14;
 
-      writeGapWidening(`Willpower cannot override a survival program. Filters cannot reach it. Accountability cannot see it. The neuropathway will keep firing until the root narrative it is responding to is restructured at the source.`);
+      writeGapWidening("Every strategy on this list was aimed at managing the behavior. Not one of them reached the root narrative driving it. That is not a failure of effort. It is a failure of targeting.");
 
       // Spiritual Bypass section — conditional on prayer/deliverance/fasting strategies
       const spiritualStrats = strategies.filter(s => {
