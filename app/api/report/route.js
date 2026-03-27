@@ -6,7 +6,7 @@ import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 import fs from "fs";
 import path from "path";
 
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
@@ -74,7 +74,10 @@ export async function POST(request) {
     }
 
     // Analyze with Claude
+    console.log("Starting Opus analysis...");
+    const analysisStart = Date.now();
     const rawAnalysis = await analyzeConversation(messages, userName);
+    console.log(`Opus analysis completed in ${((Date.now() - analysisStart) / 1000).toFixed(1)}s`);
 
     // Sanitize all string values: strip em dashes + internal code identifiers
     function cleanStr(s) {
@@ -156,8 +159,9 @@ export async function POST(request) {
 
     return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
   } catch (error) {
-    console.error("Report generation error:", error);
-    return Response.json({ error: "Failed to generate report." }, { status: 500, headers: CORS_HEADERS });
+    console.error("Report generation error:", error.message || error);
+    console.error("Error stack:", error.stack);
+    return Response.json({ error: `Failed to generate report: ${error.message || "unknown error"}` }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
@@ -174,7 +178,7 @@ async function analyzeConversation(messages, userName) {
     .join("\n\n");
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-opus-4",
     max_tokens: 16384,
     messages: [{
       role: "user",
