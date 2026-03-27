@@ -27,6 +27,8 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       lastName: (name || "").split(" ").slice(1).join(" ") || "",
       phone: phone || "",
       name: name || "",
+      report_url: reportUrl || "",
+      reportUrl: reportUrl || "",
     },
     tags: tags || [],
     reportUrl: reportUrl || null,
@@ -224,6 +226,8 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
       lastName: (name || "").split(" ").slice(1).join(" ") || "",
       phone: phone || "",
       name: name || "",
+      report_url: reportUrl || "",
+      reportUrl: reportUrl || "",
     },
     tags: [
       "Diagnostic Complete",
