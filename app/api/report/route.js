@@ -178,7 +178,7 @@ async function analyzeConversation(messages, userName) {
     .join("\n\n");
 
   const response = await client.messages.create({
-    model: "claude-opus-4",
+    model: "claude-opus-4-6",
     max_tokens: 16384,
     messages: [{
       role: "user",
