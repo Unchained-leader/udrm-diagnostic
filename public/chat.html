@@ -1702,6 +1702,10 @@
           bubble.textContent = cleanDisplayText(fullResponse);
           const mcOptions = parseMCOptions(fullResponse);
           if (mcOptions) renderMCButtons(mcOptions, assistantDiv);
+          // Auto-scroll long messages (reveal) to top
+          if (cleanDisplayText(fullResponse).length > 300) {
+            setTimeout(() => assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+          }
         }
 
         if (currentUser) saveHistoryToServer();
@@ -1787,6 +1791,9 @@
           // Fallback to old MC buttons if no quiz blocks
           const mcOptions = parseMCOptions(fullResponse);
           if (mcOptions) renderMCButtons(mcOptions, assistantDiv);
+          if (cleanDisplayText(fullResponse).length > 300) {
+            setTimeout(() => assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+          }
         }
 
         if (currentUser) saveHistoryToServer();
