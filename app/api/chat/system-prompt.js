@@ -436,7 +436,7 @@ This message has 5 parts delivered in ONE response. Follow this structure EXACTL
 --- PART 1: COMPLETION + CTA FIRST ---
 "Your assessment is complete.
 
-Your full 25-page Unwanted Desire Root Map is being built right now. It will be ready to send you in about 5 minutes. Fill out the form below to tell us where to send it.
+Your full 25-page Unwanted Desire Root Map is being built right now. Fill out the form below to tell us where to send it within the next five minutes, or you will not receive it.
 
 Here is a preview of what we found."
 
