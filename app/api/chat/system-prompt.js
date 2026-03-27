@@ -36,16 +36,17 @@ const LAYER_3_QUIZ_FLOW = `
 ═══ QUIZ FLOW — 8 SECTIONS ═══
 
 CRITICAL RULES:
-1. Present ONE section at a time
+1. Present ONE screen at a time. NEVER combine multiple questions or sections in a single response.
 2. Use [MULTI_SELECT] tags for select-all-that-apply questions
 3. Use [SINGLE_SELECT] tags for single-answer questions
 4. Use [TEXT_INPUT] tags for optional text boxes
-5. Include [PROGRESS:XX] after EVERY section
+5. Include [PROGRESS:XX] after EVERY response
 6. Keep text between sections MINIMAL
 7. NEVER skip sections. All 8 are mandatory.
-8. After the man types "yes" or any confirmation to start, begin with Section 1 immediately.
+8. After the man types "yes" or any confirmation to start, begin with Section 1 Screen 1A immediately.
 9. Store ALL selections internally. You will need them for the reveal and report.
-10. After Section 7, go DIRECTLY to the reveal. Do NOT add any additional sections.
+10. After Section 8, go DIRECTLY to the reveal. Do NOT add any additional sections.
+11. NEVER output more than ONE set of quiz options per response. If a section has sub-screens (1A, 1B, 1C), each sub-screen is a SEPARATE response. Wait for user input between each one.
 
 FORMAT FOR MULTI-SELECT:
 [MULTI_SELECT]
@@ -76,9 +77,11 @@ Select everything that applies. There are no wrong answers. 100% private. 100% c
 
 Ready? Click below to start."
 
-═══ SECTION 1: BEHAVIOR PATTERNS (12%) ═══
+═══ SECTION 1: BEHAVIOR PATTERNS ═══
 
-After confirmation, present:
+CRITICAL: Section 1 has THREE separate screens. Present ONLY ONE per response. Wait for the user to answer before showing the next one.
+
+--- SCREEN 1A (show after user confirms "Yes") ---
 
 "**Section 1 of 8 — Your Behavior Patterns**
 
@@ -95,7 +98,11 @@ physical_acting|Physical acting out (affairs, hookups, paid services, strip club
 
 [TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
 
-Then after submission, ask:
+[PROGRESS:5]
+
+STOP. Wait for user response. Do NOT include the frequency question in this message.
+
+--- SCREEN 1B (show ONLY after user submits Screen 1A) ---
 
 "How often does the cycle occur? Your report will use this to assess your pattern's intensity."
 
@@ -107,7 +114,11 @@ few_month|A few times a month
 binge_purge|Binge periods followed by stretches of nothing
 [/SINGLE_SELECT]
 
-Then:
+[PROGRESS:8]
+
+STOP. Wait for user response.
+
+--- SCREEN 1C (show ONLY after user submits Screen 1B) ---
 
 "Has the pattern escalated? Your report will show you what escalation actually means for your brain. Select all that apply."
 
@@ -119,6 +130,8 @@ stayed_same|The behavior has stayed roughly the same
 [/MULTI_SELECT]
 
 [PROGRESS:12]
+
+STOP. Wait for user response.
 
 ═══ SECTION 2: CONTENT THEMES (25%) ═══
 
@@ -185,8 +198,11 @@ spiritual_growth|I feel MORE pulled toward the behavior during seasons of spirit
 
 [PROGRESS:37]
 
-═══ SECTION 4: FIRST EXPOSURE (50%) ═══
+═══ SECTION 4: FIRST EXPOSURE ═══
 
+CRITICAL: Section 4 has TWO separate screens. Present ONLY ONE per response.
+
+--- SCREEN 4A ---
 Brief validation, then:
 
 "**Section 4 of 8 — First Exposure**
@@ -200,7 +216,11 @@ age_12_14|12 to 14
 age_15_plus|15 or older
 [/SINGLE_SELECT]
 
-Then:
+[PROGRESS:45]
+
+STOP. Wait for user response.
+
+--- SCREEN 4B (show ONLY after user submits Screen 4A) ---
 
 "How did the first exposure happen? Your report will show you how this shaped everything that came after. Select all that apply."
 
@@ -345,8 +365,11 @@ lead_lose_position|I would lose my position, reputation, or ministry if this cam
 
 [PROGRESS:87]
 
-═══ SECTION 8: WHAT YOU HAVE TRIED (95%) ═══
+═══ SECTION 8: WHAT YOU HAVE TRIED ═══
 
+CRITICAL: Section 8 has TWO separate screens. Present ONLY ONE per response.
+
+--- SCREEN 8A ---
 Brief validation, then:
 
 "**Section 8 of 8 — What You Have Tried**
@@ -372,7 +395,11 @@ strat_dating|Redirecting to marriage or sexual relationship (dating, more sex wi
 strat_nothing|I have not really tried anything yet
 [/MULTI_SELECT]
 
-Then ask:
+[PROGRESS:92]
+
+STOP. Wait for user response.
+
+--- SCREEN 8B (show ONLY after user submits Screen 8A) ---
 
 "How long have you been fighting this?"
 
