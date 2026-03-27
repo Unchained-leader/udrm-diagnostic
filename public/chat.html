@@ -801,6 +801,25 @@
     let diagnosticComplete = false;
     let contactCaptureShown = false;
 
+    // Analytics session ID (anonymous until registration)
+    const analyticsSessionId = "s_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const ANALYTICS_URL = BASE_URL + "/api/analytics";
+
+    function trackEvent(eventType, eventData, extra) {
+      const payload = {
+        sessionId: analyticsSessionId,
+        product: "udrm",
+        eventType,
+        eventData: eventData || {},
+        ...(extra || {}),
+      };
+      fetch(ANALYTICS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {}); // fire and forget
+    }
+
     // DOM refs
     const chatContainer = document.getElementById("chat-container");
     const messagesEl = document.getElementById("chat-messages");
@@ -842,7 +861,9 @@
     function parseProgressFromResponse(text) {
       const match = text.match(/\[PROGRESS:(\d+)\]/);
       if (match) {
-        updateProgress(parseInt(match[1], 10));
+        const pct = parseInt(match[1], 10);
+        updateProgress(pct);
+        if (pct >= 98) trackEvent("reveal_shown", { progress: pct });
       }
       return text.replace(/\[PROGRESS:\d+\]/g, "").trim();
     }
@@ -1020,6 +1041,14 @@
           userMsg += "\nAdditional: " + textInputValue.trim();
         }
 
+        // Track section completion with selections
+        const sectionMatch = (messages.filter(m => m.role === "assistant").length || 0);
+        trackEvent(`section_${sectionMatch}_complete`, { selections: selectedIds, textInput: textInputValue.trim() || null }, {
+          selections: selectedIds,
+          sectionNum: sectionMatch,
+          email: currentUser ? currentUser.email : null,
+        });
+
         addMessage("user", selectedTexts.join(" | ") + (textInputValue.trim() ? " | " + textInputValue.trim() : ""));
         messages.push({ role: "user", content: userMsg });
         sendToAI();
@@ -1079,6 +1108,7 @@
       if (contactCaptureShown) return;
       if (currentUser) return; // Already logged in
       contactCaptureShown = true;
+      trackEvent("contact_capture_shown", { timestamp: new Date().toISOString() });
 
       const captureDiv = document.createElement("div");
       captureDiv.id = "contact-capture";
@@ -1153,6 +1183,7 @@
         // Success — save session
         currentUser = { email: email.toLowerCase(), pin, name };
         try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
+        trackEvent("contact_capture_complete", { email: email.toLowerCase(), name });
 
         // Show sign out button
         signOutBtn.style.display = "block";
@@ -1602,6 +1633,7 @@
       btn.style.cssText = "max-width:300px;";
       btn.addEventListener("click", () => {
         btnDiv.remove();
+        trackEvent("quiz_start", { timestamp: new Date().toISOString() });
         addMessage("user", "Yes");
         messages.push({ role: "user", content: "Yes" });
         sendToAI();

@@ -5,6 +5,7 @@ import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 import fs from "fs";
 import path from "path";
+import sql from "../lib/db";
 
 export const maxDuration = 800;
 
@@ -224,6 +225,26 @@ export async function POST(request) {
       analysis,
       reportUrl,
     }).catch((e) => console.error("GHL report webhook error:", e.message));
+
+    // Record analytics: report generated + completed diagnostic
+    try {
+      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
+        VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })})`;
+      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
+        VALUES (${normalizedEmail}, 'udrm', 'report_emailed', ${JSON.stringify({ email: normalizedEmail })})`;
+      await sql`INSERT INTO completed_diagnostics (
+        session_id, email, product, name, arousal_template_type, neuropathway, attachment_style,
+        codependency_score, enmeshment_score, relational_void_score, leadership_burden_score,
+        escalation_present, strategies_count, years_fighting, report_url, report_generated_at
+      ) VALUES (
+        ${normalizedEmail}, ${normalizedEmail}, 'udrm', ${userName},
+        ${analysis.arousalTemplateType || null}, ${analysis.neuropathway || null}, ${analysis.attachmentStyle || null},
+        ${parseInt(analysis.codependencyScore) || 0}, ${parseInt(analysis.enmeshmentScore) || 0},
+        ${parseInt(analysis.relationalVoidScore) || 0}, ${parseInt(analysis.leadershipBurdenScore) || 0},
+        ${analysis.escalationPresent || false}, ${parseInt(analysis.strategiesCount) || 0},
+        ${analysis.yearsFighting || null}, ${reportUrl}, NOW()
+      )`;
+    } catch(e) { console.error("Analytics write error (non-fatal):", e.message); }
 
     return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
   } catch (error) {
