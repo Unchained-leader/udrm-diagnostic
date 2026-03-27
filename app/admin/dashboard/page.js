@@ -73,6 +73,7 @@ export default function Dashboard() {
 
   const tabs = [
     { id: "funnel", label: "Funnel" },
+    { id: "trends", label: "Trends" },
     { id: "research", label: "Research" },
     { id: "dropoff", label: "Drop-off" },
     { id: "devices", label: "Devices" },
@@ -124,6 +125,7 @@ export default function Dashboard() {
 
       <div style={S.content}>
         {tab === "funnel" && data && <FunnelView data={data} />}
+        {tab === "trends" && <TrendsView product={product} days={days} />}
         {tab === "research" && data && <ResearchView data={data} />}
         {tab === "dropoff" && data && <DropoffView data={data} />}
         {tab === "devices" && data && <DevicesView data={data} />}
@@ -190,6 +192,147 @@ function FunnelView({ data }) {
           ))}
         </>
       )}
+    </div>
+  );
+}
+
+// ═══ TRENDS (Period-over-Period Line Graph) ═══
+function TrendsView({ product, days }) {
+  const [trendData, setTrendData] = useState(null);
+  const [metric, setMetric] = useState("quiz_start");
+  const [showOverlay, setShowOverlay] = useState(true);
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+
+  const metricLabels = {
+    quiz_start: "Quiz Starts",
+    contact_capture_complete: "Completions",
+    report_generated: "Reports Generated",
+  };
+
+  useEffect(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    fetch(`/api/analytics?secret=${encodeURIComponent(s)}&view=trends&product=${product}&days=${days}&metric=${metric}`)
+      .then(r => r.json())
+      .then(setTrendData)
+      .catch(console.error);
+  }, [product, days, metric]);
+
+  useEffect(() => {
+    if (!trendData || !canvasRef.current) return;
+    // Load Chart.js from CDN if not already loaded
+    if (!window.Chart) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+      script.onload = () => renderChart();
+      document.head.appendChild(script);
+    } else {
+      renderChart();
+    }
+  }, [trendData, showOverlay, metric]);
+
+  function renderChart() {
+    if (!window.Chart || !canvasRef.current || !trendData) return;
+    if (chartRef.current) chartRef.current.destroy();
+
+    const { multiCurrent, multiPrevious } = trendData;
+    const metrics = ["quiz_start", "contact_capture_complete", "report_generated"];
+    const colors = {
+      quiz_start: { current: "#c5a55a", prev: "rgba(197,165,90,0.3)" },
+      contact_capture_complete: { current: "#4CAF50", prev: "rgba(76,175,80,0.3)" },
+      report_generated: { current: "#2196F3", prev: "rgba(33,150,243,0.3)" },
+    };
+
+    // Build date labels from current period
+    const allDates = new Set();
+    for (const m of metrics) {
+      (multiCurrent[m] || []).forEach(d => allDates.add(d.date.split("T")[0]));
+    }
+    const dateLabels = [...allDates].sort();
+    const shortLabels = dateLabels.map(d => {
+      const dt = new Date(d + "T12:00:00");
+      return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    });
+
+    const datasets = [];
+    for (const m of metrics) {
+      const currentMap = {};
+      (multiCurrent[m] || []).forEach(d => { currentMap[d.date.split("T")[0]] = parseInt(d.count); });
+      datasets.push({
+        label: metricLabels[m] + " (Current)",
+        data: dateLabels.map(d => currentMap[d] || 0),
+        borderColor: colors[m].current,
+        backgroundColor: colors[m].current + "20",
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false,
+        pointRadius: 3,
+      });
+
+      if (showOverlay) {
+        const prevArr = multiPrevious[m] || [];
+        // Align previous period to current period dates (by offset)
+        const prevData = dateLabels.map((_, i) => {
+          return i < prevArr.length ? parseInt(prevArr[i].count) : 0;
+        });
+        datasets.push({
+          label: metricLabels[m] + " (Previous " + days + "d)",
+          data: prevData,
+          borderColor: colors[m].prev,
+          borderDash: [5, 5],
+          borderWidth: 1.5,
+          tension: 0.3,
+          fill: false,
+          pointRadius: 0,
+        });
+      }
+    }
+
+    chartRef.current = new window.Chart(canvasRef.current, {
+      type: "line",
+      data: { labels: shortLabels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: "#aaa", font: { size: 11 } },
+            position: "bottom",
+          },
+        },
+        scales: {
+          x: {
+            grid: { color: "rgba(255,255,255,0.05)" },
+            ticks: { color: "#888", font: { size: 10 } },
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: "rgba(255,255,255,0.05)" },
+            ticks: { color: "#888", stepSize: 1 },
+          },
+        },
+      },
+    });
+  }
+
+  return (
+    <div>
+      <h2 style={S.sectionTitle}>Performance Trends</h2>
+      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <label style={{ color: "#aaa", fontSize: 13 }}>
+          <input type="checkbox" checked={showOverlay} onChange={e => setShowOverlay(e.target.checked)}
+            style={{ marginRight: 6 }} />
+          Show previous {days}-day overlay
+        </label>
+      </div>
+      <div style={{ height: 350, background: "#0d0d0d", borderRadius: 8, padding: 12, border: "1px solid #222" }}>
+        <canvas ref={canvasRef} />
+      </div>
+      {!trendData && <div style={{ color: "#666", marginTop: 12, fontSize: 13 }}>Loading trend data...</div>}
+      <p style={{ color: "#666", fontSize: 11, marginTop: 8 }}>
+        Solid lines = current {days} days. Dashed lines = previous {days} days. Toggle overlay to compare periods.
+      </p>
     </div>
   );
 }

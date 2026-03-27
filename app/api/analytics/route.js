@@ -272,6 +272,55 @@ export async function GET(request) {
       const uptimePct = total > 0 ? ((healthy / total) * 100).toFixed(1) : "100.0";
 
       return Response.json({ history, uptimePct, totalChecks: total }, { headers: CORS_HEADERS });
+
+    } else if (view === "trends") {
+      // Daily event counts for current period + previous period (for overlay comparison)
+      const metric = searchParams.get("metric") || "quiz_start";
+      const currentStart = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const prevStart = new Date(Date.now() - days * 2 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Current period daily counts
+      const current = await sql`
+        SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = ${metric} AND created_at >= ${currentStart}
+        GROUP BY DATE(created_at)
+        ORDER BY date
+      `;
+
+      // Previous period daily counts
+      const previous = await sql`
+        SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = ${metric}
+          AND created_at >= ${prevStart} AND created_at < ${currentStart}
+        GROUP BY DATE(created_at)
+        ORDER BY date
+      `;
+
+      // Also get multiple metrics for multi-line view
+      const metrics = ["quiz_start", "contact_capture_complete", "report_generated"];
+      const multiCurrent = {};
+      const multiPrevious = {};
+      for (const m of metrics) {
+        multiCurrent[m] = await sql`
+          SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+          FROM analytics_events
+          WHERE product = ${product} AND event_type = ${m} AND created_at >= ${currentStart}
+          GROUP BY DATE(created_at)
+          ORDER BY date
+        `;
+        multiPrevious[m] = await sql`
+          SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+          FROM analytics_events
+          WHERE product = ${product} AND event_type = ${m}
+            AND created_at >= ${prevStart} AND created_at < ${currentStart}
+          GROUP BY DATE(created_at)
+          ORDER BY date
+        `;
+      }
+
+      return Response.json({ current, previous, multiCurrent, multiPrevious, days, metric }, { headers: CORS_HEADERS });
     }
 
     return Response.json({ error: "Invalid view" }, { status: 400, headers: CORS_HEADERS });
