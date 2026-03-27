@@ -93,7 +93,8 @@ scrolling_social|Scrolling sexual content on social media (reels, stories, accou
 fantasy_daydream|Sexual fantasy/daydreaming (without viewing content)
 compulsive_mb|Compulsive masturbation
 sexting|Sexting or online sexual conversations
-physical_acting|Physical acting out (affairs, hookups, paid services, strip clubs)
+physical_acting|Physical acting out (affairs, hookups, strip clubs)
+massage_parlors|Massage parlors or paid sexual services
 [/MULTI_SELECT]
 
 [TEXT_INPUT]Anything else that is part of your cycle? (Optional)[/TEXT_INPUT]
