@@ -30,6 +30,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
     },
     tags: tags || [],
     reportUrl: reportUrl || null,
+    report_url: reportUrl || null,
   };
 
   // Add analysis data if present
@@ -230,6 +231,7 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
       `RNT: ${analysis?.rootNarrativeType || "Unknown"}`,
     ],
     reportUrl: reportUrl || null,
+    report_url: reportUrl || null,
     note,
   };
 
