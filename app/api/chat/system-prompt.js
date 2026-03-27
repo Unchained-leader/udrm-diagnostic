@@ -161,6 +161,7 @@ ten_emotional|Drawn to content with emotional intimacy, not just physical
 ten_connection|The emotional connection matters more than the physical acts
 nov_new|Constantly searching for something new
 nov_search|The search and anticipation are more consuming than the content itself
+nov_anime|Drawn to anime, hentai, or animated sexual content
 conf_wife_others|Fantasies involving your wife/partner with other men
 conf_race|Drawn to content featuring a specific race or ethnicity
 conf_samesex|Drawn to same-sex content despite identifying as heterosexual
