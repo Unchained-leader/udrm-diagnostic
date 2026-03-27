@@ -1129,8 +1129,20 @@
     // ========== CONTACT CAPTURE (inline in chat after teaser) ==========
     function showContactCapture() {
       if (contactCaptureShown) return;
-      if (currentUser) return; // Already logged in
       contactCaptureShown = true;
+
+      // If already logged in, skip the form and auto-generate the report
+      if (currentUser) {
+        trackEvent("contact_capture_auto", { email: currentUser.email });
+        saveDiagnosticData();
+        generateAndSendReport();
+        const confirmDiv = document.createElement("div");
+        confirmDiv.className = "msg assistant";
+        confirmDiv.innerHTML = '<div class="msg-bubble">Your report is being generated and will be sent to ' + escapeHtml(currentUser.email) + ' within 5 minutes. Check your inbox.</div>';
+        messagesEl.appendChild(confirmDiv);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return;
+      }
       trackEvent("contact_capture_shown", { timestamp: new Date().toISOString() });
 
       const captureDiv = document.createElement("div");
