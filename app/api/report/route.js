@@ -175,7 +175,7 @@ async function analyzeConversation(messages, userName) {
 
   const response = await client.messages.create({
     model: "claude-opus-4",
-    max_tokens: 8192,
+    max_tokens: 16384,
     messages: [{
       role: "user",
       content: `Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections.
@@ -290,10 +290,16 @@ Return ONLY valid JSON, no markdown:
   const text = response.content[0].text;
   try {
     return JSON.parse(text);
-  } catch {
+  } catch (e) {
+    console.error("JSON parse failed, attempting extraction. Error:", e.message);
+    console.error("First 500 chars of response:", text.substring(0, 500));
     // Try to extract JSON from the response
     const match = text.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
+    if (match) {
+      try { return JSON.parse(match[0]); } catch (e2) {
+        console.error("Extracted JSON also failed:", e2.message);
+      }
+    }
     // Fallback
     return {
       arousalTemplateType: "Unknown",
@@ -322,6 +328,7 @@ Return ONLY valid JSON, no markdown:
       leadershipBurdenExplanation: null,
       escalationPresent: false,
       isolationLevel: "Unknown",
+      strategyBreakdowns: [],
       keyInsight: "Your pattern is not random. Every behavior traces to a root. Every root has an origin.",
       closingStatement: "You are not broken. You are not perverted. Every behavior has a root, every root has an origin, and every origin can be traced, exposed, and restructured.",
     };
