@@ -89,20 +89,84 @@ export async function GET(request) {
       }
     } catch (e) { /* ignore */ }
 
+    // ── TREND ANALYSIS: 3-day, 7-day, 30-day windows ──
+    async function getWindowStats(daysBack) {
+      const from = new Date();
+      from.setDate(from.getDate() - daysBack);
+      const fromStr = from.toISOString();
+      const sRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'quiz_start' AND product = 'udrm' AND created_at >= ${fromStr}::timestamp`;
+      const cRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'contact_capture_complete' AND product = 'udrm' AND created_at >= ${fromStr}::timestamp`;
+      const s = parseInt(sRes[0]?.c) || 0;
+      const c = parseInt(cRes[0]?.c) || 0;
+      const rate = s > 0 ? ((c / s) * 100).toFixed(1) : "0.0";
+      const dailyAvgStarts = (s / daysBack).toFixed(1);
+      const dailyAvgCompletions = (c / daysBack).toFixed(1);
+      return { starts: s, completions: c, rate, dailyAvgStarts, dailyAvgCompletions, days: daysBack };
+    }
+
+    const d3 = await getWindowStats(3);
+    const d7 = await getWindowStats(7);
+    const d30 = await getWindowStats(30);
+
+    // Determine trajectory
+    let trajectory = "";
+    const r3 = parseFloat(d3.rate);
+    const r7 = parseFloat(d7.rate);
+    const r30 = parseFloat(d30.rate);
+
+    if (r3 > r7 && r7 > r30) {
+      trajectory = ":chart_with_upwards_trend: *Trajectory: Accelerating.* Conversion rate is climbing across all windows. Current momentum is strong.";
+    } else if (r3 > r7) {
+      trajectory = ":chart_with_upwards_trend: *Trajectory: Improving.* Short-term conversion is trending up vs the 7-day average. Keep current ad strategy running.";
+    } else if (r3 < r7 && r7 < r30) {
+      trajectory = ":chart_with_downwards_trend: *Trajectory: Declining.* Conversion rate is dropping across all windows. Review ad targeting, landing page, or quiz friction.";
+    } else if (r3 < r7) {
+      trajectory = ":small_red_triangle_down: *Trajectory: Softening.* Short-term conversion dipped below the 7-day average. Could be normal variance, or early signal. Monitor closely.";
+    } else if (d3.starts === 0) {
+      trajectory = ":warning: *Trajectory: No recent data.* Zero quiz starts in the last 3 days. Ads may be paused or landing page may be down.";
+    } else {
+      trajectory = ":heavy_minus_sign: *Trajectory: Stable.* Conversion rate is holding steady across all windows.";
+    }
+
+    // Volume trend
+    let volumeTrend = "";
+    const avg3 = parseFloat(d3.dailyAvgStarts);
+    const avg7 = parseFloat(d7.dailyAvgStarts);
+    const avg30 = parseFloat(d30.dailyAvgStarts);
+    if (avg3 > avg7 * 1.2) {
+      volumeTrend = "Volume is surging, 3-day daily average is 20%+ above the 7-day average.";
+    } else if (avg3 < avg7 * 0.8) {
+      volumeTrend = "Volume is dropping, 3-day daily average is 20%+ below the 7-day average. Check ad spend or delivery.";
+    } else {
+      volumeTrend = "Volume is consistent with recent averages.";
+    }
+
+    // 7-day forecast
+    const forecastWeeklyStarts = (avg7 * 7).toFixed(0);
+    const forecastWeeklyCompletions = (parseFloat(d7.dailyAvgCompletions) * 7).toFixed(0);
+
     // Build message
-    const hasData = starts > 0;
+    const hasData = starts > 0 || d3.starts > 0;
     let message;
     if (hasData) {
       message = `:bar_chart: *DAILY PERFORMANCE SUMMARY*\n${dateLabel}\n\n`
-        + `*Quiz Starts:* ${starts}\n`
-        + `*Completions:* ${completions}\n`
-        + `*Reports Generated:* ${reports}\n`
-        + `*Conversion Rate:* ${convRate}%\n\n`
-        + `*Biggest Drop-off:* ${biggestDrop}\n`
-        + `*Most Selected Behavior:* ${topBehavior}\n\n`
+        + `*Yesterday:*\n`
+        + `Quiz Starts: ${starts}  |  Completions: ${completions}  |  Reports: ${reports}  |  Conversion: ${convRate}%\n`
+        + `Biggest Drop-off: ${biggestDrop}\n\n`
+        + `───────────────────\n`
+        + `:mag: *TREND ANALYSIS*\n\n`
+        + `*Last 3 Days:* ${d3.starts} starts, ${d3.completions} completions, ${d3.rate}% conversion (${d3.dailyAvgStarts}/day avg)\n`
+        + `*Last 7 Days:* ${d7.starts} starts, ${d7.completions} completions, ${d7.rate}% conversion (${d7.dailyAvgStarts}/day avg)\n`
+        + `*Last 30 Days:* ${d30.starts} starts, ${d30.completions} completions, ${d30.rate}% conversion (${d30.dailyAvgStarts}/day avg)\n\n`
+        + `${trajectory}\n`
+        + `${volumeTrend}\n\n`
+        + `*7-Day Forecast (at current pace):* ~${forecastWeeklyStarts} starts, ~${forecastWeeklyCompletions} completions\n\n`
+        + `───────────────────\n`
         + `Full dashboard: https://unchained-marketing-coach.vercel.app/admin/dashboard`;
     } else {
-      message = `:bar_chart: *DAILY PERFORMANCE SUMMARY*\n${dateLabel}\n\nNo quiz activity yesterday. Dashboard: https://unchained-marketing-coach.vercel.app/admin/dashboard`;
+      message = `:bar_chart: *DAILY PERFORMANCE SUMMARY*\n${dateLabel}\n\nNo quiz activity in the last 3 days.\n\n`
+        + `*30-Day Totals:* ${d30.starts} starts, ${d30.completions} completions, ${d30.rate}% conversion\n\n`
+        + `Dashboard: https://unchained-marketing-coach.vercel.app/admin/dashboard`;
     }
 
     // Send to Slack (NO @channel tag for daily summaries)
