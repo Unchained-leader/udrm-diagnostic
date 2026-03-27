@@ -1082,7 +1082,7 @@ async function generatePDF(analysis, firstName) {
     // SECTION 10 — NEXT STEPS & RESOURCES
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
-    doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("BASED ON YOUR RESULTS, HERE ARE YOUR PRIORITIZED NEXT STEPS", M, y, { characterSpacing: 2 });
+    doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("YOUR NEXT STEP AND ADDITIONAL RESOURCES", M, y, { characterSpacing: 2 });
     y = doc.y + 30;
 
     // Helper to draw a resource card with CTA button
@@ -1095,8 +1095,8 @@ async function generatePDF(analysis, firstName) {
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
       doc.roundedRect(M, y, CW, cardH, 6).strokeColor(priority === 1 ? GOLD : BORDER).lineWidth(priority === 1 ? 1.5 : 0.5).stroke();
 
-      // Priority label (left) + price badge (right, bigger)
-      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(`PRIORITY ${priority}`, M + 16, y + 14, { characterSpacing: 1 });
+      // Label (left) + price badge (right, bigger)
+      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(label, M + 16, y + 14, { characterSpacing: 1 });
       const priceColor = price === "FREE" ? [80, 180, 80] : GOLD;
       const priceBg = price === "FREE" ? [20, 50, 20] : [50, 40, 15];
       const priceW = price === "FREE" ? 60 : 50;
@@ -1124,19 +1124,19 @@ async function generatePDF(analysis, firstName) {
 
     // Priority 1 — FREE
     const p1Body = `Your diagnostic revealed ${sanitize(analysis.arousalTemplateType || "your primary pattern")} as your primary pattern with ${sanitize(analysis.neuropathway || "a specific neuropathway")} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`;
-    drawResourceCard(1, "PRIORITY 1", "FREE", "Watch the Art of Freedom Training", p1Body, "https://unchained-leader.com/aof");
+    drawResourceCard(1, "PRIORITY 1 — YOUR NEXT STEP", "FREE", "Watch the Art of Freedom Training", p1Body, "https://unchained-leader.com/aof");
 
-    // Priority 2 — $27
+    // Option 2 — $27
     const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
-    drawResourceCard(2, "PRIORITY 2", "$27", "Book a 30-Minute Clarity Call", p2Body, "https://unchained-leader.com/clarity-call");
+    drawResourceCard(2, "OPTION 2", "$27", "Book a 30-Minute Clarity Call", p2Body, "https://unchained-leader.com/clarity-call");
 
-    // Priority 3 — FREE
+    // Option 3 — FREE
     const p3Body = "A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you.";
-    drawResourceCard(3, "PRIORITY 3", "FREE", "7-Day Devotional: 7 Lies of the Divided Leader", p3Body, "https://unchained-leader.com/7-lies");
+    drawResourceCard(3, "OPTION 3", "FREE", "7-Day Devotional: 7 Lies of the Divided Leader", p3Body, "https://unchained-leader.com/7-lies");
 
-    // Priority 4 — $27
+    // Option 4 — $27
     const p4Body = "The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and extensive research.";
-    drawResourceCard(4, "PRIORITY 4", "$27", "The Unchained Leader Black Book", p4Body, "https://unchained-leader.com/black-book");
+    drawResourceCard(4, "OPTION 4", "$27", "The Unchained Leader Black Book", p4Body, "https://unchained-leader.com/black-book");
 
     // Closing
     checkFit(60);
