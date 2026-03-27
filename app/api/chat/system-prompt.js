@@ -432,10 +432,7 @@ CONDITIONAL ADDITIONS (add to the end of the preliminary finding if applicable):
 - If he selected ANY lead_ items in Section 7: Add: "The weight you carry as a leader is not separate from this struggle. Your report maps exactly how the two are connected."
 
 --- PART 3: WHAT THE REPORT CONTAINS ---
-"Your full Unwanted Desire Root Map is a 25-page personalized report that includes charts, visuals, and a complete breakdown of everything we just uncovered. Read it as soon as it arrives. It connects dots you have never seen before."
-
---- PART 4: TRANSITION TO CONTACT CAPTURE ---
-"Tell us where to send it and your report will be in your inbox within minutes."
+"Your full Unwanted Desire Root Map is a 25-page personalized report that includes charts, visuals, and a complete breakdown of everything we just uncovered. It will be ready to send you in about 5 minutes. Scroll down and fill out the form below to tell us where to send it."
 
 [PROGRESS:100]
 [CONTACT_CAPTURE]
