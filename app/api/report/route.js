@@ -1047,8 +1047,15 @@ async function generatePDF(analysis, firstName) {
     newPage(); y = CONTENT_TOP;
     sectionHeader("THE FULL PICTURE");
 
+    // Force first name at start of key insight
+    let keyInsightText = sanitize(analysis.keyInsight || "Your pattern is not random.");
+    // Strip any leading "Brother," or "Man," or generic opener and prepend first name
+    keyInsightText = keyInsightText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
+    if (!keyInsightText.startsWith(firstName)) {
+      keyInsightText = `${firstName}, ${keyInsightText.charAt(0).toLowerCase()}${keyInsightText.slice(1)}`;
+    }
     _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
-      analysis.keyInsight || "Your pattern is not random.",
+      keyInsightText,
       M, y, { width: CW, lineGap: 5 }
     );
     y = doc.y + 20;
@@ -1060,8 +1067,13 @@ async function generatePDF(analysis, firstName) {
     doc.fontSize(16).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
     y += 24;
 
+    let closingText = sanitize(analysis.closingStatement || "You are not broken. Every behavior has a root, every root has an origin, and every origin can be traced and restructured.");
+    closingText = closingText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
+    if (!closingText.startsWith(firstName)) {
+      closingText = `${firstName}, ${closingText.charAt(0).toLowerCase()}${closingText.slice(1)}`;
+    }
     _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
-      analysis.closingStatement || "You are not broken. Every behavior has a root, every root has an origin, and every origin can be traced and restructured.",
+      closingText,
       M, y, { width: CW, lineGap: 5 }
     );
     y = doc.y + 20;
