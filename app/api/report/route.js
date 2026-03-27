@@ -89,6 +89,9 @@ export async function POST(request) {
         .replace(/\s*\((?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\)/gi, "")
         // Strip standalone identifiers like "tab_incest" without parens
         .replace(/\b(?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\b/gi, "")
+        // Replace "Brother," with first name
+        .replace(/^Brother,/i, `${firstName || "Brother"},`)
+        .replace(/\bBrother,\b/g, `${firstName || "Brother"},`)
         // Replace "clinical" when describing our process (not when referencing research)
         .replace(/\bclinical process\b/gi, "specialized process")
         .replace(/\bclinical approach\b/gi, "specialized approach")
@@ -351,8 +354,8 @@ Return ONLY valid JSON, no markdown:
   "yearsFighting": "from the duration question (e.g. '10 to 20', 'Over 20'). Do NOT include the word 'years' in this value.",
   "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure."}],
 
-  "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
-  "closingStatement": "3-4 sentences. The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
+  "keyInsight": "The single most powerful paragraph. 4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
+  "closingStatement": "3-4 sentences. Start with the man's first name (${userName}), NOT 'Brother.' The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
 }`
     }],
   });
@@ -1126,8 +1129,6 @@ async function generatePDF(analysis, firstName) {
     // Closing
     checkFit(60);
     doc.fontSize(22).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
-    y = doc.y + 14;
-    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text("Access this report anytime at unchainedleader.com/login using your email and PIN.", M, y, { width: CW, align: "center" });
 
     doc.end();
   });
