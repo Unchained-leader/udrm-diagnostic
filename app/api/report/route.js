@@ -570,7 +570,7 @@ async function generatePDF(analysis, firstName) {
     try {
       const badgePath = path.join(process.cwd(), "public", "legitscript-badge.png");
       if (fs.existsSync(badgePath)) {
-        const badgeW = 70;
+        const badgeW = 250;
         const badgeX = W / 2 - badgeW / 2;
         doc.image(badgePath, badgeX, afterCredText, { width: badgeW });
       }
