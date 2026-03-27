@@ -110,7 +110,64 @@ export async function POST(request) {
 
     // Generate PDF
     const pdfBuffer = await generatePDF(analysis, firstName);
-    const pdfBase64 = pdfBuffer.toString("base64");
+
+    // ═══════════════════════════════════════
+    // QC CHECK — validate PDF before sending
+    // ═══════════════════════════════════════
+    const qcIssues = [];
+    const pdfStr = pdfBuffer.toString("latin1");
+
+    // 1. Page count — expect 15-30 pages
+    const pageCount = (pdfStr.match(/\/Type\s*\/Page[^s]/g) || []).length;
+    if (pageCount < 10) qcIssues.push(`Low page count: ${pageCount} (expected 15+)`);
+    if (pageCount > 40) qcIssues.push(`High page count: ${pageCount} (expected under 35)`);
+
+    // 2. File size — expect 30KB-500KB
+    const sizeKB = Math.round(pdfBuffer.length / 1024);
+    if (sizeKB < 20) qcIssues.push(`File too small: ${sizeKB}KB (expected 30KB+)`);
+
+    // 3. Blank page detection — each page should have text stream content
+    // Count pages that have our dark background rect (means pageAdded handler fired)
+    const bgRects = (pdfStr.match(/0\.0667 0\.0667 0\.0667 rg/g) || []).length; // DK_BG rgb
+    if (bgRects < pageCount - 1) qcIssues.push(`Missing dark backgrounds: ${bgRects} bgs for ${pageCount} pages`);
+
+    // 4. Check for essential content markers
+    const hasScorecard = pdfStr.includes("Results at a Glance") || pdfStr.includes("RESULTS AT A GLANCE");
+    const hasTemplate = pdfStr.includes("AROUSAL TEMPLATE") || pdfStr.includes("Arousal Template");
+    const hasNextSteps = pdfStr.includes("PRIORITIZED NEXT STEPS") || pdfStr.includes("Priority");
+    if (!hasScorecard) qcIssues.push("Missing: Results at a Glance section");
+    if (!hasTemplate) qcIssues.push("Missing: Arousal Template section");
+    if (!hasNextSteps) qcIssues.push("Missing: Next Steps section");
+
+    // 5. Check for internal code leaks
+    const codeLeaks = pdfStr.match(/(?:tab_|conf_|val_|pow_|sur_|voy_|ten_|nov_|cod_|enm_|void_|lead_)[a-z_]+/g);
+    if (codeLeaks && codeLeaks.length > 0) qcIssues.push(`Internal codes leaked: ${[...new Set(codeLeaks)].slice(0, 3).join(", ")}`);
+
+    // Log QC results
+    if (qcIssues.length > 0) {
+      console.warn(`PDF QC WARNINGS (${qcIssues.length}):`, qcIssues.join(" | "));
+    } else {
+      console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present`);
+    }
+
+    // If critical failure (very low pages or missing key sections), regenerate once
+    const criticalFail = pageCount < 5 || (!hasScorecard && !hasTemplate);
+    if (criticalFail) {
+      console.error("CRITICAL QC FAILURE — attempting regeneration");
+      const pdfBuffer2 = await generatePDF(analysis, firstName);
+      const pageCount2 = (pdfBuffer2.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+      if (pageCount2 > pageCount) {
+        console.log(`Regeneration improved: ${pageCount} -> ${pageCount2} pages`);
+        var finalBuffer = pdfBuffer2;
+      } else {
+        console.log("Regeneration did not improve. Using original.");
+        var finalBuffer = pdfBuffer;
+      }
+    } else {
+      var finalBuffer = pdfBuffer;
+    }
+
+    const pdfBase64 = finalBuffer.toString("base64");
 
     // Upload PDF to Vercel Blob for permanent storage
     let reportUrl = null;
@@ -118,7 +175,7 @@ export async function POST(request) {
       const timestamp = Date.now();
       const blob = await put(
         `reports/${normalizedEmail.replace(/[^a-z0-9]/g, "-")}/${timestamp}-diagnostic.pdf`,
-        pdfBuffer,
+        finalBuffer,
         { access: "public", contentType: "application/pdf" }
       );
       reportUrl = blob.url;
