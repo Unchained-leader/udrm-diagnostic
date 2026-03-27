@@ -1250,78 +1250,34 @@
           </div>
         `;
 
-        // Inject a message to resume the conversation (triggers upsell)
-        messages.push({ role: "user", content: "Account created. My name is " + name + "." });
-        // Small delay then auto-send to trigger the upsell
+        // Show static confirmation — do NOT send to AI
+        diagnosticComplete = true;
         setTimeout(() => {
-          addMessage("user", "Account created. My name is " + name + ".");
-          // Trigger the AI to deliver the $27 upsell
-          isStreaming = true;
-          sendBtn.disabled = true;
-          showTyping();
-          fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages,
-              userId: currentUser.email,
-              userName: currentUser.name,
-              conversationSummary,
-            }),
-          }).then(async (response) => {
-            if (!response.ok) throw new Error("API error");
-            removeTyping();
-            const assistantDiv = document.createElement("div");
-            assistantDiv.className = "msg assistant";
-            const bubble = document.createElement("div");
-            bubble.className = "msg-bubble";
-            assistantDiv.appendChild(bubble);
-            messagesEl.appendChild(assistantDiv);
-            let fullResponse = "";
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              const chunk = decoder.decode(value);
-              const lines = chunk.split("\n");
-              for (const line of lines) {
-                if (line.startsWith("data: ")) {
-                  const data = line.slice(6);
-                  if (data === "[DONE]") break;
-                  try {
-                    const parsed = JSON.parse(data);
-                    if (parsed.text) {
-                      fullResponse += parsed.text;
-                      bubble.textContent = cleanDisplayText(fullResponse);
-                      messagesEl.scrollTop = messagesEl.scrollHeight;
-                    }
-                  } catch(e) {}
-                }
-              }
-            }
-            parseProgressFromResponse(fullResponse);
-            messages.push({ role: "assistant", content: fullResponse.trim() });
-            const quizBlocks = parseQuizBlocks(fullResponse);
-            if (quizBlocks) {
-              bubble.textContent = getTextBeforeQuizBlocks(fullResponse);
-              renderQuizBlocks(quizBlocks, assistantDiv);
-              assistantDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-            } else {
-              bubble.textContent = cleanDisplayText(fullResponse);
-              const mcOpts = parseMCOptions(fullResponse);
-              if (mcOpts) renderMCButtons(mcOpts, assistantDiv);
-            }
-            saveHistoryToServer();
-            if (fullResponse.includes("[BOOKING_CTA]")) showBookingCTA();
-            isStreaming = false;
-            sendBtn.disabled = false;
-          }).catch(() => {
-            removeTyping();
-            isStreaming = false;
-            sendBtn.disabled = false;
-          });
+          const confirmMsg = document.createElement("div");
+          confirmMsg.className = "msg assistant";
+          confirmMsg.innerHTML = '<div class="msg-bubble">Your report is being built right now. It will arrive at ' + escapeHtml(email) + ' within the next few minutes. Check your inbox (and spam folder, just in case).\n\nThis is the most important email you will receive today. Read it carefully. Every page was built from your answers.</div>';
+          messagesEl.appendChild(confirmMsg);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+
+          // Disable further chat — redirect any messages to check email
+          inputEl.placeholder = "Your report is on the way. Check your email.";
+
+          // Override sendMessage to redirect to email
+          const origSend = sendMessage;
+          sendMessage = function() {
+            const content = inputEl.value.trim();
+            if (!content) return;
+            inputEl.value = "";
+            addMessage("user", content);
+            const redirectMsg = document.createElement("div");
+            redirectMsg.className = "msg assistant";
+            redirectMsg.innerHTML = '<div class="msg-bubble">Your full 25-page report has everything you need. Check your email at ' + escapeHtml(email) + ' for your Unwanted Desire Root Map. That is where the answers are.</div>';
+            messagesEl.appendChild(redirectMsg);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          };
         }, 1500);
+
+        // End of post-registration flow — no AI call, just confirmation + redirect to email
 
       } catch(e) {
         errorEl.textContent = "Connection error. Please try again.";
