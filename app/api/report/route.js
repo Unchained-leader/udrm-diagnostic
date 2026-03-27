@@ -234,7 +234,7 @@ Return ONLY valid JSON, no markdown:
   "rootNarrativeStatement": "The core lie (e.g. 'I am not enough', 'I am unsafe')",
   "whatBrainCounterfeits": "What the brain is trying to get through the behavior (1 sentence)",
 
-  "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation (2-3 sentences). Frame as a counterfeit of something God designed him to have. The desire underneath is not wrong, it is misdirected."}],
+  "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation in 2-3 SHORT paragraphs separated by newlines. First paragraph: what the behavior actually is (a shame management system, an escape valve, etc). Second paragraph: connect it to what God designed and how the brain is counterfeiting it. Keep paragraphs to 2-3 sentences max for mobile readability."}],
 
   "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full clinical decoder (3-5 sentences). Zero shame. Clinical clarity. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
@@ -276,10 +276,10 @@ Return ONLY valid JSON, no markdown:
   "scorecardSpiritualDisconnect": "1-5: based on god_ items. 1=connected, 5=severely disconnected",
   "scorecardRelationalBurden": "1-5: combined codependency+enmeshment+void+leadership score",
 
-  "strategiesTried": ["Array of strategy names the man selected in Section 8 (e.g. 'Apps, blockers, or internet filters', 'Accountability partner', etc.)"],
+  "strategiesTried": ["Array of strategy names the man selected in plain English"],
   "strategiesCount": "number of strategies selected",
-  "yearsFighting": "from the duration question (e.g. '10 to 20 years', 'Over 20 years')",
-  "strategyAutopsy": "For EACH strategy he selected, write 1-2 sentences explaining why that specific strategy failed against HIS specific root narrative type. Be direct. Example: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Write this as one flowing section with each strategy addressed. Use the Scripture + Science voice. Do NOT use internal code names. Use plain language for each strategy.",
+  "yearsFighting": "from the duration question (e.g. '10 to 20', 'Over 20'). Do NOT include the word 'years' in this value.",
+  "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure."}],
 
   "keyInsight": "The single most powerful paragraph. 4-5 sentences. Connect ALL dots: specific behaviors to roots, shame fueling the cycle, attachment driving relational patterns, childhood encoding the template. Use the Scripture + Science voice. Frame the enemy as having targeted him specifically because of the assignment on his life. The fact that his pattern is this specific is evidence he is dangerous to the kingdom of darkness. Write directly to him as Mason would.",
   "closingStatement": "3-4 sentences. The most direct kingdom language in the report. 'You are not disqualified. You are not damaged goods. You are a man carrying a kingdom assignment that the enemy has been trying to neutralize since childhood.' Frame freedom as neurological, spiritual, and relational reality. End with the question: the question is not whether it is possible, the question is whether you are ready."
@@ -500,7 +500,7 @@ async function generatePDF(analysis, firstName) {
 
     // Scored dimensions with bar chart
     const dimensions = [
-      { label: "Childhood Wound Severity", score: analysis.scorecardChildhoodWoundScore, max: 5 },
+      { label: "Childhood Impact Severity", score: analysis.scorecardChildhoodWoundScore, max: 5 },
       { label: "Attachment Insecurity", score: analysis.scorecardAttachmentSeverity, max: 5 },
       { label: "Escalation Risk", score: analysis.escalationSeverity, max: 5 },
       { label: "Spiritual Disconnect", score: analysis.scorecardSpiritualDisconnect, max: 5 },
@@ -717,7 +717,8 @@ async function generatePDF(analysis, firstName) {
     );
     y = doc.y + 14;
 
-    const yearsData = analysis.patternYears || "many";
+    const yearsRaw = String(analysis.patternYears || "many").replace(/\s*years?\s*$/i, "").trim();
+    const yearsData = yearsRaw;
     writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
 
     // ════════════════════════════════════════
@@ -827,16 +828,32 @@ async function generatePDF(analysis, firstName) {
       }
       y += 20;
 
-      // Strategy Analysis — short paragraph
+      // Strategy Analysis — individual breakdowns
       checkFit(60);
       doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("STRATEGY ANALYSIS", M, y, { characterSpacing: 1 });
       y = doc.y + 10;
 
-      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
-        `Based on the findings in this report, the behavior is a symptom of deeper root narratives, not a discipline problem. Every strategy listed above was focused on behavior management. None of them reached the root narrative that says "${sanitize(analysis.rootNarrativeStatement || "something is wrong with me")}." True transformation requires a root level process that addresses what is driving the behavior, not just the behavior itself.`,
-        M, y, { width: CW, lineGap: 4 }
-      );
-      y = doc.y + 14;
+      const breakdowns = analysis.strategyBreakdowns || [];
+      if (breakdowns.length > 0) {
+        for (const bd of breakdowns) {
+          const stratName = sanitize(bd.strategy || "");
+          const explanation = sanitize(bd.explanation || "");
+          if (!stratName || !explanation) continue;
+          const explH = doc.fontSize(16).font("Helvetica").heightOfString(explanation, { width: CW - 24, lineGap: 3 });
+          checkFit(28 + explH + 16);
+          doc.fontSize(16).fillColor(WHITE).font("Helvetica-Bold").text(stratName, M, y, { width: CW });
+          y = doc.y + 4;
+          _currentTextColor = GRAY; doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(explanation, M + 12, y, { width: CW - 24, lineGap: 3 });
+          y = doc.y + 14;
+        }
+      } else {
+        // Fallback generic paragraph if breakdowns not available
+        _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+          `Based on the findings in this report, the behavior is a symptom of deeper root narratives, not a discipline problem. Every strategy listed above was focused on behavior management. None of them reached the root narrative that says "${sanitize(analysis.rootNarrativeStatement || "something is wrong with me")}." True transformation requires a root level process.`,
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 14;
+      }
 
       writeGapWidening("Every strategy on this list was aimed at managing the behavior. Not one of them reached the root narrative driving it. That is not a failure of effort. It is a failure of targeting.");
 
@@ -871,6 +888,13 @@ async function generatePDF(analysis, firstName) {
           "If your child broke their arm, you would not choose between prayer and an X-ray. You would choose both. The arm needs to be set by someone trained to set it, and God's healing power works through that process, not instead of it. Your root narrative works the same way. Prayer positions the heart. But restructuring the neuropathway requires a guided, clinical process that prayer was never designed to replace.",
           M, y, { width: CW, lineGap: 4 }
         );
+        y = doc.y + 12;
+
+        // Personalized analogy
+        const spiritStratNames = spiritualStrats.map(s => sanitize(s).toLowerCase()).join(", ");
+        const personalizedBypass = `You tried ${spiritStratNames} against a ${sanitize(analysis.arousalTemplateType || "deeply encoded")} pattern with ${sanitize(analysis.attachmentStyle || "insecure")} attachment. That is like praying over a compound fracture without letting anyone set the bone. The prayer matters. But the bone still needs to be set by someone who can see it.`;
+        checkFit(50);
+        _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(personalizedBypass, M, y, { width: CW, lineGap: 4 });
         y = doc.y + 14;
       }
     }
@@ -1023,8 +1047,10 @@ async function generatePDF(analysis, firstName) {
     drawResourceCard(4, "PRIORITY 4", "$27", "The Unchained Leader Black Book", p4Body, "https://unchained-leader.com/black-book");
 
     // Closing
-    checkFit(40);
+    checkFit(60);
     doc.fontSize(22).fillColor(GOLD).font("Helvetica-Bold").text("#liveunchained", M, y, { width: CW, align: "center" });
+    y = doc.y + 14;
+    doc.fontSize(14).fillColor(GRAY).font("Helvetica").text("Access this report anytime at unchainedleader.com/login using your email and PIN.", M, y, { width: CW, align: "center" });
 
     doc.end();
   });
