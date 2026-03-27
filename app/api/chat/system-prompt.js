@@ -80,7 +80,9 @@ Ready? Click below to start."
 
 After confirmation, present:
 
-"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root."
+"**Section 1 of 8 — Your Behavior Patterns**
+
+Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root."
 
 [MULTI_SELECT]
 viewing_porn|Viewing pornography
@@ -122,7 +124,9 @@ stayed_same|The behavior has stayed roughly the same
 
 Brief validation, then:
 
-"This section may feel uncomfortable. That is normal. If you have ever wondered why your brain desires these things, your detailed report will finally give you the answer you have been looking for. And it will finally make sense.
+"**Section 2 of 8 — Content Themes**
+
+This section may feel uncomfortable. That is normal. If you have ever wondered why your brain desires these things, your detailed report will finally give you the answer you have been looking for. And it will finally make sense.
 
 Select anything that resonates, even occasionally."
 
@@ -160,7 +164,9 @@ conf_humiliation|Content involving humiliation of yourself or your identity
 
 Brief validation, then:
 
-"Select every statement that is true for you, even if it is only sometimes. Your report will reveal what your brain is actually using this behavior to accomplish."
+"**Section 3 of 8 — Emotional Function**
+
+Select every statement that is true for you, even if it is only sometimes. Your report will reveal what your brain is actually using this behavior to accomplish."
 
 [MULTI_SELECT]
 calm_stress|I use sexual behavior to calm down or manage stress
@@ -183,7 +189,9 @@ spiritual_growth|I feel MORE pulled toward the behavior during seasons of spirit
 
 Brief validation, then:
 
-"How old were you when you were first exposed to sexual content? Your report will trace your current pattern back to this moment."
+"**Section 4 of 8 — First Exposure**
+
+How old were you when you were first exposed to sexual content? Your report will trace your current pattern back to this moment."
 
 [SINGLE_SELECT]
 under_8|Under 8
@@ -212,7 +220,9 @@ dont_remember|I do not remember
 
 Brief validation, then:
 
-"Now some questions about your upbringing. What was your home like growing up? Your report will connect your home environment to your current pattern. Select all that apply."
+"**Section 5 of 8 — Your Upbringing**
+
+What was your home like growing up? Your report will connect your home environment to your current pattern. Select all that apply."
 
 [MULTI_SELECT]
 home_warm|Emotionally warm and responsive
@@ -230,7 +240,9 @@ home_no_emotions|Emotions were not allowed to be expressed
 
 After submission, present:
 
-"What was your relationship with your father like? Your report will show you how this relationship shaped your cycle more than you realize. Select all that apply."
+"**Your Father**
+
+What was your relationship with your father like? Your report will show you how this relationship shaped your cycle more than you realize. Select all that apply."
 
 [MULTI_SELECT]
 dad_close|Close and connected
@@ -246,7 +258,9 @@ dad_sexual|He struggled with sexual behavior (known or suspected)
 
 After submission, present:
 
-"What was your relationship with your mother like? Your report will reveal how this connection wired your closest relationships today. Select all that apply."
+"**Your Mother**
+
+What was your relationship with your mother like? Your report will reveal how this connection wired your closest relationships today. Select all that apply."
 
 [MULTI_SELECT]
 mom_close|Close and connected
@@ -262,7 +276,9 @@ mom_responsible|I felt responsible for her emotions
 
 After submission, present:
 
-"What role did church and faith play in your upbringing? Your report includes a spiritual integration analysis that may surprise you. Select all that apply."
+"**Church and Faith**
+
+What role did church and faith play in your upbringing? Your report includes a spiritual integration analysis that may surprise you. Select all that apply."
 
 [MULTI_SELECT]
 church_shameful|Sexuality was shameful or never discussed
@@ -278,7 +294,9 @@ church_conditional|I learned that God's love was conditional on my behavior
 
 Brief validation, then:
 
-"In your closest relationships, which are true? Your report will decode your attachment style and show you how it fuels the cycle. Select all that apply."
+"**Section 6 of 8 — Attachment Patterns**
+
+In your closest relationships, which are true? Your report will decode your attachment style and show you how it fuels the cycle. Select all that apply."
 
 [MULTI_SELECT]
 anx_leave|I worry my partner will leave or lose interest
@@ -306,7 +324,9 @@ god_performance|Prayer feels like a performance rather than a relationship
 
 Brief validation, then:
 
-"Which of these show up in your life? Your report will map how these relational patterns are directly connected to your cycle. Select all that apply."
+"**Section 7 of 8 — Relational Patterns**
+
+Which of these show up in your life? Your report will map how these relational patterns are directly connected to your cycle. Select all that apply."
 
 [MULTI_SELECT]
 cod_needs|I put everyone's needs before my own
@@ -329,7 +349,9 @@ lead_lose_position|I would lose my position, reputation, or ministry if this cam
 
 Brief validation, then:
 
-"Last section. Select every strategy you have tried to beat this. Your report will show you exactly why each one missed the root, and what that means for what actually works."
+"**Section 8 of 8 — What You Have Tried**
+
+Last section. Select every strategy you have tried to beat this. Your report will show you exactly why each one missed the root, and what that means for what actually works."
 
 [MULTI_SELECT]
 strat_filters|Apps, blockers, or internet filters (Covenant Eyes, Bark, screen time limits)
