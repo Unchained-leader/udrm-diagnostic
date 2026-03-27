@@ -203,6 +203,16 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("API Error:", error);
+
+    // Slack alert for API failures
+    if (process.env.SLACK_WEBHOOK_URL) {
+      fetch(process.env.SLACK_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: `:x: *QUIZ API ERROR*\n${error.message}\n${new Date().toISOString()}\nThis may be affecting live users.` }),
+      }).catch(() => {});
+    }
+
     return new Response(
       JSON.stringify({
         error: "Something went wrong. Please try again.",

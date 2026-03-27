@@ -804,8 +804,31 @@
     // Analytics session ID (anonymous until registration)
     const analyticsSessionId = "s_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     const ANALYTICS_URL = BASE_URL + "/api/analytics";
+    let sectionStartTime = Date.now();
+    const sectionTimes = {};
+
+    // Device detection
+    const deviceInfo = {
+      type: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : /Tablet|iPad/i.test(navigator.userAgent) ? "tablet" : "desktop",
+      browser: /Chrome/i.test(navigator.userAgent) ? "Chrome" : /Safari/i.test(navigator.userAgent) ? "Safari" : /Firefox/i.test(navigator.userAgent) ? "Firefox" : "Other",
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+    };
 
     function trackEvent(eventType, eventData, extra) {
+      // Track section timing
+      if (eventType.startsWith("section_") && eventType.endsWith("_complete")) {
+        const elapsed = Math.round((Date.now() - sectionStartTime) / 1000);
+        const sectionNum = eventType.match(/section_(\d+)/)?.[1] || "0";
+        sectionTimes[sectionNum] = elapsed;
+        eventData = { ...eventData, sectionSeconds: elapsed, device: deviceInfo };
+        sectionStartTime = Date.now(); // reset for next section
+      }
+      if (eventType === "quiz_start") {
+        sectionStartTime = Date.now();
+        eventData = { ...eventData, device: deviceInfo };
+      }
+
       const payload = {
         sessionId: analyticsSessionId,
         product: "udrm",

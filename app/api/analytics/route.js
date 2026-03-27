@@ -181,6 +181,100 @@ export async function GET(request) {
       }, { headers: CORS_HEADERS });
     }
 
+    } else if (view === "devices") {
+      // Device breakdown
+      const devices = await sql`
+        SELECT
+          event_data->>'device'->>'type' as device_type,
+          COUNT(DISTINCT session_id) as users
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+          AND event_data->'device' IS NOT NULL
+        GROUP BY event_data->>'device'->>'type'
+      `.catch(() => []);
+
+      // Fallback: parse device from event_data JSON
+      const deviceRaw = await sql`
+        SELECT event_data::text as raw, session_id
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+      `;
+      const deviceCounts = { mobile: 0, desktop: 0, tablet: 0, unknown: 0 };
+      for (const row of deviceRaw) {
+        try {
+          const d = JSON.parse(row.raw);
+          const type = d?.device?.type || "unknown";
+          deviceCounts[type] = (deviceCounts[type] || 0) + 1;
+        } catch (e) { deviceCounts.unknown++; }
+      }
+
+      // Browser breakdown
+      const browserCounts = {};
+      for (const row of deviceRaw) {
+        try {
+          const d = JSON.parse(row.raw);
+          const browser = d?.device?.browser || "Unknown";
+          browserCounts[browser] = (browserCounts[browser] || 0) + 1;
+        } catch (e) {}
+      }
+
+      return Response.json({ devices: deviceCounts, browsers: browserCounts }, { headers: CORS_HEADERS });
+
+    } else if (view === "cohort") {
+      // This week vs last week
+      const thisWeekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const lastWeekStart = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+      const thisWeek = await sql`
+        SELECT event_type, COUNT(DISTINCT session_id) as users
+        FROM analytics_events
+        WHERE product = ${product} AND created_at >= ${thisWeekStart}
+          AND event_type IN ('quiz_start', 'contact_capture_complete', 'report_generated')
+        GROUP BY event_type
+      `;
+      const lastWeek = await sql`
+        SELECT event_type, COUNT(DISTINCT session_id) as users
+        FROM analytics_events
+        WHERE product = ${product} AND created_at >= ${lastWeekStart} AND created_at < ${thisWeekStart}
+          AND event_type IN ('quiz_start', 'contact_capture_complete', 'report_generated')
+        GROUP BY event_type
+      `;
+
+      const toMap = (arr) => {
+        const m = {};
+        arr.forEach(r => { m[r.event_type] = parseInt(r.users) || 0; });
+        return m;
+      };
+
+      return Response.json({ thisWeek: toMap(thisWeek), lastWeek: toMap(lastWeek) }, { headers: CORS_HEADERS });
+
+    } else if (view === "health") {
+      // Downtime history from health check events
+      const checks = await sql`
+        SELECT created_at, event_data
+        FROM analytics_events
+        WHERE session_id = 'system' AND event_type = 'health_check'
+        ORDER BY created_at DESC
+        LIMIT 100
+      `;
+
+      const history = checks.map(c => {
+        const d = typeof c.event_data === "string" ? JSON.parse(c.event_data) : c.event_data;
+        return {
+          timestamp: c.created_at,
+          status: d.status,
+          downServices: d.downServices || [],
+        };
+      });
+
+      // Calculate uptime percentage
+      const total = history.length;
+      const healthy = history.filter(h => h.status === "healthy").length;
+      const uptimePct = total > 0 ? ((healthy / total) * 100).toFixed(1) : "100.0";
+
+      return Response.json({ history, uptimePct, totalChecks: total }, { headers: CORS_HEADERS });
+    }
+
     return Response.json({ error: "Invalid view" }, { status: 400, headers: CORS_HEADERS });
   } catch (error) {
     console.error("Analytics query error:", error);
