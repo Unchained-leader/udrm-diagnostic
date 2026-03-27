@@ -89,6 +89,14 @@ export async function POST(request) {
         .replace(/\s*\((?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\)/gi, "")
         // Strip standalone identifiers like "tab_incest" without parens
         .replace(/\b(?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\b/gi, "")
+        // Replace "clinical" when describing our process (not when referencing research)
+        .replace(/\bclinical process\b/gi, "specialized process")
+        .replace(/\bclinical approach\b/gi, "specialized approach")
+        .replace(/\bclinical program\b/gi, "structured program")
+        .replace(/\bclinical framework\b/gi, "structured framework")
+        .replace(/\bclinical clarity\b/gi, "clear insight")
+        .replace(/\bclinical explanation\b/gi, "research-backed explanation")
+        .replace(/\bclinical reason\b/gi, "specific reason")
         // Clean up double spaces left behind
         .replace(/  +/g, " ").trim();
     }
@@ -271,15 +279,16 @@ ATTACHMENT STYLES (based on Section 6):
 CRITICAL FORMATTING RULES:
 1. NEVER use em dashes (the long dash character) in any text. Use commas instead.
 2. NEVER include internal variable names, code identifiers, or selection IDs in any text. Do NOT write things like "tab_incest", "conf_wife_others", "cod_needs", "enm_parent_emotions", "god_disappointed", "void_no_one", "lead_disqualified", "val_desired", "pow_dominance", etc. These are internal system identifiers. The report is client-facing. Use plain English descriptions only. Write "incest-themed content" not "tab_incest". Write "fantasies involving your wife with others" not "conf_wife_others". Write "feeling disqualified from leadership" not "lead_disqualified".
-3. NEVER reference "selections" or "items selected" in clinical language. Write as if you know the man personally, not as if you are reading a data printout.
+3. NEVER reference "selections" or "items selected" in diagnostic language. Write as if you know the man personally, not as if you are reading a data printout.
+IMPORTANT: We are NOT a clinical practice. NEVER use the word "clinical" when describing our process, our approach, or what we offer. Use alternatives like "specialized," "guided," "professional," "trained," "structured," or "root-level." The word "clinical" is acceptable ONLY when referencing published research (e.g. "research shows") or when describing something the man may have tried (e.g. "clinical therapy"). It must NEVER describe what WE do.
 
 VOICE GUIDE — SCRIPTURE + SCIENCE INTEGRATION:
-You are writing this report as Mason Cain. Every clinical insight should connect to kingdom purpose. Every Scripture reference should be grounded in neuroscience. The man reading this should feel simultaneously understood by science and seen by God. Never preach. Never lecture. Speak as a fellow traveler who has walked this road and found that faith and psychology are the same explanation viewed from two angles.
+You are writing this report as Mason Cain. Every insight should connect to kingdom purpose. Every Scripture reference should be grounded in neuroscience. The man reading this should feel simultaneously understood by science and seen by God. Never preach. Never lecture. Speak as a fellow traveler who has walked this road and found that faith and psychology are the same explanation viewed from two angles.
 
 VOICE PRINCIPLES:
 1. Lead with identity, not pathology. Not "your pattern indicates anxious attachment." Instead: "You were designed for deep connection, but your nervous system learned to distrust it before you had a choice. That is not a disorder. That is a misalignment between how God wired you and what your story taught you."
-2. Every clinical insight points to a kingdom truth. Connect the neuropathway to purpose: "Your brain uses this behavior to manage pain. That pain management system kept you alive as a child. But it is now standing between you and the man God is calling you to become."
-3. Every Biblical truth is grounded in clinical reality. "Romans 12:2 says be transformed by the renewing of your mind. Neuroplasticity research confirms this is literally how the brain works. Paul was not being poetic. He was being precise."
+2. Every research-backed insight points to a kingdom truth. Connect the neuropathway to purpose: "Your brain uses this behavior to manage pain. That pain management system kept you alive as a child. But it is now standing between you and the man God is calling you to become."
+3. Every Biblical truth is grounded in science. "Romans 12:2 says be transformed by the renewing of your mind. Neuroplasticity research confirms this is literally how the brain works. Paul was not being poetic. He was being precise."
 4. Use kingdom language that connects to masculine purpose. Calling, authority, leadership, legacy, assignment. Not soft devotional language.
 5. Name the contradiction between calling and cycle. "You know God has more in store for you. You can feel the assignment on your life. But every time this cycle runs, it erodes the confidence you need to fully step into it. The cycle is not just stealing your purity. It is stealing your authority."
 6. Frame each behavior as a counterfeit of something God designed him to have. The desire underneath is not wrong. It is misdirected. Misdirected desire does not need punishment. It needs restructuring.
@@ -297,7 +306,7 @@ Return ONLY valid JSON, no markdown:
 
   "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation in 2-3 SHORT paragraphs separated by newlines. First paragraph: what the behavior actually is (a shame management system, an escape valve, etc). Second paragraph: connect it to what God designed and how the brain is counterfeiting it. Keep paragraphs to 2-3 sentences max for mobile readability."}],
 
-  "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full clinical decoder (3-5 sentences). Zero shame. Clinical clarity. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
+  "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
   "neuropathway": "Arousal|Numbing|Fantasy|Deprivation",
   "neuropathwayManages": "Pain|Anxiety|Shame|Terror",
@@ -749,7 +758,7 @@ async function generatePDF(analysis, firstName) {
       sectionHeader("SECTION 3 — CONFUSING PATTERNS DECODED");
 
       _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
-        "These are the patterns you have likely never told anyone about. Each one has a clinical explanation that has nothing to do with your character and everything to do with how your brain was wired.",
+        "These are the patterns you have likely never told anyone about. Each one has a research-backed explanation that has nothing to do with your character and everything to do with how your brain was wired.",
         M, y, { width: CW, lineGap: 3 }
       );
       y = doc.y + 14;
@@ -953,7 +962,7 @@ async function generatePDF(analysis, firstName) {
         y = doc.y + 12;
 
         _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica-Oblique").text(
-          "If your child broke their arm, you would not choose between prayer and an X-ray. You would choose both. The arm needs to be set by someone trained to set it, and God's healing power works through that process, not instead of it. Your root narrative works the same way. Prayer positions the heart. But restructuring the neuropathway requires a guided, clinical process that prayer was never designed to replace.",
+          "If your child broke their arm, you would not choose between prayer and an X-ray. You would choose both. The arm needs to be set by someone trained to set it, and God's healing power works through that process, not instead of it. Your root narrative works the same way. Prayer positions the heart. But restructuring the neuropathway requires a guided, specialized process that prayer was never designed to replace.",
           M, y, { width: CW, lineGap: 4 }
         );
         y = doc.y + 12;
@@ -1103,7 +1112,7 @@ async function generatePDF(analysis, firstName) {
     drawResourceCard(1, "PRIORITY 1", "FREE", "Watch the Art of Freedom Training", p1Body, "https://unchained-leader.com/aof");
 
     // Priority 2 — $27
-    const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the clinical reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
+    const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
     drawResourceCard(2, "PRIORITY 2", "$27", "Book a 30-Minute Clarity Call", p2Body, "https://unchained-leader.com/clarity-call");
 
     // Priority 3 — FREE
@@ -1111,7 +1120,7 @@ async function generatePDF(analysis, firstName) {
     drawResourceCard(3, "PRIORITY 3", "FREE", "7-Day Devotional: 7 Lies of the Divided Leader", p3Body, "https://unchained-leader.com/7-lies");
 
     // Priority 4 — $27
-    const p4Body = "The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and clinical research.";
+    const p4Body = "The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and extensive research.";
     drawResourceCard(4, "PRIORITY 4", "$27", "The Unchained Leader Black Book", p4Body, "https://unchained-leader.com/black-book");
 
     // Closing
