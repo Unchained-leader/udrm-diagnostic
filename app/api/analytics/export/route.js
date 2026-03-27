@@ -13,6 +13,7 @@ export async function GET(request) {
     const product = searchParams.get("product") || "udrm";
     const days = parseInt(searchParams.get("days")) || 90;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const sql = getDb();
 
     let rows = [];
     let headers = [];

@@ -5,7 +5,7 @@ import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 import fs from "fs";
 import path from "path";
-import sql from "../lib/db";
+import { getDb } from "../lib/db";
 
 export const maxDuration = 800;
 
@@ -228,6 +228,7 @@ export async function POST(request) {
 
     // Record analytics: report generated + completed diagnostic
     try {
+      const sql = getDb();
       await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
         VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })})`;
       await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)

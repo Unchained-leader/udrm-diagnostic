@@ -1,4 +1,4 @@
-import sql from "../../lib/db";
+import { getDb } from "../../lib/db";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +16,8 @@ export async function POST(request) {
     if (body.secret !== process.env.ADMIN_PASSWORD) {
       return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
     }
+
+    const sql = getDb();
 
     // Create tables
     await sql`

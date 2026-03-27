@@ -1,4 +1,4 @@
-import sql from "../lib/db";
+import { getDb } from "../lib/db";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +19,8 @@ export async function POST(request) {
     if (!sessionId || !eventType) {
       return Response.json({ error: "sessionId and eventType required" }, { status: 400, headers: CORS_HEADERS });
     }
+
+    const sql = getDb();
 
     // Record the event
     await sql`
@@ -55,6 +57,7 @@ export async function GET(request) {
     const product = searchParams.get("product") || "udrm";
     const days = parseInt(searchParams.get("days")) || 30;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const sql = getDb();
 
     if (view === "funnel") {
       // Funnel conversion data
