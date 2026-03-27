@@ -969,32 +969,41 @@ async function generatePDF(analysis, firstName) {
     doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("BASED ON YOUR RESULTS, HERE ARE YOUR PRIORITIZED NEXT STEPS", M, y, { characterSpacing: 2 });
     y = doc.y + 30;
 
-    // Helper to draw a resource card
+    // Helper to draw a resource card with CTA button
     function drawResourceCard(priority, label, price, title, body, link) {
       const bodyH = doc.fontSize(16).font("Helvetica").heightOfString(body, { width: CW - 32, lineGap: 3 });
-      const cardH = 18 + 22 + 8 + bodyH + 14 + 20 + 14;
+      const btnH = 36;
+      const cardH = 18 + 28 + 8 + bodyH + 14 + btnH + 20;
       checkFit(cardH + 20);
 
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
       doc.roundedRect(M, y, CW, cardH, 6).strokeColor(priority === 1 ? GOLD : BORDER).lineWidth(priority === 1 ? 1.5 : 0.5).stroke();
 
-      // Priority label + price
+      // Priority label (left) + price badge (right, bigger)
+      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(`PRIORITY ${priority}`, M + 16, y + 14, { characterSpacing: 1 });
       const priceColor = price === "FREE" ? [80, 180, 80] : GOLD;
-      doc.fontSize(12).fillColor(GOLD).font("Helvetica").text(`PRIORITY ${priority}`, M + 16, y + 12, { characterSpacing: 1 });
-      doc.fontSize(12).fillColor(priceColor).font("Helvetica-Bold").text(price, M + CW - 80, y + 12, { width: 64, align: "right" });
+      const priceBg = price === "FREE" ? [20, 50, 20] : [50, 40, 15];
+      const priceW = price === "FREE" ? 60 : 50;
+      const priceX = M + CW - 16 - priceW;
+      doc.roundedRect(priceX, y + 8, priceW, 24, 4).fill(priceBg);
+      doc.fontSize(16).fillColor(priceColor).font("Helvetica-Bold").text(price, priceX, y + 12, { width: priceW, align: "center" });
 
       // Title
-      doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(title, M + 16, y + 30, { width: CW - 32 });
+      doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(title, M + 16, y + 38, { width: CW - 32 });
       const titleBottom = doc.y + 6;
 
       // Body
       _currentTextColor = GRAY; doc.fontSize(16).fillColor(GRAY).font("Helvetica").text(body, M + 16, titleBottom, { width: CW - 32, lineGap: 3 });
-      const bodyBottom = doc.y + 10;
+      const bodyBottom = doc.y + 12;
 
-      // Link line
-      doc.fontSize(14).fillColor(GOLD).font("Helvetica").text(link, M + 16, bodyBottom, { width: CW - 32, link: link });
+      // CTA button (gold gradient rectangle with white text, clickable)
+      const btnW = 240;
+      const btnX = M + (CW - btnW) / 2;
+      doc.roundedRect(btnX, bodyBottom, btnW, btnH, 6).fill(GOLD);
+      const btnLabel = price === "FREE" ? "ACCESS NOW" : "GET STARTED";
+      doc.fontSize(14).fillColor([0, 0, 0]).font("Helvetica-Bold").text(btnLabel, btnX, bodyBottom + 10, { width: btnW, align: "center", link: link });
 
-      y = bodyBottom + 20 + 14;
+      y = bodyBottom + btnH + 18;
     }
 
     // Priority 1 — FREE
