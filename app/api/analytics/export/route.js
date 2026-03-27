@@ -1,4 +1,4 @@
-import sql from "../../lib/db";
+import { getDb } from "../../lib/db";
 
 export async function GET(request) {
   try {
