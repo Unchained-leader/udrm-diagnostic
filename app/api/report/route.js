@@ -560,9 +560,25 @@ async function generatePDF(analysis, firstName) {
     y += 20;
     doc.fontSize(12).fillColor([100, 100, 100]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 3 });
 
+    // Credentials + LegitScript badge (centered in blank space)
+    const credY = y + 60;
+    const credText = "This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.";
+    doc.fontSize(11).fillColor([120, 120, 120]).font("Helvetica").text(credText, M + 40, credY, { width: CW - 80, align: "center", lineGap: 2 });
+    const afterCredText = doc.y + 14;
+
+    // LegitScript badge
+    try {
+      const badgePath = path.join(process.cwd(), "public", "legitscript-badge.png");
+      if (fs.existsSync(badgePath)) {
+        const badgeW = 70;
+        const badgeX = W / 2 - badgeW / 2;
+        doc.image(badgePath, badgeX, afterCredText, { width: badgeW });
+      }
+    } catch (e) { console.log("LegitScript badge not found:", e.message); }
+
     // Disclaimer
     const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
-    doc.fontSize(12).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 120, { width: CW - 20, align: "center", lineGap: 2 });
+    doc.fontSize(10).fillColor([80, 80, 80]).font("Helvetica").text(disclaimer, M + 10, H - 100, { width: CW - 20, align: "center", lineGap: 2 });
 
     // ════════════════════════════════════════
     // SCORECARD PAGE — Results Overview
