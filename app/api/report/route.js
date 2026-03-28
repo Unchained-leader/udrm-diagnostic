@@ -333,7 +333,7 @@ CONVERSATION:
 ${conversationText}
 
 CO-OCCURRING COPING BEHAVIORS (based on Section 1 vice_ selections):
-If the user selected any vice_ items, these are OTHER ways the brain is trying to solve the same root problem. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When a man tries to white-knuckle his primary behavior (sexual acting out), the brain will route the same unresolved pain through other coping mechanisms. This is why behavioral solutions are dangerous: they address the outlet, not the source. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is precisely why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
+If the user selected any vice_ items, use these to help them see a critical truth: this was never a lust problem or a perversion problem. Just like it is not a substance problem, a food problem, or a gambling problem. Every unwanted behavior and desire is a symptom of the brain's creative attempt to medicate or escape root-level pain. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When a man tries to white-knuckle his primary behavior, the brain reroutes the same unresolved pain through other coping mechanisms. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is exactly why behavior-level solutions are dangerous, and why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
 - vice_alcohol → Alcohol as nervous system regulation. Depressant that mimics the numbing the brain needs.
 - vice_thc → THC/marijuana as nervous system sedation. Dulls anxiety and emotional pain the same way the sexual behavior does, just through a different receptor system.
 - vice_substances → Other substance use as neurochemical override. Directly hijacks the same dopamine/serotonin pathways.
@@ -401,7 +401,7 @@ Return ONLY valid JSON, no markdown:
 
   "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation in 2-3 SHORT paragraphs separated by newlines. First paragraph: what the behavior actually is (a shame management system, an escape valve, etc). Second paragraph: connect it to what God designed and how the brain is counterfeiting it. Keep paragraphs to 2-3 sentences max for mobile readability."}],
 
-  "coCopingBehaviors": [{"behavior": "behavior name in plain English (e.g. Alcohol, Overeating)", "connection": "2-3 sentences explaining how this specific vice connects to the SAME root narrative driving the sexual behavior. Frame it as the brain routing the same unresolved pain through a different outlet. Explain why white-knuckling the primary behavior often causes this sub-addiction to intensify. Connect to why root-level healing (RNR) is the only real solution, because it addresses the source, not the symptom."}] or null if no vice_ items selected,
+  "coCopingBehaviors": [{"behavior": "behavior name in plain English (e.g. Alcohol, Overeating)", "connection": "2-3 sentences. Use this to reinforce: this is not a lust or perversion problem, just like this is not a substance or food problem. All of it is the brain's creative attempt to medicate root pain. Explain how this specific vice connects to the SAME root narrative driving the sexual behavior. Frame white-knuckling one behavior as why the other intensifies. Connect to why root-level healing (RNR) is the only real solution."}] or null if no vice_ items selected,
 
   "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
@@ -898,7 +898,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
 
       y += 10 * SP;
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
-        "When a man tries to white-knuckle his primary behavior, the brain does not stop seeking relief. It reroutes. These are not separate problems. They are the same root narrative expressing itself through different outlets. This is exactly why behavior-level solutions are dangerous, and why root-level healing is essential.",
+        "The fact that these behaviors show up alongside your sexual pattern is actually proof that this was never a lust problem or a perversion problem. Just like it is not a substance problem or a food problem. Every unwanted behavior and desire on this list is a symptom of your brain's creative attempt to medicate or escape root-level pain. When you try to white-knuckle one outlet, your brain does not stop seeking relief. It reroutes through another. These are not separate problems. They are the same root narrative expressing itself through different outlets.",
         M, y, { width: CW, lineGap: 3 }
       );
       y = doc.y + 14;
@@ -917,7 +917,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(cbConn, M + 14, cbBodyY, { width: CW - 28, lineGap: 4 });
         y += cbBoxH + 10;
       }
-      writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. The RNR process does not manage symptoms. It restructures the root narrative that drives all of them.");
+      writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. This is exactly why behavior-level solutions are dangerous. And it is exactly why root-level healing through the RNR process is essential. It does not manage symptoms. It restructures the root narrative that drives all of them.");
     }
 
     // ════════════════════════════════════════
