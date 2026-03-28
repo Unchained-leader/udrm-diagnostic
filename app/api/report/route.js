@@ -182,15 +182,31 @@ export async function POST(request) {
       console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present, no blank pages`);
     }
 
-    // If critical failure (very low pages or missing key sections), regenerate once
-    const criticalFail = pageCount < 5 || (!hasScorecard && !hasTemplate);
-    if (criticalFail) {
-      console.error("CRITICAL QC FAILURE — attempting regeneration");
+    // If any QC issues found, regenerate once and use the better result
+    if (qcIssues.length > 0) {
+      console.warn("QC FAILED — attempting regeneration");
       const pdfResult2 = await generatePDF(analysis, firstName);
       const pdfStr2 = pdfResult2.buffer.toString("latin1");
       const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
-      if (pageCount2 > pageCount) {
-        console.log(`Regeneration improved: ${pageCount} -> ${pageCount2} pages`);
+
+      // Run same blank-page check on regenerated PDF
+      const contentLog2 = pdfResult2.pageContentLog;
+      const pageEndPositions2 = {};
+      for (const entry of contentLog2) {
+        if (!pageEndPositions2[entry.page] || entry.endY > pageEndPositions2[entry.page]) {
+          pageEndPositions2[entry.page] = entry.endY;
+        }
+      }
+      const blankPages2 = [];
+      for (const [page, endY] of Object.entries(pageEndPositions2)) {
+        const p = parseInt(page);
+        if (p === 1 || p === pdfResult2.pageNum) continue;
+        if (endY < MIN_CONTENT_Y) blankPages2.push(p);
+      }
+
+      const qcIssues2Count = blankPages2.length + (pageCount2 < 10 ? 1 : 0);
+      if (qcIssues2Count < qcIssues.length) {
+        console.log(`Regeneration improved: ${qcIssues.length} issues -> ${qcIssues2Count} issues (${pageCount2} pages)`);
         pdfBuffer = pdfResult2.buffer;
       } else {
         console.log("Regeneration did not improve. Using original.");
