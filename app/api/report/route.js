@@ -400,7 +400,7 @@ Return ONLY valid JSON, no markdown:
   "attachmentFuels": "2-3 sentences: how this attachment style fuels the cycle AND limits his kingdom capacity. Connect human attachment to his capacity for intimacy with God.",
 
   "godAttachment": "2-3 sentences: how he relates to God through the same template as his human attachment. Include specific Scripture (Psalm 139, Romans 8:1, etc.). The barrier between him and the Father is the same barrier between him and freedom.",
-  "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null. Show how the church message fused shame with arousal rather than preventing it.",
+  "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null. Frame as: even with the best of intentions, Biblical truth can get misinterpreted through communication. Religiosity that sometimes finds its way inside the church can unintentionally reinforce shame rather than dismantle it. Show how this dynamic may have fused shame with arousal. NEVER frame the church itself as the problem. The church is not the enemy. Misapplied religiosity is.",
 
   "codependencyScore": "0-3 based on cod_ items",
   "enmeshmentScore": "0-3 based on enm_ items",
