@@ -1194,7 +1194,6 @@
       const name = document.getElementById("inputName").value.trim();
       const email = document.getElementById("inputEmail").value.trim();
       const phone = document.getElementById("inputPhone").value.trim();
-      const pin = String(Math.floor(1000 + Math.random() * 9000)); // auto-generate 4-digit PIN
 
       formError.textContent = "";
 
@@ -1209,7 +1208,7 @@
         const res = await fetch(AUTH_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "register", email, pin, name, phone }),
+          body: JSON.stringify({ action: "register", email, name, phone }),
         });
 
         const data = await res.json();
@@ -1219,7 +1218,7 @@
             const loginRes = await fetch(AUTH_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "login", email, pin }),
+              body: JSON.stringify({ action: "login", email }),
             });
             const loginData = await loginRes.json();
             if (!loginRes.ok) {
@@ -1237,7 +1236,7 @@
         }
 
         // Success
-        currentUser = { email: email.toLowerCase(), pin, name };
+        currentUser = { email: email.toLowerCase(), name };
         try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
 
         trackEvent("contact_capture_complete", { email: email.toLowerCase(), name });
@@ -1309,7 +1308,6 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: currentUser.email,
-          pin: currentUser.pin,
           name: currentUser.name,
           messages: messages,
           completedAt: new Date().toISOString(),
@@ -1325,7 +1323,6 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: currentUser.email,
-            pin: currentUser.pin,
             name: currentUser.name,
             diagnosticData: messages,
           }),

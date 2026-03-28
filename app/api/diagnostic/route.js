@@ -15,11 +15,11 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, pin, name, messages, completedAt } = body;
+    const { email, name, messages, completedAt } = body;
 
-    if (!email || !pin) {
+    if (!email) {
       return new Response(
-        JSON.stringify({ error: "Email and PIN required" }),
+        JSON.stringify({ error: "Email is required" }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
@@ -27,13 +27,13 @@ export async function POST(request) {
       );
     }
 
-    // Verify user credentials
+    // Verify user exists
     const user = await redis.get(`mkt:user:${email.toLowerCase()}`);
-    if (!user || String(user.pin) !== String(pin)) {
+    if (!user) {
       return new Response(
-        JSON.stringify({ error: "Invalid credentials" }),
+        JSON.stringify({ error: "No account found" }),
         {
-          status: 401,
+          status: 404,
           headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         }
       );
