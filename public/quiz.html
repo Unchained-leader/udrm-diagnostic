@@ -598,6 +598,11 @@
     // PRE-DEFINED QUIZ SCREENS (no API calls needed for sections 1-8)
     // =====================================================================
     const QUIZ_SCREENS = [
+      { id:"0", section:0, sectionLabel:"About You", title:"Before we begin", intro:"This helps us personalize your report.", progress:2, blocks:[
+        {type:"single", options:[
+          {id:"male",text:"Male"},{id:"female",text:"Female"}
+        ]}
+      ]},
       { id:"1a", section:1, sectionLabel:"Section 1", title:"Section 1 of 8 \u2014 Your Behavior Patterns", intro:"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root.", progress:5, blocks:[
         {type:"multi", options:[
           {id:"viewing_porn",text:"Viewing pornography"},{id:"scrolling_social",text:"Scrolling sexual content on social media (reels, stories, accounts)"},{id:"fantasy_daydream",text:"Sexual fantasy/daydreaming (without viewing content)"},{id:"compulsive_mb",text:"Compulsive masturbation"},{id:"sexting",text:"Sexting or online sexual conversations"},{id:"physical_acting",text:"Physical acting out (affairs, hookups, strip clubs)"},{id:"massage_parlors",text:"Massage parlors or paid sexual services"}
