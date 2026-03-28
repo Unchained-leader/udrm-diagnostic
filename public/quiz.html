@@ -532,6 +532,23 @@
     // UNCHAINED UDRM QUIZ — STANDALONE ASSESSMENT UI
     // =====================================================================
 
+    // Embed mode: ?embed=true hides header, removes padding for iframe use
+    const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true';
+    if (isEmbed) {
+      document.body.style.background = '#000';
+      const header = document.querySelector('.site-header');
+      if (header) header.style.display = 'none';
+      const page = document.querySelector('.quiz-page');
+      if (page) page.style.padding = '0';
+      const card = document.querySelector('.quiz-card');
+      if (card) {
+        card.style.borderRadius = '0';
+        card.style.border = 'none';
+        card.style.boxShadow = 'none';
+        card.style.maxWidth = '100%';
+      }
+    }
+
     const BASE_URL = window.UNCHAINED_MKT_API_URL || (window.location.hostname === 'localhost' ? '' : "https://unchained-marketing-coach.vercel.app");
     const API_URL = BASE_URL + "/api/chat";
     const AUTH_URL = BASE_URL + "/api/auth";
