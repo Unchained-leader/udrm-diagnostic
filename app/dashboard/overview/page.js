@@ -13,15 +13,33 @@ const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiag
 
 const GOLD = "#C9A227";
 
+// Fix censored words in stored analysis data
+function uncensor(text) {
+  if (typeof text !== "string") return text;
+  return text.replace(/p\*rn/gi, "porn").replace(/p\*rnography/gi, "pornography");
+}
+
+function uncensorDeep(obj) {
+  if (typeof obj === "string") return uncensor(obj);
+  if (Array.isArray(obj)) return obj.map(uncensorDeep);
+  if (obj && typeof obj === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) out[k] = uncensorDeep(v);
+    return out;
+  }
+  return obj;
+}
+
 function ContentBlock({ title, body, borderColor }) {
   if (!body) return null;
-  const paragraphs = typeof body === "string" ? body.split("\n").filter(p => p.trim()) : [String(body)];
+  const text = uncensor(typeof body === "string" ? body : String(body));
+  const paragraphs = text.split("\n").filter(p => p.trim());
   return (
     <div style={{
       background: "#1a1a1a", borderRadius: 10, padding: "16px 18px",
       border: `1px solid ${borderColor || "#2a2a2a"}`, marginBottom: 10,
     }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{uncensor(title)}</div>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: "#999" }}>{p}</p>
       ))}
@@ -76,6 +94,7 @@ export default function OverviewPage() {
           }
           setError(d.error);
         } else {
+          if (d.analysis) d.analysis = uncensorDeep(d.analysis);
           setData(d);
         }
         setLoading(false);
