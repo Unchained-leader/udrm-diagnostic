@@ -39,18 +39,18 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, pin, name, diagnosticData } = body;
+    const { email, name, diagnosticData } = body;
 
-    if (!email || !pin) {
-      return Response.json({ error: "Email and PIN required." }, { status: 400, headers: CORS_HEADERS });
+    if (!email) {
+      return Response.json({ error: "Email is required." }, { status: 400, headers: CORS_HEADERS });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Authenticate
+    // Look up user
     const user = await redis.get(`mkt:user:${normalizedEmail}`);
-    if (!user || String(user.pin) !== String(pin)) {
-      return Response.json({ error: "Invalid credentials." }, { status: 401, headers: CORS_HEADERS });
+    if (!user) {
+      return Response.json({ error: "No account found. Please register first." }, { status: 404, headers: CORS_HEADERS });
     }
 
     const userName = name || user.name || "Brother";

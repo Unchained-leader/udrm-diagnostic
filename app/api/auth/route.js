@@ -16,9 +16,9 @@ export async function POST(request) {
     const { action, email, pin, name, phone } = await request.json();
     const normalizedEmail = (email || "").trim().toLowerCase();
 
-    if (!normalizedEmail || !pin) {
+    if (!normalizedEmail) {
       return Response.json(
-        { error: "Email and PIN are required." },
+        { error: "Email is required." },
         { status: 400, headers: CORS_HEADERS }
       );
     }
@@ -27,14 +27,6 @@ export async function POST(request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return Response.json(
         { error: "Please enter a valid email address." },
-        { status: 400, headers: CORS_HEADERS }
-      );
-    }
-
-    // Validate PIN is 4 digits
-    if (!/^\d{4}$/.test(pin)) {
-      return Response.json(
-        { error: "PIN must be exactly 4 digits." },
         { status: 400, headers: CORS_HEADERS }
       );
     }
@@ -62,7 +54,6 @@ export async function POST(request) {
 
       // Create new user
       await redis.set(userKey, {
-        pin,
         name: trimmedName,
         phone: phone || "",
         createdAt: new Date().toISOString(),
@@ -86,13 +77,6 @@ export async function POST(request) {
         return Response.json(
           { error: "No account found with this email. Please register first." },
           { status: 404, headers: CORS_HEADERS }
-        );
-      }
-
-      if (user.pin !== pin) {
-        return Response.json(
-          { error: "Incorrect PIN. Please try again." },
-          { status: 401, headers: CORS_HEADERS }
         );
       }
 
