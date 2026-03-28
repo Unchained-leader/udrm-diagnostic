@@ -332,6 +332,20 @@ IMPORTANT: Adapt ALL report language to match the person's gender and age. If fe
 CONVERSATION:
 ${conversationText}
 
+CO-OCCURRING COPING BEHAVIORS (based on Section 1 vice_ selections):
+If the user selected any vice_ items, these are OTHER ways the brain is trying to solve the same root problem. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When a man tries to white-knuckle his primary behavior (sexual acting out), the brain will route the same unresolved pain through other coping mechanisms. This is why behavioral solutions are dangerous: they address the outlet, not the source. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is precisely why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
+- vice_alcohol → Alcohol as nervous system regulation. Depressant that mimics the numbing the brain needs.
+- vice_substances → Substance use as neurochemical override. Directly hijacks the same dopamine/serotonin pathways.
+- vice_overeating → Food as emotional regulation. Dopamine + serotonin hit that mimics comfort the brain is missing.
+- vice_gambling → Gambling as dopamine chasing. Same anticipation/reward loop as the sexual behavior cycle.
+- vice_gaming → Gaming as dissociation. Escape into a world where the brain does not have to process real pain.
+- vice_spending → Spending as dopamine seeking. The purchase high mimics the novelty hit of the sexual cycle.
+- vice_social_media → Doom-scrolling as numbing. Infinite scroll = infinite avoidance of what the brain does not want to feel.
+- vice_work → Overworking as performance-based worth. If the root narrative is "I am not enough," busyness is another counterfeit.
+- vice_nicotine → Nicotine as anxiety regulation. Quick nervous system reset that manages the same stress the sexual behavior manages.
+
+If vice_none is selected or no vice_ items are present, do not include coCopingBehaviors in the output.
+
 AROUSAL TEMPLATE TYPES (based on Section 2 content theme selections):
 - val_ items → The Invisible Man. Root: "I am not enough / not wanted." Counterfeits: being chosen, seen, desired.
 - pow_ items → The Controller. Root: "I am unsafe / powerless." Counterfeits: mastery, safety, control.
@@ -385,6 +399,8 @@ Return ONLY valid JSON, no markdown:
   "whatBrainCounterfeits": "What the brain is trying to get through the behavior (1 sentence)",
 
   "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation in 2-3 SHORT paragraphs separated by newlines. First paragraph: what the behavior actually is (a shame management system, an escape valve, etc). Second paragraph: connect it to what God designed and how the brain is counterfeiting it. Keep paragraphs to 2-3 sentences max for mobile readability."}],
+
+  "coCopingBehaviors": [{"behavior": "behavior name in plain English (e.g. Alcohol, Overeating)", "connection": "2-3 sentences explaining how this specific vice connects to the SAME root narrative driving the sexual behavior. Frame it as the brain routing the same unresolved pain through a different outlet. Explain why white-knuckling the primary behavior often causes this sub-addiction to intensify. Connect to why root-level healing (RNR) is the only real solution, because it addresses the source, not the symptom."}] or null if no vice_ items selected,
 
   "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
@@ -457,6 +473,7 @@ Return ONLY valid JSON, no markdown:
       rootNarrativeStatement: "Unable to determine from available data",
       whatBrainCounterfeits: "Something your soul actually needs",
       behaviorRootMap: [],
+      coCopingBehaviors: null,
       confusingPatternsDecoded: [],
       neuropathway: "Unknown",
       neuropathwayManages: "Unknown",
@@ -869,6 +886,38 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     }
 
     writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You did not choose these patterns. They chose you. And now, for the first time, you can see them.");
+
+    // ════════════════════════════════════════
+    // CO-OCCURRING COPING BEHAVIORS (conditional)
+    // ════════════════════════════════════════
+    const ccb = analysis.coCopingBehaviors || [];
+    if (ccb.length > 0) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("YOUR BRAIN'S OTHER ESCAPE ROUTES");
+
+      y += 10 * SP;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
+        "When a man tries to white-knuckle his primary behavior, the brain does not stop seeking relief. It reroutes. These are not separate problems. They are the same root narrative expressing itself through different outlets. This is exactly why behavior-level solutions are dangerous, and why root-level healing is essential.",
+        M, y, { width: CW, lineGap: 3 }
+      );
+      y = doc.y + 14;
+
+      for (const cb of ccb) {
+        const cbTitle = sanitize(cb.behavior || "");
+        const cbConn = sanitize(cb.connection || "");
+        const cbTitleH = doc.fontSize(20).font("Helvetica-Bold").heightOfString(cbTitle, { width: CW - 28 });
+        const connH = doc.fontSize(20).font("Helvetica").heightOfString(cbConn, { width: CW - 28, lineGap: 4 });
+        const cbBoxH = Math.max(60, 14 + cbTitleH + 10 + connH + 14);
+        checkFit(cbBoxH + 10);
+        doc.roundedRect(M, y, CW, cbBoxH, 5).fill(CARD_BG);
+        doc.roundedRect(M, y, CW, cbBoxH, 5).strokeColor("#C9A227").lineWidth(0.5).stroke();
+        doc.fontSize(20).fillColor("#C9A227").font("Helvetica-Bold").text(cbTitle, M + 14, y + 14, { width: CW - 28 });
+        const cbBodyY = y + 14 + cbTitleH + 10;
+        _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(cbConn, M + 14, cbBodyY, { width: CW - 28, lineGap: 4 });
+        y += cbBoxH + 10;
+      }
+      writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. The RNR process does not manage symptoms. It restructures the root narrative that drives all of them.");
+    }
 
     // ════════════════════════════════════════
     // SECTION 3 — CONFUSING PATTERNS DECODED (conditional)
