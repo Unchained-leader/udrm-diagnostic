@@ -909,6 +909,45 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     y = doc.y + 14;
     writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
 
+    // Neuropathway Flow Diagram (Trigger → Pathway → Behavior)
+    checkFit(120);
+    const npManages = (analysis.neuropathwayManages || "Pain");
+    const npType = (analysis.neuropathway || "Unknown");
+    const flowBoxW = (CW - 40) / 3;
+    const flowBoxH = 50;
+    const flowY = y + 10;
+
+    // Trigger box
+    doc.roundedRect(M, flowY, flowBoxW, flowBoxH, 6).fill(CARD_BG);
+    doc.roundedRect(M, flowY, flowBoxW, flowBoxH, 6).strokeColor([180, 60, 60]).lineWidth(0.8).stroke();
+    doc.fontSize(9).fillColor([180, 60, 60]).font("Helvetica").text("TRIGGER", M + 8, flowY + 8, { width: flowBoxW - 16, align: "center" });
+    doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold").text(npManages, M + 8, flowY + 22, { width: flowBoxW - 16, align: "center" });
+
+    // Arrow 1
+    const arrow1X = M + flowBoxW + 2;
+    doc.fontSize(16).fillColor(GRAY).font("Helvetica").text("→", arrow1X, flowY + 16, { width: 16, align: "center" });
+
+    // Pathway box
+    const pathX = M + flowBoxW + 20;
+    const pathColor = npType === "Arousal" ? [180, 60, 60] : npType === "Numbing" ? [60, 120, 200] : npType === "Fantasy" ? [140, 80, 200] : [200, 160, 40];
+    doc.roundedRect(pathX, flowY, flowBoxW, flowBoxH, 6).fill(CARD_BG);
+    doc.roundedRect(pathX, flowY, flowBoxW, flowBoxH, 6).strokeColor(pathColor).lineWidth(0.8).stroke();
+    doc.fontSize(9).fillColor(pathColor).font("Helvetica").text("PATHWAY", pathX + 8, flowY + 8, { width: flowBoxW - 16, align: "center" });
+    doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold").text(npType, pathX + 8, flowY + 22, { width: flowBoxW - 16, align: "center" });
+
+    // Arrow 2
+    const arrow2X = pathX + flowBoxW + 2;
+    doc.fontSize(16).fillColor(GRAY).font("Helvetica").text("→", arrow2X, flowY + 16, { width: 16, align: "center" });
+
+    // Behavior box
+    const behX = pathX + flowBoxW + 20;
+    doc.roundedRect(behX, flowY, flowBoxW, flowBoxH, 6).fill(CARD_BG);
+    doc.roundedRect(behX, flowY, flowBoxW, flowBoxH, 6).strokeColor(GOLD).lineWidth(0.8).stroke();
+    doc.fontSize(9).fillColor(GOLD).font("Helvetica").text("BEHAVIOR", behX + 8, flowY + 8, { width: flowBoxW - 16, align: "center" });
+    doc.fontSize(14).fillColor(WHITE).font("Helvetica-Bold").text("The Cycle", behX + 8, flowY + 22, { width: flowBoxW - 16, align: "center" });
+
+    y = flowY + flowBoxH + 20;
+
     // ════════════════════════════════════════
     // SECTION 4 — THE BEHAVIOR-ROOT MAP
     // ════════════════════════════════════════
@@ -1046,7 +1085,42 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       );
       y = doc.y + 10;
 
-      writeGapWidening("Every area of lack on this list is fuel for the cycle. And every area of abundance is a resource your brain can draw from instead. Root-level healing does not just address the behavior. It rebuilds your capacity to carry the weight of real life without needing an escape.");
+      // Insight section
+      checkFit(200);
+      y += 6;
+      doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
+      y += 16;
+
+      _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+        "Most people unknowingly try to stabilize their unwanted desires and behaviors by stabilizing these categories in life. But it actually works the opposite way.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+      _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
+        "When you address your root issues, you stabilize behavior, and behavior brings stability to these areas.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 14;
+
+      // Trend callout box
+      const trendH = 80;
+      checkFit(trendH + 20);
+      doc.roundedRect(M, y, CW, trendH, 6).fill(CARD_BG);
+      doc.roundedRect(M, y, CW, trendH, 6).strokeColor(GOLD).lineWidth(1).stroke();
+      doc.fontSize(10).fillColor(GOLD).font("Helvetica-Bold").text("THE #1 TREND", M + 16, y + 12, { width: CW - 32, characterSpacing: 1 });
+      _currentTextColor = WHITE; doc.fontSize(18).fillColor(WHITE).font("Helvetica").text(
+        "In the 10,000+ clients we have worked with, the #1 trend is increased income, fulfillment, and relationship health as a direct result of healing root issues.",
+        M + 16, y + 30, { width: CW - 32, lineGap: 3 }
+      );
+      y += trendH + 14;
+
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+        "Every single person who takes the first steps towards freedom does so from a place of being unstable in multiple areas of life. The leap of faith in unstable times is a rite of passage.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+
+      writeGapWidening("Root-level healing does not just address the behavior. It rebuilds your capacity to carry the weight of real life without needing an escape.");
     }
 
     // ════════════════════════════════════════
@@ -1079,6 +1153,77 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         y += cbBoxH + 10;
       }
       writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. This is exactly why behavior-level solutions are dangerous. And it is exactly why root-level healing through the RNR process is essential. It does not manage symptoms. It restructures the root narrative that drives all of them.");
+
+      // ── Substance vs Behavior Vice Diagram ──
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("SUBSTANCE VS. BEHAVIOR — SAME ROOT");
+
+      const substanceVices = ["Alcohol", "THC / Marijuana", "Other Substances", "Nicotine"];
+      const behaviorVices = ["Gambling", "Gaming", "Impulse Spending", "Doom-Scrolling", "Overeating", "Overworking"];
+
+      const colW = (CW - 30) / 2;
+      const viceItemH = 26;
+
+      // Substance column header
+      doc.fontSize(10).fillColor([220, 80, 80]).font("Helvetica-Bold").text("SUBSTANCE", M, y, { width: colW, align: "center", characterSpacing: 2 });
+      // Behavior column header
+      doc.fontSize(10).fillColor([80, 140, 240]).font("Helvetica-Bold").text("BEHAVIOR", M + colW + 30, y, { width: colW, align: "center", characterSpacing: 2 });
+      y += 20;
+
+      // Draw vice items
+      const maxItems = Math.max(substanceVices.length, behaviorVices.length);
+      for (let vi = 0; vi < maxItems; vi++) {
+        // Substance side
+        if (vi < substanceVices.length) {
+          const sLabel = substanceVices[vi];
+          const sActive = ccb.some(b => (b.behavior || "").toLowerCase().includes(sLabel.toLowerCase().split(" ")[0].toLowerCase()));
+          doc.roundedRect(M, y, colW, viceItemH, 4).fill(sActive ? [60, 20, 20] : CARD_BG);
+          doc.roundedRect(M, y, colW, viceItemH, 4).strokeColor(sActive ? [220, 80, 80] : BORDER).lineWidth(sActive ? 0.8 : 0.3).stroke();
+          doc.fontSize(11).fillColor(sActive ? [255, 180, 180] : [100, 100, 100]).font(sActive ? "Helvetica-Bold" : "Helvetica").text(sLabel, M + 10, y + 7, { width: colW - 20, align: "center" });
+        }
+        // Behavior side
+        if (vi < behaviorVices.length) {
+          const bLabel = behaviorVices[vi];
+          const bActive = ccb.some(b => (b.behavior || "").toLowerCase().includes(bLabel.toLowerCase().split(" ")[0].toLowerCase()));
+          doc.roundedRect(M + colW + 30, y, colW, viceItemH, 4).fill(bActive ? [15, 30, 55] : CARD_BG);
+          doc.roundedRect(M + colW + 30, y, colW, viceItemH, 4).strokeColor(bActive ? [80, 140, 240] : BORDER).lineWidth(bActive ? 0.8 : 0.3).stroke();
+          doc.fontSize(11).fillColor(bActive ? [160, 200, 255] : [100, 100, 100]).font(bActive ? "Helvetica-Bold" : "Helvetica").text(bLabel, M + colW + 40, y + 7, { width: colW - 20, align: "center" });
+        }
+        y += viceItemH + 4;
+      }
+
+      // Convergence arrow
+      y += 6;
+      doc.fontSize(16).fillColor(GRAY).font("Helvetica").text("↓", M, y, { width: CW, align: "center" });
+      y += 20;
+
+      // Same root box
+      const rootBoxW = CW * 0.6;
+      const rootBoxX = M + (CW - rootBoxW) / 2;
+      doc.roundedRect(rootBoxX, y, rootBoxW, 40, 6).fill(CARD_BG);
+      doc.roundedRect(rootBoxX, y, rootBoxW, 40, 6).strokeColor(GOLD).lineWidth(0.8).stroke();
+      doc.fontSize(10).fillColor(GOLD).font("Helvetica-Bold").text("SAME ROOT", rootBoxX, y + 8, { width: rootBoxW, align: "center", characterSpacing: 2 });
+      doc.fontSize(12).fillColor(WHITE).font("Helvetica").text("Different strategies, identical origin", rootBoxX, y + 24, { width: rootBoxW, align: "center" });
+      y += 56;
+
+      // Explanation text
+      checkFit(200);
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+        "Most people look at a behavior like gambling and a substance like alcohol as two very different problems. One is a \"behavioral issue.\" The other is a \"substance issue.\" Different categories, different treatments, different labels.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+      _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+        "But they are not different problems. They are different strategies your brain uses to medicate the same root pain.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+        "The substance numbs. The behavior distracts. The scroll dissociates. The spend creates a dopamine hit. The overwork creates a sense of worth. Every single one is aimed at the same target: the root narrative that says something is wrong with you, missing in you, or broken about you.",
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+      writeGapWidening("That is why white-knuckling one behavior so often causes another to intensify. Remove one escape route and the brain finds another. The only way to stop the cycle is to heal what the brain is running from.");
     }
 
     // ════════════════════════════════════════
