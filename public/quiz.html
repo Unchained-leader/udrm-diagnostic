@@ -599,8 +599,11 @@
     // =====================================================================
     const QUIZ_SCREENS = [
       { id:"0", section:0, sectionLabel:"About You", title:"Before we begin", intro:"This helps us personalize your report.", progress:2, blocks:[
-        {type:"single", options:[
+        {type:"single", label:"Gender", options:[
           {id:"male",text:"Male"},{id:"female",text:"Female"}
+        ]},
+        {type:"single", label:"Age Range", options:[
+          {id:"age_18_27",text:"18\u201327"},{id:"age_28_37",text:"28\u201337"},{id:"age_38_47",text:"38\u201347"},{id:"age_48_57",text:"48\u201357"},{id:"age_58_67",text:"58\u201367"},{id:"age_68_plus",text:"68+"}
         ]}
       ]},
       { id:"1a", section:1, sectionLabel:"Section 1", title:"Section 1 of 8 \u2014 Your Behavior Patterns", intro:"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root.", progress:5, blocks:[
@@ -874,6 +877,13 @@
           input.addEventListener("input", () => { textInputValue = input.value; });
           sectionContent.appendChild(input);
           return;
+        }
+
+        if (block.label) {
+          const lbl = document.createElement("div");
+          lbl.className = "section-sublabel";
+          lbl.textContent = block.label;
+          sectionContent.appendChild(lbl);
         }
 
         allSelections[blockIdx] = new Set();
