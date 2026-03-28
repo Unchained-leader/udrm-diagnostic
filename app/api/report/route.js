@@ -859,8 +859,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       M, y, { width: CW }
     );
 
-    // ════════════════════════════════════════
-    // SECTION 1 — AROUSAL TEMPLATE TYPE
+    // SECTION 1 — YOUR AROUSAL TEMPLATE TYPE
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
     sectionHeader("SECTION 1 — YOUR AROUSAL TEMPLATE TYPE");
@@ -874,10 +873,47 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     writeGapWidening("You now have a name for the story that has been running beneath your cycle. Most men never get this far. Sit with that for a moment. The pages ahead are going to show you how deep this goes.");
 
     // ════════════════════════════════════════
-    // SECTION 2 — BEHAVIOR-ROOT MAP
+    // SECTION 2 — YOUR AROUSAL TEMPLATE ORIGIN
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
-    sectionHeader("SECTION 2 — THE BEHAVIOR-ROOT MAP");
+    sectionHeader("SECTION 2 — YOUR AROUSAL TEMPLATE ORIGIN");
+
+    doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(`First Exposure: Age ${analysis.imprintingAge || "unknown"}`, M, y);
+    y = doc.y + 8;
+    _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
+    y = doc.y + 16;
+
+    _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+      analysis.imprintingFusion || "",
+      M, y, { width: CW, lineGap: 4 }
+    );
+    y = doc.y + 14;
+
+    const yearsRaw = String(analysis.patternYears || "many").replace(/\s*years?\s*$/i, "").trim();
+    const yearsData = yearsRaw;
+
+    writeGapWidening(`You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. And it raises a question most men eventually ask: if this has been running beneath the surface for ${yearsData} years without me seeing it, what else is down there that I still cannot see?`);
+
+    // ════════════════════════════════════════
+    // SECTION 3 — YOUR ADDICTION NEUROPATHWAY
+    // ════════════════════════════════════════
+    newPage(); y = CONTENT_TOP;
+    sectionHeader("SECTION 3 — YOUR ADDICTION NEUROPATHWAY");
+
+    writeCard("NEUROPATHWAY", analysis.neuropathway || "Unknown", analysis.neuropathwayExplanation || "");
+
+    _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+      `Your brain is not using this behavior for pleasure. It is using it to manage ${(analysis.neuropathwayManages || "pain").toLowerCase()}.`,
+      M, y, { width: CW, lineGap: 3 }
+    );
+    y = doc.y + 14;
+    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
+
+    // ════════════════════════════════════════
+    // SECTION 4 — THE BEHAVIOR-ROOT MAP
+    // ════════════════════════════════════════
+    newPage(); y = CONTENT_TOP;
+    sectionHeader("SECTION 4 — THE BEHAVIOR-ROOT MAP");
 
     _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
       "Every behavior in your cycle traces to a specific root. Here is what your brain is actually trying to accomplish through each one.",
@@ -903,44 +939,12 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     writeGapWidening("Every line on this map represents a connection your brain made before you had any say in the matter. You did not choose these patterns. They chose you. And now, for the first time, you can see them.");
 
     // ════════════════════════════════════════
-    // CO-OCCURRING COPING BEHAVIORS (conditional)
-    // ════════════════════════════════════════
-    const ccb = analysis.coCopingBehaviors || [];
-    if (ccb.length > 0) {
-      newPage(); y = CONTENT_TOP;
-      sectionHeader("YOUR BRAIN'S OTHER ESCAPE ROUTES");
-
-      y += 10 * SP;
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
-        "The fact that these behaviors show up alongside your sexual pattern is actually proof that this was never a lust problem or a perversion problem. Just like it is not a substance problem or a food problem. Every unwanted behavior and desire on this list is a symptom of your brain's creative attempt to medicate or escape root-level pain. When you try to white-knuckle one outlet, your brain does not stop seeking relief. It reroutes through another. These are not separate problems. They are the same root narrative expressing itself through different outlets.",
-        M, y, { width: CW, lineGap: 3 }
-      );
-      y = doc.y + 14;
-
-      for (const cb of ccb) {
-        const cbTitle = sanitize(cb.behavior || "");
-        const cbConn = sanitize(cb.connection || "");
-        const cbTitleH = doc.fontSize(20).font("Helvetica-Bold").heightOfString(cbTitle, { width: CW - 28 });
-        const connH = doc.fontSize(20).font("Helvetica").heightOfString(cbConn, { width: CW - 28, lineGap: 4 });
-        const cbBoxH = Math.max(60, 14 + cbTitleH + 10 + connH + 14);
-        checkFit(cbBoxH + 10);
-        doc.roundedRect(M, y, CW, cbBoxH, 5).fill(CARD_BG);
-        doc.roundedRect(M, y, CW, cbBoxH, 5).strokeColor("#C9A227").lineWidth(0.5).stroke();
-        doc.fontSize(20).fillColor("#C9A227").font("Helvetica-Bold").text(cbTitle, M + 14, y + 14, { width: CW - 28 });
-        const cbBodyY = y + 14 + cbTitleH + 10;
-        _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(cbConn, M + 14, cbBodyY, { width: CW - 28, lineGap: 4 });
-        y += cbBoxH + 10;
-      }
-      writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. This is exactly why behavior-level solutions are dangerous. And it is exactly why root-level healing through the RNR process is essential. It does not manage symptoms. It restructures the root narrative that drives all of them.");
-    }
-
-    // ════════════════════════════════════════
-    // SECTION 3 — CONFUSING PATTERNS DECODED (conditional)
+    // SECTION 5 — CONFUSING PATTERNS DECODED (conditional)
     // ════════════════════════════════════════
     const cpd = analysis.confusingPatternsDecoded || [];
     if (cpd.length > 0) {
       newPage(); y = CONTENT_TOP;
-      sectionHeader("SECTION 3 — CONFUSING PATTERNS DECODED");
+      sectionHeader("SECTION 5 — CONFUSING PATTERNS DECODED");
 
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
         "These are the patterns you have likely never told anyone about. Each one has a research-backed explanation that has nothing to do with your character and everything to do with how your brain was wired.",
@@ -966,67 +970,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     }
 
     // ════════════════════════════════════════
-    // SECTION 4 — ADDICTION NEUROPATHWAY
-    // ════════════════════════════════════════
-    newPage(); y = CONTENT_TOP;
-    sectionHeader("SECTION 4 — YOUR ADDICTION NEUROPATHWAY");
-
-    writeCard("NEUROPATHWAY", analysis.neuropathway || "Unknown", analysis.neuropathwayExplanation || "");
-
-    _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
-      `Your brain is not using this behavior for pleasure. It is using it to manage ${(analysis.neuropathwayManages || "pain").toLowerCase()}.`,
-      M, y, { width: CW, lineGap: 3 }
-    );
-    y = doc.y + 14;
-
-    const yearsRaw = String(analysis.patternYears || "many").replace(/\s*years?\s*$/i, "").trim();
-    const yearsData = yearsRaw;
-    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
-
-    // ════════════════════════════════════════
-    // YOUR STRESS LANDSCAPE (conditional)
-    // ════════════════════════════════════════
-    if (analysis.lifeStressAnalysis) {
-      newPage(); y = CONTENT_TOP;
-      sectionHeader("YOUR STRESS LANDSCAPE");
-
-      y += 10 * SP;
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
-        "Your brain does not act out in a vacuum. The stress you carry in everyday life creates the pressure your nervous system needs relief from. Every area of lack is a load your brain is trying to manage, and when the load exceeds your capacity, the cycle runs.",
-        M, y, { width: CW, lineGap: 3 }
-      );
-      y = doc.y + 14;
-
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
-        sanitize(analysis.lifeStressAnalysis),
-        M, y, { width: CW, lineGap: 4 }
-      );
-      y = doc.y + 10;
-
-      writeGapWidening("Every area of lack on this list is fuel for the cycle. And every area of abundance is a resource your brain can draw from instead. Root-level healing does not just address the behavior. It rebuilds your capacity to carry the weight of real life without needing an escape.");
-    }
-
-    // ════════════════════════════════════════
-    // SECTION 5 — AROUSAL TEMPLATE ORIGIN
-    // ════════════════════════════════════════
-    newPage(); y = CONTENT_TOP;
-    sectionHeader("SECTION 5 — YOUR AROUSAL TEMPLATE ORIGIN");
-
-    doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(`First Exposure: Age ${analysis.imprintingAge || "unknown"}`, M, y);
-    y = doc.y + 8;
-    _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(`Context: ${analysis.imprintingContext || "unknown"}`, M, y, { width: CW });
-    y = doc.y + 16;
-
-    _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
-      analysis.imprintingFusion || "",
-      M, y, { width: CW, lineGap: 4 }
-    );
-    y = doc.y + 14;
-
-    writeGapWidening(`You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. And it raises a question most men eventually ask: if this has been running beneath the surface for ${yearsData} years without me seeing it, what else is down there that I still cannot see?`);
-
-    // ════════════════════════════════════════
-    // SECTION 6 — ATTACHMENT STYLE
+    // SECTION 6 — YOUR ATTACHMENT STYLE
     // ════════════════════════════════════════
     newPage(); y = CONTENT_TOP;
     sectionHeader("SECTION 6 — YOUR ATTACHMENT STYLE");
@@ -1083,7 +1027,62 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Codependency drains you until the behavior becomes the only thing that is yours. The leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently.");
 
     // ════════════════════════════════════════
-    // SECTION 8 — STRATEGY AUTOPSY
+    // YOUR STRESS LANDSCAPE (conditional)
+    // ════════════════════════════════════════
+    if (analysis.lifeStressAnalysis) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("YOUR STRESS LANDSCAPE");
+
+      y += 10 * SP;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
+        "Your brain does not act out in a vacuum. The stress you carry in everyday life creates the pressure your nervous system needs relief from. Every area of lack is a load your brain is trying to manage, and when the load exceeds your capacity, the cycle runs.",
+        M, y, { width: CW, lineGap: 3 }
+      );
+      y = doc.y + 14;
+
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+        sanitize(analysis.lifeStressAnalysis),
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+
+      writeGapWidening("Every area of lack on this list is fuel for the cycle. And every area of abundance is a resource your brain can draw from instead. Root-level healing does not just address the behavior. It rebuilds your capacity to carry the weight of real life without needing an escape.");
+    }
+
+    // ════════════════════════════════════════
+    // CO-OCCURRING COPING BEHAVIORS (conditional)
+    // ════════════════════════════════════════
+    const ccb = analysis.coCopingBehaviors || [];
+    if (ccb.length > 0) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("YOUR BRAIN'S OTHER ESCAPE ROUTES");
+
+      y += 10 * SP;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
+        "The fact that these behaviors show up alongside your sexual pattern is actually proof that this was never a lust problem or a perversion problem. Just like it is not a substance problem or a food problem. Every unwanted behavior and desire on this list is a symptom of your brain's creative attempt to medicate or escape root-level pain. When you try to white-knuckle one outlet, your brain does not stop seeking relief. It reroutes through another. These are not separate problems. They are the same root narrative expressing itself through different outlets.",
+        M, y, { width: CW, lineGap: 3 }
+      );
+      y = doc.y + 14;
+
+      for (const cb of ccb) {
+        const cbTitle = sanitize(cb.behavior || "");
+        const cbConn = sanitize(cb.connection || "");
+        const cbTitleH = doc.fontSize(20).font("Helvetica-Bold").heightOfString(cbTitle, { width: CW - 28 });
+        const connH = doc.fontSize(20).font("Helvetica").heightOfString(cbConn, { width: CW - 28, lineGap: 4 });
+        const cbBoxH = Math.max(60, 14 + cbTitleH + 10 + connH + 14);
+        checkFit(cbBoxH + 10);
+        doc.roundedRect(M, y, CW, cbBoxH, 5).fill(CARD_BG);
+        doc.roundedRect(M, y, CW, cbBoxH, 5).strokeColor("#C9A227").lineWidth(0.5).stroke();
+        doc.fontSize(20).fillColor("#C9A227").font("Helvetica-Bold").text(cbTitle, M + 14, y + 14, { width: CW - 28 });
+        const cbBodyY = y + 14 + cbTitleH + 10;
+        _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(cbConn, M + 14, cbBodyY, { width: CW - 28, lineGap: 4 });
+        y += cbBoxH + 10;
+      }
+      writeGapWidening("You cannot win a game of whack-a-mole with your nervous system. Every time you shut down one outlet without addressing the root, your brain will find another. This is exactly why behavior-level solutions are dangerous. And it is exactly why root-level healing through the RNR process is essential. It does not manage symptoms. It restructures the root narrative that drives all of them.");
+    }
+
+    // ════════════════════════════════════════
+    // STRATEGY AUDIT
     // ════════════════════════════════════════
     const strategies = analysis.strategiesTried || [];
     const stratCount = parseInt(analysis.strategiesCount) || strategies.length || 0;

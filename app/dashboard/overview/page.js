@@ -103,47 +103,6 @@ export default function OverviewPage() {
           <ScoreRadar analysis={a} />
         </ResultCard>
 
-        {/* Neuropathway */}
-        <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.neuropathwayExplanation}</p>
-        </ResultCard>
-
-        {/* Behavior Root Map */}
-        <ResultCard title="Behavior-Root Map">
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
-          {(a.behaviorRootMap || []).map((item, i) => (
-            <ExpandableCard key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
-          ))}
-        </ResultCard>
-
-        {/* Co-Coping Behaviors */}
-        {a.coCopingBehaviors && a.coCopingBehaviors.length > 0 && (
-          <ResultCard title="Your Brain's Other Escape Routes">
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain is solving the same root problem</div>
-            {a.coCopingBehaviors.map((item, i) => (
-              <ExpandableCard key={i} title={item.behavior} body={item.connection} borderColor="#9A7730" />
-            ))}
-          </ResultCard>
-        )}
-
-        {/* Life Stress */}
-        {a.lifeStressAnalysis && (
-          <ResultCard title="Your Stress Landscape">
-            <StressHeatmap analysis={a} />
-          </ResultCard>
-        )}
-
-        {/* Confusing Patterns */}
-        {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
-          <ResultCard title="Confusing Patterns Decoded" gold>
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
-            {a.confusingPatternsDecoded.map((item, i) => (
-              <ExpandableCard key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
-            ))}
-          </ResultCard>
-        )}
-
         {/* Imprinting Origin */}
         <ResultCard title="Your Arousal Template Origin">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
@@ -158,6 +117,30 @@ export default function OverviewPage() {
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.imprintingFusion}</p>
         </ResultCard>
+
+        {/* Neuropathway */}
+        <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
+          <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
+          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.neuropathwayExplanation}</p>
+        </ResultCard>
+
+        {/* Behavior Root Map */}
+        <ResultCard title="Behavior-Root Map">
+          <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
+          {(a.behaviorRootMap || []).map((item, i) => (
+            <ExpandableCard key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
+          ))}
+        </ResultCard>
+
+        {/* Confusing Patterns */}
+        {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
+          <ResultCard title="Confusing Patterns Decoded" gold>
+            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
+            {a.confusingPatternsDecoded.map((item, i) => (
+              <ExpandableCard key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
+            ))}
+          </ResultCard>
+        )}
 
         {/* Attachment Style */}
         <ResultCard title="Your Attachment Style" subtitle={a.attachmentStyle || "Unknown"}>
@@ -187,6 +170,21 @@ export default function OverviewPage() {
             {a.leadershipBurdenExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 13, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Leadership Burden:</strong> {a.leadershipBurdenExplanation}</div>}
           </div>
         </ResultCard>
+
+        {/* Life Stress Landscape */}
+        {a.lifeStressAnalysis && (
+          <ResultCard title="Your Stress Landscape">
+            <StressHeatmap analysis={a} />
+          </ResultCard>
+        )}
+
+        {/* Co-Coping Behaviors */}
+        {a.coCopingBehaviors && (
+          <ResultCard title="Your Brain's Other Escape Routes">
+            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.coCopingBehaviors}</p>
+          </ResultCard>
+        )}
 
         {/* Strategy Autopsy */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
