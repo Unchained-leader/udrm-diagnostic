@@ -247,16 +247,27 @@ export async function POST(request) {
     await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
 
     // Store report metadata (including PDF URL)
-    await redis.set(`mkt:report:${normalizedEmail}`, {
+    const reportMeta = {
       generatedAt: new Date().toISOString(),
       arousalTemplateType: analysis.arousalTemplateType,
       attachmentStyle: analysis.attachmentStyle,
       neuropathway: analysis.neuropathway,
       reportUrl: reportUrl || null,
-    });
+    };
+    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
 
-    // Store full analysis for client dashboard
+    // Store full analysis for client dashboard (latest)
     await redis.set(`mkt:analysis:${normalizedEmail}`, analysis);
+
+    // Append to report history list for trend tracking
+    const historyEntry = {
+      ...reportMeta,
+      analysis,
+    };
+    const existingHistory = await redis.get(`mkt:history:${normalizedEmail}`);
+    const history = Array.isArray(existingHistory) ? existingHistory : [];
+    history.push(historyEntry);
+    await redis.set(`mkt:history:${normalizedEmail}`, history);
 
     // Send to GoHighLevel CRM via webhook (with PDF URL)
     ghlDiagnosticComplete({
