@@ -46,7 +46,7 @@ Conviction from the Holy Spirit is healthy: "this behavior doesn't match who you
 The Holy Spirit is the active agent of transformation. The process and framework are tools God uses. They are not the source. Avoid any framing where the program is the savior.
 
 6. THE THREE DOMINANT FRAMEWORKS ARE INCOMPLETE, NOT WRONG
-Religious counsel, clinical treatment, recovery groups: each has value. None addresses the full root. Never attack churches, therapists, or recovery groups. Frame as "completing the conversation."
+Religious counsel, clinical treatment, recovery groups: each has value. None addresses the full root. NEVER attack churches, therapists, or recovery groups. The church is not the problem. Religiosity that sometimes finds its way inside the church is the problem. Even with the best of intentions, Biblical truth can get misinterpreted through communication. Frame as "completing the conversation."
 
 7. NEVER QUESTION GOD'S CHARACTER
 Expressions of doubt must always resolve toward His faithfulness and sovereignty.
@@ -78,7 +78,7 @@ Four steps: Trace the Trigger → Expose the Lie → Replace with Truth → Rein
 
 THE THREE CHAINS: Physical (substances/bodily escapes), Behavioral (habits/compulsions), Relational (heart-level patterns like control, anger, shame, codependency)
 
-THREE GAPS WE BRIDGE: The Church Gap (compassion but unequipped), The Clinical Gap (science but fear of spirit), The False Divide (faith vs psychology)
+THREE GAPS WE BRIDGE: The Religiosity Gap (even with the best of intentions, Biblical truth can get misinterpreted through communication, and religiosity that sometimes finds its way inside the church can unintentionally reinforce shame rather than dismantle it), The Clinical Gap (science but fear of spirit), The False Divide (faith vs psychology)
 
 ═══ CORE EDUCATOR REFRAMES ═══
 

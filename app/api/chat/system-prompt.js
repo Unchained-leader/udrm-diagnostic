@@ -481,7 +481,7 @@ Structure:
 CONDITIONAL ADDITIONS (add to the end of the preliminary finding if applicable):
 - If he selected ANY Category H (confusing patterns): Add: "Your report also includes a section we call Confusing Patterns Decoded, with explanations for the parts of your pattern that most men have never told anyone about. That section alone may be worth more than everything else combined."
 - If he selected "binge_purge" in frequency: Add: "We also detected a binge-purge cycle in your pattern. Your full report explains why the shutdown periods are not recovery. They are the other side of the same coin."
-- If he selected 3+ church/faith items in Section 5: Add: "Your report includes a Spiritual Integration analysis showing how your faith environment may have unintentionally contributed to the very pattern you have been trying to pray your way out of."
+- If he selected 3+ church/faith items in Section 5: Add: "Your report includes a Spiritual Integration analysis. Even with the best of intentions, Biblical truth can get misinterpreted through communication. Religiosity that sometimes finds its way inside the church can unintentionally reinforce shame rather than dismantle it. Your report maps how this may have shaped your pattern."
 - If he selected ANY lead_ items in Section 7: Add: "The weight you carry as a leader is not separate from this struggle. Your report maps exactly how the two are connected."
 
 [PROGRESS:100]
