@@ -383,6 +383,18 @@
       bottom: 0;
       z-index: 5;
     }
+    .scroll-hint {
+      text-align: center;
+      color: #DFC468;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 0 2px;
+      animation: scrollHintPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes scrollHintPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
 
     /* ===== CONTACT FORM ===== */
     .contact-form { margin-top: 4px; }
@@ -857,11 +869,26 @@
     // =====================================================================
     // RENDER SCREEN (from pre-defined QUIZ_SCREENS data)
     // =====================================================================
+    let hasSeenAllOptions = false;
+
+    function checkScrolledToBottom() {
+      const threshold = 30;
+      return sectionContent.scrollHeight - sectionContent.scrollTop - sectionContent.clientHeight <= threshold;
+    }
+
+    function checkContentOverflows() {
+      return sectionContent.scrollHeight > sectionContent.clientHeight + 10;
+    }
+
     function renderScreen(screen) {
       sectionContent.innerHTML = "";
       sectionContent.scrollTop = 0;
+      hasSeenAllOptions = false;
       btnContinue.disabled = true;
       btnContinue.textContent = "Continue";
+      // Remove any existing scroll hint
+      const oldHint = document.getElementById("scrollHint");
+      if (oldHint) oldHint.remove();
 
       // Section label (only on first screen of a new section)
       if (screen.sectionLabel) {
@@ -1036,6 +1063,22 @@
         } else {
           // All sections done — call AI for the personalized reveal
           sendToAIForReveal();
+        }
+      };
+
+      // After rendering, check if content overflows; if not, mark as seen
+      requestAnimationFrame(() => {
+        if (!checkContentOverflows()) {
+          hasSeenAllOptions = true;
+        }
+      });
+
+      // Listen for scroll to detect when user has seen all options
+      sectionContent.onscroll = () => {
+        if (!hasSeenAllOptions && checkScrolledToBottom()) {
+          hasSeenAllOptions = true;
+          const hint = document.getElementById("scrollHint");
+          if (hint) hint.remove();
         }
       };
     }
@@ -1395,6 +1438,19 @@
 
     // Continue button (section complete)
     btnContinue.addEventListener("click", () => {
+      if (!hasSeenAllOptions) {
+        // Show hint and scroll down
+        let hint = document.getElementById("scrollHint");
+        if (!hint) {
+          hint = document.createElement("div");
+          hint.id = "scrollHint";
+          hint.className = "scroll-hint";
+          hint.textContent = "\u2193 Scroll down to view all options";
+          btnContinue.parentNode.insertBefore(hint, btnContinue);
+        }
+        sectionContent.scrollTo({ top: sectionContent.scrollHeight, behavior: "smooth" });
+        return;
+      }
       if (btnContinue._submitHandler) {
         btnContinue._submitHandler();
       }
