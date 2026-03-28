@@ -168,7 +168,8 @@ export default function OverviewPage() {
         background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)",
         borderRadius: 16, border: `1px solid ${GOLD}22`, marginBottom: 24,
       }}>
-        <div style={{ color: GOLD, fontSize: 14, letterSpacing: 4, marginBottom: 16, textTransform: "uppercase" }}>Unchained Leader</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 50, width: "auto", marginBottom: 20 }} />
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "#fff", lineHeight: 1.3 }}>UNWANTED DESIRE</h1>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 20px", color: "#fff", lineHeight: 1.3 }}>ROOT MAPPING</h1>
         <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
@@ -177,6 +178,11 @@ export default function OverviewPage() {
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
         <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/legitscript-badge.png" alt="LegitScript Certified" style={{ maxWidth: 200, width: "100%", height: "auto", marginTop: 16 }} />
+        <div style={{ fontSize: 9, color: "#555", marginTop: 20, maxWidth: 520, margin: "20px auto 0", lineHeight: 1.6 }}>
+          DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide &amp; Crisis Lifeline immediately.
         </div>
       </div>
 
