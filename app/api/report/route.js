@@ -494,8 +494,9 @@ async function generatePDF(analysis, firstName) {
       return sanitize(text.length <= max ? text : text.substring(0, max - 3) + "...");
     }
     function sectionHeader(title) {
+      checkFit(70); // ensure header + rule + spacing fits on current page
       doc.fontSize(20).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
-      y += 26;
+      y = doc.y + 6;
       doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
       y += 18;
     }
