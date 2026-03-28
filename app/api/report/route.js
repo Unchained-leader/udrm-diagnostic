@@ -182,14 +182,17 @@ export async function POST(request) {
       console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present, no blank pages`);
     }
 
-    // If any QC issues found, regenerate once and use the better result
+    // If any QC issues found, regenerate with tighter spacing to fix layout problems
     if (qcIssues.length > 0) {
-      console.warn("QC FAILED — attempting regeneration");
-      const pdfResult2 = await generatePDF(analysis, firstName);
+      console.warn("QC FAILED — regenerating with tighter layout (spacing: 0.85)");
+      const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85 });
       const pdfStr2 = pdfResult2.buffer.toString("latin1");
       const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
 
-      // Run same blank-page check on regenerated PDF
+      // Run same QC checks on tightened PDF
+      const qcIssues2 = [];
+
+      // Blank page check
       const contentLog2 = pdfResult2.pageContentLog;
       const pageEndPositions2 = {};
       for (const entry of contentLog2) {
@@ -197,19 +200,26 @@ export async function POST(request) {
           pageEndPositions2[entry.page] = entry.endY;
         }
       }
-      const blankPages2 = [];
       for (const [page, endY] of Object.entries(pageEndPositions2)) {
         const p = parseInt(page);
         if (p === 1 || p === pdfResult2.pageNum) continue;
-        if (endY < MIN_CONTENT_Y) blankPages2.push(p);
+        if (endY < MIN_CONTENT_Y) qcIssues2.push(`page ${p} still blank`);
       }
 
-      const qcIssues2Count = blankPages2.length + (pageCount2 < 10 ? 1 : 0);
-      if (qcIssues2Count < qcIssues.length) {
-        console.log(`Regeneration improved: ${qcIssues.length} issues -> ${qcIssues2Count} issues (${pageCount2} pages)`);
+      // Section check
+      if (!pdfStr2.includes("RESULTS AT A GLANCE") && !pdfStr2.includes("Results at a Glance")) qcIssues2.push("Missing scorecard");
+      if (!pdfStr2.includes("AROUSAL TEMPLATE") && !pdfStr2.includes("Arousal Template")) qcIssues2.push("Missing template");
+
+      if (qcIssues2.length < qcIssues.length) {
+        console.log(`Tighter layout fixed: ${qcIssues.length} issues -> ${qcIssues2.length} (${pageCount2} pages)`);
+        pdfBuffer = pdfResult2.buffer;
+      } else if (qcIssues2.length === 0) {
+        console.log(`Tighter layout passed QC: ${pageCount2} pages`);
         pdfBuffer = pdfResult2.buffer;
       } else {
-        console.log("Regeneration did not improve. Using original.");
+        console.warn(`Tighter layout still has ${qcIssues2.length} issues. Using best available.`);
+        // Use whichever has fewer issues
+        if (qcIssues2.length <= qcIssues.length) pdfBuffer = pdfResult2.buffer;
       }
     }
 
@@ -470,7 +480,10 @@ Return ONLY valid JSON, no markdown:
 // PDF GENERATION — 2-3 pages, focused on awareness
 // ═══════════════════════════════════════════════════════════════
 
-async function generatePDF(analysis, firstName) {
+async function generatePDF(analysis, firstName, layoutOpts = {}) {
+  // Layout spacing multiplier: 1.0 = normal, 0.85 = tighter (used on QC retry)
+  const SP = layoutOpts.spacingMultiplier || 1.0;
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: "letter",
@@ -487,7 +500,7 @@ async function generatePDF(analysis, firstName) {
     });
     doc.on("error", reject);
 
-    const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - 60;
+    const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - Math.round(60 * SP);
     const CONTENT_TOP = 50;
 
     // Load logo FIRST so the pageAdded handler can reference it
@@ -545,9 +558,9 @@ async function generatePDF(analysis, firstName) {
     function sectionHeader(title) {
       checkFit(70); // ensure header + rule + spacing fits on current page
       doc.fontSize(20).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
-      y = doc.y + 6;
+      y = doc.y + Math.round(6 * SP);
       doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
-      y += 18;
+      y += Math.round(18 * SP);
     }
     function checkFit(needed) {
       if (y + needed > PB) {
@@ -559,26 +572,29 @@ async function generatePDF(analysis, firstName) {
     function writeCard(label, title, body) {
       title = sanitize(title);
       body = sanitize(body);
+      const lg = Math.round(5 * SP);
+      const pad = Math.round(14 * SP);
       const titleH = doc.fontSize(24).font("Helvetica-Bold").heightOfString(title || "", { width: CW - 28 });
-      const bodyH = body ? doc.fontSize(20).font("Helvetica").heightOfString(body, { width: CW - 28, lineGap: 5 }) : 0;
-      const labelTop = 16;
-      const titleTop = labelTop + 22;
-      const bodyTop = titleTop + titleH + 10;
-      const cardH = Math.max(80, bodyTop + bodyH + 16);
-      checkFit(cardH + 14);
+      const bodyH = body ? doc.fontSize(20).font("Helvetica").heightOfString(body, { width: CW - 28, lineGap: lg }) : 0;
+      const labelTop = Math.round(16 * SP);
+      const titleTop = labelTop + Math.round(22 * SP);
+      const bodyTop = titleTop + titleH + Math.round(10 * SP);
+      const cardH = Math.max(80, bodyTop + bodyH + Math.round(16 * SP));
+      checkFit(cardH + pad);
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
       doc.fontSize(18).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
       doc.fontSize(24).fillColor(WHITE).font("Helvetica-Bold").text(title || "", M + 14, y + titleTop);
-      if (body) { _currentTextColor = GRAY; _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: 5 }); }
-      y += cardH + 14;
+      if (body) { _currentTextColor = GRAY; _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: lg }); }
+      y += cardH + pad;
     }
     function writeGapWidening(text) {
-      const gapH = doc.fontSize(20).font("Helvetica-Oblique").heightOfString(text, { width: CW - 20, lineGap: 4 });
-      checkFit(gapH + 30);
+      const lg = Math.round(4 * SP);
+      const gapH = doc.fontSize(20).font("Helvetica-Oblique").heightOfString(text, { width: CW - 20, lineGap: lg });
+      checkFit(gapH + Math.round(30 * SP));
       doc.rect(M, y, CW, 0.5).fill([50, 50, 50]);
-      y += 14;
-      _currentTextColor = [200, 60, 60]; doc.fontSize(20).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: 4 });
-      y = doc.y + 18;
+      y += Math.round(14 * SP);
+      _currentTextColor = [200, 60, 60]; doc.fontSize(20).fillColor([200, 60, 60]).font("Helvetica-Oblique").text(text, M + 10, y, { width: CW - 20, lineGap: lg });
+      y = doc.y + Math.round(18 * SP);
     }
 
     function writeGauge(label, score, maxScore) {
