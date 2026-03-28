@@ -377,11 +377,26 @@
       -webkit-overflow-scrolling: touch;
       padding-bottom: 4px;
     }
-    #screenSection .btn-continue {
+    #screenSection .btn-continue,
+    #screenReveal .btn-continue {
       flex-shrink: 0;
       position: sticky;
       bottom: 0;
       z-index: 5;
+    }
+    #screenReveal {
+      display: none;
+      flex-direction: column;
+      max-height: 70vh;
+    }
+    #screenReveal.active {
+      display: flex;
+    }
+    #screenReveal #revealContent {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
     }
     .scroll-hint {
       text-align: center;
@@ -560,8 +575,10 @@
 
         <!-- SCREEN: Reveal (preview finding) -->
         <div class="screen" id="screenReveal">
-          <div class="section-label" style="margin-bottom:12px;">Your Preview Finding</div>
-          <div class="reveal-text" id="revealText"></div>
+          <div id="revealContent">
+            <div class="section-label" style="margin-bottom:12px;">Your Preview Finding</div>
+            <div class="reveal-text" id="revealText"></div>
+          </div>
           <button class="btn-gold btn-continue" id="btnAfterReveal" style="margin-top:28px;">Get My Full Report</button>
         </div>
 
@@ -830,13 +847,13 @@
         setTimeout(() => {
           current.classList.remove("active", "fade-out");
           current.style.display = "none";
-          target.style.display = (target === screenSection) ? "flex" : "block";
+          target.style.display = (target === screenSection || target === screenReveal) ? "flex" : "block";
           // Force reflow for transition
           void target.offsetWidth;
           target.classList.add("active");
         }, 250);
       } else {
-        target.style.display = (target === screenSection) ? "flex" : "block";
+        target.style.display = (target === screenSection || target === screenReveal) ? "flex" : "block";
         void target.offsetWidth;
         target.classList.add("active");
       }
@@ -1149,6 +1166,7 @@
         if (cleanText.length > 50) {
           revealText.textContent = cleanText;
           showScreen(screenReveal);
+          setupRevealScrollGate();
         } else {
           if (currentUser) {
             handleAutoReport();
@@ -1392,6 +1410,7 @@
           if (hasContactCapture && cleanText.length > 50) {
             revealText.textContent = cleanText;
             showScreen(screenReveal);
+          setupRevealScrollGate();
             return true;
           } else if (hasContactCapture) {
             if (currentUser) { handleAutoReport(); } else { showScreen(screenContact); }
@@ -1456,7 +1475,43 @@
     });
 
     // After reveal — go to contact capture
+    let hasSeenAllReveal = false;
+    const revealContent = document.getElementById("revealContent");
+
+    function checkRevealScrolled() {
+      return revealContent.scrollHeight - revealContent.scrollTop - revealContent.clientHeight <= 30;
+    }
+
+    function setupRevealScrollGate() {
+      hasSeenAllReveal = false;
+      const oldHint = document.getElementById("revealScrollHint");
+      if (oldHint) oldHint.remove();
+      requestAnimationFrame(() => {
+        if (revealContent.scrollHeight <= revealContent.clientHeight + 10) {
+          hasSeenAllReveal = true;
+        }
+      });
+      revealContent.onscroll = () => {
+        if (!hasSeenAllReveal && checkRevealScrolled()) {
+          hasSeenAllReveal = true;
+          const hint = document.getElementById("revealScrollHint");
+          if (hint) hint.remove();
+        }
+      };
+    }
+
     btnAfterReveal.addEventListener("click", () => {
+      if (!hasSeenAllReveal) {
+        let hint = document.getElementById("revealScrollHint");
+        if (!hint) {
+          hint = document.createElement("div");
+          hint.id = "revealScrollHint";
+          hint.className = "scroll-hint";
+          hint.textContent = "\u2193 Scroll down to read your full preview";
+          btnAfterReveal.parentNode.insertBefore(hint, btnAfterReveal);
+        }
+        return;
+      }
       if (currentUser) {
         handleAutoReport();
       } else {
