@@ -565,11 +565,11 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       return sanitize(text.length <= max ? text : text.substring(0, max - 3) + "...");
     }
     function sectionHeader(title) {
-      checkFit(70); // ensure header + rule + spacing fits on current page
+      checkFit(80); // ensure header + rule + spacing fits on current page
       doc.fontSize(20).fillColor(GOLD).font("Helvetica").text(title, M, y, { characterSpacing: 2 });
-      y = doc.y + Math.round(6 * SP);
+      y = doc.y + Math.round(8 * SP);
       doc.roundedRect(M, y, CW, 2, 0).fill(GOLD);
-      y += Math.round(18 * SP);
+      y += Math.round(24 * SP);
     }
     function checkFit(needed) {
       if (y + needed > PB) {
@@ -582,7 +582,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       title = sanitize(title);
       body = sanitize(body);
       const lg = Math.round(5 * SP);
-      const pad = Math.round(14 * SP);
+      const pad = Math.round(20 * SP);
       const titleH = doc.fontSize(24).font("Helvetica-Bold").heightOfString(title || "", { width: CW - 28 });
       const bodyH = body ? doc.fontSize(20).font("Helvetica").heightOfString(body, { width: CW - 28, lineGap: lg }) : 0;
       const labelTop = Math.round(16 * SP);
@@ -729,7 +729,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     y += 24;
     // Relational pattern scores mini-row
     doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("RELATIONAL PATTERN BREAKDOWN", M, y, { characterSpacing: 1 });
-    y += 22;
+    y += 28;
 
     const relScores = [
       { label: "Codependency", score: analysis.codependencyScore, max: 3 },
@@ -947,19 +947,21 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     writeCard("ATTACHMENT STYLE", analysis.attachmentStyle || "Unknown", analysis.attachmentFuels || "");
 
     if (analysis.godAttachment) {
+      y += 10;
       checkFit(100);
       doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("HOW THIS SHOWS UP WITH GOD", M, y, { characterSpacing: 1 });
-      y += 22;
+      y += 28;
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 4 });
-      y = doc.y + 16;
+      y = doc.y + 20;
     }
 
     if (analysis.purityCultureImpact) {
+      y += 10;
       checkFit(100);
-      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("PURITY CULTURE IMPACT", M, y, { characterSpacing: 1 });
-      y += 22;
+      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("SPIRITUAL INTEGRATION", M, y, { characterSpacing: 1 });
+      y += 28;
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 4 });
-      y = doc.y + 16;
+      y = doc.y + 20;
     }
 
     writeGapWidening("Your attachment style has been your relational operating system since before you could speak. It shapes how you love, how you hide, how you connect with God, and how you relate to the behavior. Patterns this deep do not change through understanding alone. They were formed in relationship. The research is clear that they restructure the same way.");
