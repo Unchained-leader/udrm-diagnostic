@@ -66,6 +66,19 @@ export default function OverviewPage() {
   const a = data.analysis;
   const name = data.name || "there";
 
+  if (!a) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+        <div style={{ textAlign: "center", maxWidth: 400, padding: 40 }}>
+          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 12 }}>UNCHAINED LEADER</div>
+          <div style={{ color: "#ccc", fontSize: 16, marginBottom: 8 }}>Your report is still processing.</div>
+          <div style={{ color: "#888", fontSize: 14 }}>This can take up to 5 minutes. Please check back shortly.</div>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: "10px 24px", background: "none", border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 8, cursor: "pointer", fontSize: 13 }}>Refresh</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px" }}>
       {/* Header */}
