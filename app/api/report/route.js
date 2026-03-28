@@ -640,16 +640,16 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     doc.fontSize(12).fillColor([140, 140, 140]).text("CONFIDENTIAL", M, y, { width: CW, align: "center", characterSpacing: 3 });
 
     // Credentials + LegitScript badge (centered in blank space)
-    const credY = y + 50;
+    const credY = y + 40;
     const credText = "This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.";
-    doc.fontSize(11).fillColor([160, 160, 160]).font("Helvetica").text(credText, M + 40, credY, { width: CW - 80, align: "center", lineGap: 2 });
-    const afterCredText = doc.y + 10;
+    doc.fontSize(10).fillColor([160, 160, 160]).font("Helvetica").text(credText, M + 40, credY, { width: CW - 80, align: "center", lineGap: 2 });
+    const afterCredText = doc.y + 8;
 
     // LegitScript badge
     try {
       const badgePath = path.join(process.cwd(), "public", "legitscript-badge.png");
       if (fs.existsSync(badgePath)) {
-        const badgeW = 100;
+        const badgeW = 250;
         const badgeX = W / 2 - badgeW / 2;
         doc.image(badgePath, badgeX, afterCredText, { width: badgeW });
       }
