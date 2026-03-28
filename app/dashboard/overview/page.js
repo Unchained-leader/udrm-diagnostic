@@ -329,7 +329,7 @@ export default function OverviewPage() {
               {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
             </div>
             {a.strategyBreakdowns.map((s, i) => (
-              <ContentBlock key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor="#666" />
+              <ContentBlock key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor={GOLD} />
             ))}
           </ResultCard>
         )}
