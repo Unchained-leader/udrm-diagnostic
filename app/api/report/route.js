@@ -335,7 +335,8 @@ ${conversationText}
 CO-OCCURRING COPING BEHAVIORS (based on Section 1 vice_ selections):
 If the user selected any vice_ items, these are OTHER ways the brain is trying to solve the same root problem. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When a man tries to white-knuckle his primary behavior (sexual acting out), the brain will route the same unresolved pain through other coping mechanisms. This is why behavioral solutions are dangerous: they address the outlet, not the source. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is precisely why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
 - vice_alcohol → Alcohol as nervous system regulation. Depressant that mimics the numbing the brain needs.
-- vice_substances → Substance use as neurochemical override. Directly hijacks the same dopamine/serotonin pathways.
+- vice_thc → THC/marijuana as nervous system sedation. Dulls anxiety and emotional pain the same way the sexual behavior does, just through a different receptor system.
+- vice_substances → Other substance use as neurochemical override. Directly hijacks the same dopamine/serotonin pathways.
 - vice_overeating → Food as emotional regulation. Dopamine + serotonin hit that mimics comfort the brain is missing.
 - vice_gambling → Gambling as dopamine chasing. Same anticipation/reward loop as the sexual behavior cycle.
 - vice_gaming → Gaming as dissociation. Escape into a world where the brain does not have to process real pain.
