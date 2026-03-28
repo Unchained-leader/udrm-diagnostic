@@ -121,7 +121,8 @@ export async function POST(request) {
     const analysis = sanitizeObj(rawAnalysis);
 
     // Generate PDF
-    const pdfBuffer = await generatePDF(analysis, firstName);
+    const pdfResult = await generatePDF(analysis, firstName);
+    let pdfBuffer = pdfResult.buffer;
 
     // ═══════════════════════════════════════
     // QC CHECK — validate PDF before sending
@@ -138,10 +139,28 @@ export async function POST(request) {
     const sizeKB = Math.round(pdfBuffer.length / 1024);
     if (sizeKB < 20) qcIssues.push(`File too small: ${sizeKB}KB (expected 30KB+)`);
 
-    // 3. Blank page detection — each page should have text stream content
-    // Count pages that have our dark background rect (means pageAdded handler fired)
-    const bgRects = (pdfStr.match(/0\.0667 0\.0667 0\.0667 rg/g) || []).length; // DK_BG rgb
-    if (bgRects < pageCount - 1) qcIssues.push(`Missing dark backgrounds: ${bgRects} bgs for ${pageCount} pages`);
+    // 3. Blank/near-blank page detection using content position tracking
+    const contentLog = pdfResult.pageContentLog;
+    const MIN_CONTENT_Y = 150; // pages with content ending before y=150 are nearly blank
+    const pageEndPositions = {};
+    for (const entry of contentLog) {
+      // Track the maximum y (most content) per page
+      if (!pageEndPositions[entry.page] || entry.endY > pageEndPositions[entry.page]) {
+        pageEndPositions[entry.page] = entry.endY;
+      }
+    }
+    const blankPages = [];
+    for (const [page, endY] of Object.entries(pageEndPositions)) {
+      const p = parseInt(page);
+      if (p === 1) continue; // skip cover page (uses absolute positioning)
+      if (p === pdfResult.pageNum) continue; // skip last page (may have less content)
+      if (endY < MIN_CONTENT_Y) {
+        blankPages.push(`page ${p} (content ends at y=${Math.round(endY)})`);
+      }
+    }
+    if (blankPages.length > 0) {
+      qcIssues.push(`Near-blank pages detected: ${blankPages.join(", ")}`);
+    }
 
     // 4. Check for essential content markers
     const hasScorecard = pdfStr.includes("Results at a Glance") || pdfStr.includes("RESULTS AT A GLANCE");
@@ -158,26 +177,27 @@ export async function POST(request) {
     // Log QC results
     if (qcIssues.length > 0) {
       console.warn(`PDF QC WARNINGS (${qcIssues.length}):`, qcIssues.join(" | "));
+      console.warn("Page content log:", JSON.stringify(contentLog));
     } else {
-      console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present`);
+      console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present, no blank pages`);
     }
 
     // If critical failure (very low pages or missing key sections), regenerate once
     const criticalFail = pageCount < 5 || (!hasScorecard && !hasTemplate);
     if (criticalFail) {
       console.error("CRITICAL QC FAILURE — attempting regeneration");
-      const pdfBuffer2 = await generatePDF(analysis, firstName);
-      const pageCount2 = (pdfBuffer2.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+      const pdfResult2 = await generatePDF(analysis, firstName);
+      const pdfStr2 = pdfResult2.buffer.toString("latin1");
+      const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
       if (pageCount2 > pageCount) {
         console.log(`Regeneration improved: ${pageCount} -> ${pageCount2} pages`);
-        var finalBuffer = pdfBuffer2;
+        pdfBuffer = pdfResult2.buffer;
       } else {
         console.log("Regeneration did not improve. Using original.");
-        var finalBuffer = pdfBuffer;
       }
-    } else {
-      var finalBuffer = pdfBuffer;
     }
+
+    var finalBuffer = pdfBuffer;
 
     const pdfBase64 = finalBuffer.toString("base64");
 
@@ -445,7 +465,10 @@ async function generatePDF(analysis, firstName) {
 
     const chunks = [];
     doc.on("data", (chunk) => chunks.push(chunk));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("end", () => {
+      logPageContent("final");
+      resolve({ buffer: Buffer.concat(chunks), pageContentLog, pageNum });
+    });
     doc.on("error", reject);
 
     const W = 612, H = 792, M = 50, CW = W - M * 2, PB = H - 60;
@@ -484,7 +507,17 @@ async function generatePDF(analysis, firstName) {
       return text.replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",");
     }
 
+    // Track content per page for QC
+    const pageContentLog = []; // { page, startY, endY, label }
+
+    function logPageContent(label) {
+      if (pageNum > 0) {
+        pageContentLog.push({ page: pageNum, endY: y, label });
+      }
+    }
+
     function newPage() {
+      logPageContent("before_newPage");
       doc.addPage();
       pageNum++;
       // Background + logo are handled by the pageAdded event listener
@@ -501,7 +534,11 @@ async function generatePDF(analysis, firstName) {
       y += 18;
     }
     function checkFit(needed) {
-      if (y + needed > PB) { newPage(); y = CONTENT_TOP; }
+      if (y + needed > PB) {
+        logPageContent("checkFit_overflow");
+        newPage();
+        y = CONTENT_TOP;
+      }
     }
     function writeCard(label, title, body) {
       title = sanitize(title);
