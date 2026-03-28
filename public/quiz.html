@@ -84,7 +84,7 @@
     /* ===== PROGRESS BAR (top of card) ===== */
     .progress-strip {
       width: 100%;
-      height: 5px;
+      height: 8px;
       background: #1a1a1a;
       position: relative;
     }
@@ -99,8 +99,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 28px 0;
-      font-size: 11px;
-      color: #555;
+      font-size: 12px;
+      color: #999;
       letter-spacing: 0.3px;
       min-height: 26px;
     }
@@ -108,6 +108,26 @@
     .progress-pct {
       color: var(--gold);
       font-weight: 600;
+    }
+
+    /* ===== RESET BUTTON ===== */
+    .reset-btn {
+      background: none;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #888;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover {
+      color: #fc5454;
+      border-color: #fc5454;
     }
 
     /* ===== CARD BODY ===== */
@@ -151,13 +171,13 @@
     }
     .landing-subtitle {
       text-align: center;
-      color: #888;
+      color: #ccc;
       font-size: 12px;
       margin-bottom: 24px;
       letter-spacing: 0.3px;
     }
     .landing-text {
-      color: #ccc;
+      color: #f0f0f0;
       font-size: 14px;
       line-height: 1.7;
       margin-bottom: 28px;
@@ -168,7 +188,7 @@
     }
     .landing-meta {
       text-align: center;
-      color: #555;
+      color: #999;
       font-size: 12px;
       margin-bottom: 24px;
     }
@@ -192,7 +212,7 @@
       line-height: 1.35;
     }
     .section-intro {
-      color: #bbb;
+      color: #d5d5d5;
       font-size: 14px;
       line-height: 1.65;
       margin-bottom: 20px;
@@ -278,7 +298,7 @@
       display: block;
     }
     .option-text {
-      color: #ddd;
+      color: #eeeeee;
       font-size: 14px;
       line-height: 1.45;
     }
@@ -401,7 +421,7 @@
       margin-bottom: 12px;
     }
     .confirm-text {
-      color: #aaa;
+      color: #ccc;
       font-size: 14px;
       line-height: 1.65;
       text-align: center;
@@ -455,7 +475,10 @@
       </div>
       <div class="progress-info hidden" id="progressInfo">
         <span id="progressLabel">Diagnostic in progress</span>
-        <span class="progress-pct" id="progressPct">0%</span>
+        <span style="display:flex; align-items:center; gap:12px;">
+          <button id="btnReset" class="reset-btn" title="Start over">Reset</button>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </span>
       </div>
 
       <div class="card-body">
@@ -463,7 +486,7 @@
         <!-- SCREEN: Landing -->
         <div class="screen active" id="screenLanding">
           <img src="/images/unchained-logo.png" alt="Unchained Leader" class="landing-logo" />
-          <h1 class="landing-title">Unwanted Desire Root Mapping</h1>
+          <h1 class="landing-title">Unwanted Desire Root Mapping<br>(UDRM)</h1>
           <p class="landing-subtitle">Powered by Unchained Leader</p>
           <p class="landing-text">
             This assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does &mdash; including the things that confuse you most.
@@ -498,7 +521,7 @@
         <div class="screen" id="screenContact">
           <img src="/images/unchained-logo.png" alt="Unchained Leader" class="landing-logo" style="margin-bottom:16px;" />
           <h2 class="section-title" style="text-align:center;">Where should we send your report?</h2>
-          <p class="section-intro" style="text-align:center; color:#777; font-size:13px;">
+          <p class="section-intro" style="text-align:center; color:#999; font-size:13px;">
             Unchained Leader exists because of trust. Your information is 100% confidential. We never share it. Ever.
           </p>
           <div class="contact-form" id="contactForm">
@@ -559,7 +582,7 @@
     const SESSION_KEY = "unchained_quiz_session";
     const STATE_KEY = "unchained_quiz_state";
 
-    const WELCOME_MESSAGE = "Welcome, brother.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Click below to start.";
+    const WELCOME_MESSAGE = "Welcome.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Click below to start.";
 
     // =====================================================================
     // STATE
@@ -613,6 +636,17 @@
     const revealText = document.getElementById("revealText");
     const confirmText = document.getElementById("confirmText");
     const formError = document.getElementById("formError");
+    const btnReset = document.getElementById("btnReset");
+
+    // =====================================================================
+    // RESET
+    // =====================================================================
+    btnReset.addEventListener("click", function() {
+      if (!confirm("Start over? All your progress will be cleared.")) return;
+      try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+      try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+      window.location.reload();
+    });
 
     // =====================================================================
     // ANALYTICS
