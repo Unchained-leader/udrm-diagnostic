@@ -347,6 +347,14 @@ If the user selected any vice_ items, use these to help them see a critical trut
 
 If vice_none is selected or no vice_ items are present, do not include coCopingBehaviors in the output.
 
+LIFE STRESS ANALYSIS (based on Section 4 life_ selections):
+The brain does not act out in a vacuum. Life stressors create the pressure the brain needs relief from. Each "lack" area is a stress load the nervous system is carrying. Each "abundance" area is a resource the brain can draw from. When lack outweighs abundance, the brain increases coping behavior frequency and intensity. Map these directly to the emotional functions selected in Section 3 and any co-coping behaviors from Section 1.
+- life_romantic_abundance / life_romantic_lack → Romantic connection (or its absence) directly impacts the attachment system. Lack here intensifies the need for counterfeit intimacy through the behavior.
+- life_health_abundance / life_health_lack → Physical health affects the nervous system's regulation capacity. Poor health reduces resilience, increasing reliance on coping behaviors.
+- life_financial_abundance / life_financial_lack → Financial stress activates survival brain. When the brain is in threat mode, it seeks immediate relief. Financial pressure keeps the amygdala firing, making the cycle harder to interrupt.
+- life_work_abundance / life_work_lack → Work fulfillment connects to identity and purpose. Lack here feeds the root narrative "I am not enough" or "I have no purpose," which the behavior counterfeits.
+- life_god_abundance / life_god_lack → Spiritual disconnection removes the primary resource for shame management and identity anchoring. Without felt connection to God, the brain has no safe place to process pain.
+
 AROUSAL TEMPLATE TYPES (based on Section 2 content theme selections):
 - val_ items → The Invisible Man. Root: "I am not enough / not wanted." Counterfeits: being chosen, seen, desired.
 - pow_ items → The Controller. Root: "I am unsafe / powerless." Counterfeits: mastery, safety, control.
@@ -402,6 +410,8 @@ Return ONLY valid JSON, no markdown:
   "behaviorRootMap": [{"behavior": "behavior name in plain English", "root": "decoded root explanation in 2-3 SHORT paragraphs separated by newlines. First paragraph: what the behavior actually is (a shame management system, an escape valve, etc). Second paragraph: connect it to what God designed and how the brain is counterfeiting it. Keep paragraphs to 2-3 sentences max for mobile readability."}],
 
   "coCopingBehaviors": [{"behavior": "behavior name in plain English (e.g. Alcohol, Overeating)", "connection": "2-3 sentences. Use this to reinforce: this is not a lust or perversion problem, just like this is not a substance or food problem. All of it is the brain's creative attempt to medicate root pain. Explain how this specific vice connects to the SAME root narrative driving the sexual behavior. Frame white-knuckling one behavior as why the other intensifies. Connect to why root-level healing (RNR) is the only real solution."}] or null if no vice_ items selected,
+
+  "lifeStressAnalysis": "3-4 sentences connecting the specific abundance/lack selections to the behavioral pattern. Show how each 'lack' area creates pressure the brain must manage, and how the behavior is the brain's attempt to medicate that real stress and pain. If financial lack is selected, weave in how financial pressure keeps the survival brain activated, making the cycle harder to interrupt. If multiple lack areas are present, show how they compound. Connect to why the RNR process addresses root stress, not surface behavior. Or null if no life_ items selected.",
 
   "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
@@ -475,6 +485,7 @@ Return ONLY valid JSON, no markdown:
       whatBrainCounterfeits: "Something your soul actually needs",
       behaviorRootMap: [],
       coCopingBehaviors: null,
+      lifeStressAnalysis: null,
       confusingPatternsDecoded: [],
       neuropathway: "Unknown",
       neuropathwayManages: "Unknown",
@@ -968,6 +979,29 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     const yearsRaw = String(analysis.patternYears || "many").replace(/\s*years?\s*$/i, "").trim();
     const yearsData = yearsRaw;
     writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
+
+    // ════════════════════════════════════════
+    // YOUR STRESS LANDSCAPE (conditional)
+    // ════════════════════════════════════════
+    if (analysis.lifeStressAnalysis) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("YOUR STRESS LANDSCAPE");
+
+      y += 10 * SP;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
+        "Your brain does not act out in a vacuum. The stress you carry in everyday life creates the pressure your nervous system needs relief from. Every area of lack is a load your brain is trying to manage, and when the load exceeds your capacity, the cycle runs.",
+        M, y, { width: CW, lineGap: 3 }
+      );
+      y = doc.y + 14;
+
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(
+        sanitize(analysis.lifeStressAnalysis),
+        M, y, { width: CW, lineGap: 4 }
+      );
+      y = doc.y + 10;
+
+      writeGapWidening("Every area of lack on this list is fuel for the cycle. And every area of abundance is a resource your brain can draw from instead. Root-level healing does not just address the behavior. It rebuilds your capacity to carry the weight of real life without needing an escape.");
+    }
 
     // ════════════════════════════════════════
     // SECTION 5 — AROUSAL TEMPLATE ORIGIN
