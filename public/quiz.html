@@ -1056,6 +1056,16 @@
             if (!anyMultiFilled) valid = false;
           }
         }
+        // Life Stress section: require at least one selection per category
+        if (valid && screen.id === "4") {
+          const lifeCategories = ["life_romantic", "life_health", "life_financial", "life_work", "life_god"];
+          const allSelected = new Set();
+          Object.values(allSelections).forEach(sel => sel.forEach(id => allSelected.add(id)));
+          for (const cat of lifeCategories) {
+            const hasOne = allSelected.has(cat + "_abundance") || allSelected.has(cat + "_lack");
+            if (!hasOne) { valid = false; break; }
+          }
+        }
         btnContinue.disabled = !valid;
       }
 
