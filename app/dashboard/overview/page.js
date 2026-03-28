@@ -10,6 +10,7 @@ const StressHeatmap = dynamic(() => import("../components/StressHeatmap"), { ssr
 const EscalationGauge = dynamic(() => import("../components/EscalationGauge"), { ssr: false });
 const ScorecardBreakdown = dynamic(() => import("../components/ScorecardBreakdown"), { ssr: false });
 const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiagram"), { ssr: false });
+const ViceBalanceDiagram = dynamic(() => import("../components/ViceBalanceDiagram"), { ssr: false });
 
 const GOLD = "#C9A227";
 
@@ -319,6 +320,13 @@ export default function OverviewPage() {
             )) : (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
             )}
+          </ResultCard>
+        )}
+
+        {/* Substance vs Behavior Vice Diagram */}
+        {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
+          <ResultCard title="Substance vs. Behavior — Same Root">
+            <ViceBalanceDiagram coCopingBehaviors={a.coCopingBehaviors} />
           </ResultCard>
         )}
 
