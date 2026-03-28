@@ -563,7 +563,7 @@
 
   <script>
     // =====================================================================
-    // UNCHAINED UDRM QUIZ — STANDALONE ASSESSMENT UI
+    // UNCHAINED UDRM QUIZ — STANDALONE ASSESSMENT UI (PRE-DEFINED SCREENS)
     // =====================================================================
 
     // Embed mode: ?embed=true hides header, removes padding for iframe use
@@ -596,6 +596,87 @@
     const WELCOME_MESSAGE = "Welcome.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Click below to start.";
 
     // =====================================================================
+    // PRE-DEFINED QUIZ SCREENS (no API calls needed for sections 1-8)
+    // =====================================================================
+    const QUIZ_SCREENS = [
+      { id:"1a", section:1, sectionLabel:"Section 1", title:"Section 1 of 8 \u2014 Your Behavior Patterns", intro:"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root.", progress:5, blocks:[
+        {type:"multi", options:[
+          {id:"viewing_porn",text:"Viewing pornography"},{id:"scrolling_social",text:"Scrolling sexual content on social media (reels, stories, accounts)"},{id:"fantasy_daydream",text:"Sexual fantasy/daydreaming (without viewing content)"},{id:"compulsive_mb",text:"Compulsive masturbation"},{id:"sexting",text:"Sexting or online sexual conversations"},{id:"physical_acting",text:"Physical acting out (affairs, hookups, strip clubs)"},{id:"massage_parlors",text:"Massage parlors or paid sexual services"}
+        ]},{type:"text_input",placeholder:"Anything else that is part of your cycle? (Optional)"}
+      ]},
+      { id:"1b", section:1, title:"How often does the cycle occur?", intro:"Your report will use this to assess your pattern\u2019s intensity.", progress:8, blocks:[
+        {type:"single", options:[
+          {id:"daily",text:"Daily"},{id:"several_week",text:"Several times a week"},{id:"weekly",text:"Weekly"},{id:"few_month",text:"A few times a month"},{id:"binge_purge",text:"Binge periods followed by stretches of nothing"}
+        ]}
+      ]},
+      { id:"1c", section:1, title:"Has the pattern escalated?", intro:"Your report will show you what escalation actually means for your brain. Select all that apply.", progress:12, blocks:[
+        {type:"multi", options:[
+          {id:"need_more_extreme",text:"I need more extreme content to feel the same effect"},{id:"crossed_lines",text:"I have crossed lines I said I never would"},{id:"added_behaviors",text:"I have added new behaviors that were not there before"},{id:"stayed_same",text:"The behavior has stayed roughly the same"}
+        ]}
+      ]},
+      { id:"2", section:2, sectionLabel:"Section 2", title:"Section 2 of 8 \u2014 Content Themes", intro:"This section may feel uncomfortable. That is normal. If you have ever wondered why your brain desires these things, your detailed report will finally give you the answer you have been looking for. And it will finally make sense.\n\nSelect anything that resonates, even occasionally.", progress:25, blocks:[
+        {type:"multi", options:[
+          {id:"val_desired",text:"Scenarios where you are desired, wanted, or pursued"},{id:"val_amateur",text:"Drawn to \u201Camateur\u201D or \u201Creal\u201D content that feels personal"},{id:"pow_dominance",text:"Scenarios involving dominance, control, or aggression"},{id:"pow_degradation",text:"Content involving degradation of others"},{id:"sur_someone_control",text:"Scenarios where someone else is in control"},{id:"sur_dominated",text:"Drawn to being dominated, humiliated, or objectified"},{id:"tab_wrong",text:"Drawn to content specifically because it feels \u201Cwrong\u201D"},{id:"tab_secrecy",text:"The secrecy or risk of getting caught adds to the pull"},{id:"tab_incest",text:"Incest-themed content (step-family or family-role scenarios)"},{id:"voy_watching",text:"Drawn to watching others without being seen"},{id:"voy_partner",text:"Fantasizing about watching your partner with others"},{id:"ten_emotional",text:"Drawn to content with emotional intimacy, not just physical"},{id:"ten_connection",text:"The emotional connection matters more than the physical acts"},{id:"nov_new",text:"Constantly searching for something new"},{id:"nov_search",text:"The search and anticipation are more consuming than the content itself"},{id:"nov_anime",text:"Drawn to anime, hentai, or animated sexual content"},{id:"conf_wife_others",text:"Fantasies involving your wife/partner with other men"},{id:"conf_race",text:"Drawn to content featuring a specific race or ethnicity"},{id:"conf_samesex",text:"Drawn to same-sex content despite identifying as heterosexual"},{id:"conf_trans",text:"Drawn to transgender content despite identifying as heterosexual"},{id:"conf_pain",text:"Content involving pain, either giving or receiving"},{id:"conf_humiliation",text:"Content involving humiliation of yourself or your identity"}
+        ]},{type:"text_input",placeholder:"Anything about your pattern that confuses you? (Optional)"}
+      ]},
+      { id:"3", section:3, sectionLabel:"Section 3", title:"Section 3 of 8 \u2014 Emotional Function", intro:"Select every statement that is true for you, even if it is only sometimes. Your report will reveal what your brain is actually using this behavior to accomplish.", progress:37, blocks:[
+        {type:"multi", options:[
+          {id:"calm_stress",text:"I use sexual behavior to calm down or manage stress"},{id:"feel_less_alone",text:"I use sexual behavior to feel less alone"},{id:"feel_powerful",text:"I use sexual behavior to feel powerful or in control"},{id:"numb_checkout",text:"I use sexual behavior to feel numb or check out"},{id:"feel_wanted",text:"I use sexual behavior to feel wanted or desired"},{id:"escape_reality",text:"I use sexual behavior to escape from reality"},{id:"manage_anger",text:"I use sexual behavior to manage anger I cannot express"},{id:"feel_something",text:"I use sexual behavior to feel something when I feel empty"},{id:"after_conflict",text:"I act out after conflict with my wife/partner"},{id:"after_serving",text:"I act out after serving at church or leading in ministry"},{id:"distant_god",text:"I act out when I feel distant from God"},{id:"spiritual_growth",text:"I feel MORE pulled toward the behavior during seasons of spiritual growth"}
+        ]}
+      ]},
+      { id:"4a", section:4, sectionLabel:"Section 4", title:"Section 4 of 8 \u2014 First Exposure", intro:"How old were you when you were first exposed to sexual content? Your report will trace your current pattern back to this moment.", progress:45, blocks:[
+        {type:"single", options:[
+          {id:"under_8",text:"Under 8"},{id:"age_8_11",text:"8 to 11"},{id:"age_12_14",text:"12 to 14"},{id:"age_15_plus",text:"15 or older"}
+        ]}
+      ]},
+      { id:"4b", section:4, title:"How did the first exposure happen?", intro:"Your report will show you how this shaped everything that came after. Select all that apply.", progress:50, blocks:[
+        {type:"multi", options:[
+          {id:"found_own",text:"Found it on my own"},{id:"peer_showed",text:"A peer showed me"},{id:"older_showed",text:"An older person showed me or exposed me"},{id:"abused",text:"I was sexually abused or molested"},{id:"parent_collection",text:"I found a parent\u2019s hidden collection"},{id:"witnessed",text:"I witnessed sexual behavior between adults"},{id:"dont_remember",text:"I do not remember"}
+        ]}
+      ]},
+      { id:"5a", section:5, sectionLabel:"Section 5", title:"Section 5 of 8 \u2014 Your Upbringing", intro:"What was your home like growing up? Your report will connect your home environment to your current pattern. Select all that apply.", progress:55, blocks:[
+        {type:"multi", options:[
+          {id:"home_warm",text:"Emotionally warm and responsive"},{id:"home_cold",text:"Emotionally cold or distant"},{id:"home_unpredictable",text:"Unpredictable (never knew what you would get)"},{id:"home_conflict",text:"High conflict (arguing, yelling, tension)"},{id:"home_controlled",text:"Controlled and rigid"},{id:"home_conditional",text:"Affection was conditional on performance"},{id:"home_no_emotions",text:"Emotions were not allowed to be expressed"}
+        ]}
+      ]},
+      { id:"5b", section:5, title:"Your Father", intro:"What was your relationship with your father like? Your report will show you how this relationship shaped your cycle more than you realize. Select all that apply.", progress:58, blocks:[
+        {type:"multi", options:[
+          {id:"dad_close",text:"Close and connected"},{id:"dad_distant",text:"Distant, uninvolved, or absent"},{id:"dad_critical",text:"Critical, demanding, or angry"},{id:"dad_approval",text:"I tried to earn his approval"},{id:"dad_sexual",text:"He struggled with sexual behavior (known or suspected)"}
+        ]}
+      ]},
+      { id:"5c", section:5, title:"Your Mother", intro:"What was your relationship with your mother like? Your report will reveal how this connection wired your closest relationships today. Select all that apply.", progress:61, blocks:[
+        {type:"multi", options:[
+          {id:"mom_close",text:"Close and connected"},{id:"mom_enmeshed",text:"Overly close or enmeshed (treated you as partner or confidant)"},{id:"mom_distant",text:"Distant or emotionally unavailable"},{id:"mom_critical",text:"Critical, controlling, or anxious"},{id:"mom_responsible",text:"I felt responsible for her emotions"}
+        ]}
+      ]},
+      { id:"5d", section:5, title:"Church and Faith", intro:"What role did church and faith play in your upbringing? Your report includes a spiritual integration analysis that may surprise you. Select all that apply.", progress:64, blocks:[
+        {type:"multi", options:[
+          {id:"church_shameful",text:"Sexuality was shameful or never discussed"},{id:"church_purity",text:"Purity culture was a significant part of my upbringing"},{id:"church_thoughts_sin",text:"I was taught that sexual thoughts meant something was spiritually wrong with me"},{id:"church_good_kid",text:"I felt pressure to be the \u201Cgood Christian kid\u201D"},{id:"church_conditional",text:"I learned that God\u2019s love was conditional on my behavior"}
+        ]}
+      ]},
+      { id:"6", section:6, sectionLabel:"Section 6", title:"Section 6 of 8 \u2014 Attachment Patterns", intro:"In your closest relationships, which are true? Your report will decode your attachment style and show you how it fuels the cycle. Select all that apply.", progress:75, blocks:[
+        {type:"multi", options:[
+          {id:"anx_leave",text:"I worry my partner will leave or lose interest"},{id:"anx_reassurance",text:"I need frequent reassurance that I am loved"},{id:"anx_conflict_end",text:"Conflict feels like the beginning of the end"},{id:"avoid_pull_away",text:"I pull away when things get too emotionally close"},{id:"avoid_sexual_easy",text:"I find it easier to be sexual than emotionally vulnerable"},{id:"avoid_withdraw",text:"I withdraw after conflict rather than engage"},{id:"fear_crave_push",text:"I crave closeness but push it away when I get it"},{id:"fear_both",text:"Intimacy feels both desperately wanted and deeply threatening"},{id:"fear_swing",text:"I can go from deeply connected to completely shut down quickly"},{id:"sec_comfortable",text:"I am generally comfortable with emotional closeness"},{id:"sec_conflict_ok",text:"Conflict does not feel like a threat to the relationship"},{id:"sec_trust",text:"I trust my partner and feel trusted"},{id:"god_disappointed",text:"I feel like God is disappointed in me most of the time"},{id:"god_avoid",text:"I avoid God after I act out"},{id:"god_grace_cant_feel",text:"I intellectually know God\u2019s grace but cannot feel it"},{id:"god_like_father",text:"I treat God the way I treated my father growing up"},{id:"god_performance",text:"Prayer feels like a performance rather than a relationship"}
+        ]}
+      ]},
+      { id:"7", section:7, sectionLabel:"Section 7", title:"Section 7 of 8 \u2014 Relational Patterns", intro:"Which of these show up in your life? Your report will map how these relational patterns are directly connected to your cycle. Select all that apply.", progress:87, blocks:[
+        {type:"multi", options:[
+          {id:"cod_needs",text:"I put everyone\u2019s needs before my own"},{id:"cod_responsible",text:"I feel responsible for other people\u2019s emotions"},{id:"cod_worth",text:"My self-worth depends on how others perceive me"},{id:"enm_parent_emotions",text:"A parent\u2019s emotions felt like my responsibility growing up"},{id:"enm_therapist",text:"I was my parent\u2019s therapist, confidant, or emotional support"},{id:"enm_boundaries",text:"My parent(s) had poor or no boundaries with me emotionally"},{id:"void_no_one",text:"I do not have a single person who truly knows me"},{id:"void_perform",text:"I perform a version of myself for everyone in my life"},{id:"void_never_told",text:"I have never told anyone the full truth about my struggle"},{id:"lead_disqualified",text:"I feel disqualified from my calling because of this struggle"},{id:"lead_no_one_serves",text:"I serve others but have no one who serves me"},{id:"lead_lose_position",text:"I would lose my position, reputation, or ministry if this came to light"}
+        ]}
+      ]},
+      { id:"8a", section:8, sectionLabel:"Section 8", title:"Section 8 of 8 \u2014 What You Have Tried", intro:"Last section. Select every strategy you have tried to beat this. Your report will show you exactly why each one missed the root, and what that means for what actually works.", progress:92, blocks:[
+        {type:"multi", options:[
+          {id:"strat_filters",text:"Apps, blockers, or internet filters (Covenant Eyes, Bark, screen time limits)"},{id:"strat_accountability",text:"Accountability partner or accountability group"},{id:"strat_prayer",text:"Spiritual practices (prayer, Bible reading, fasting, going to church more)"},{id:"strat_willpower",text:"Increasing discipline or willpower (cold showers, workout routines, streaks)"},{id:"strat_therapy",text:"Counseling or therapy (individual or couples)"},{id:"strat_group",text:"Support groups (Celebrate Recovery, SA, SAA, Pure Desire, Every Man\u2019s Battle)"},{id:"strat_rehab",text:"Check-in rehab or residential treatment center"},{id:"strat_program",text:"Online programs or courses (paid or free)"},{id:"strat_confession",text:"Confessing to wife, pastor, or friend"},{id:"strat_books",text:"Books or self-study (podcasts, YouTube, articles)"},{id:"strat_cold_turkey",text:"Going cold turkey (just stopping, white-knuckling)"},{id:"strat_medication",text:"Medication prescribed for compulsive behavior"},{id:"strat_deliverance",text:"Deliverance ministry or spiritual warfare prayer"},{id:"strat_environment",text:"Changing environment (new phone, moving TV, avoiding triggers)"},{id:"strat_dating",text:"Redirecting to marriage or sexual relationship (dating, more sex with spouse)"},{id:"strat_nothing",text:"I have not really tried anything yet"}
+        ]}
+      ]},
+      { id:"8b", section:8, title:"How long have you been fighting this?", progress:98, blocks:[
+        {type:"single", options:[
+          {id:"years_under2",text:"Less than 2 years"},{id:"years_2_5",text:"2 to 5 years"},{id:"years_5_10",text:"5 to 10 years"},{id:"years_10_20",text:"10 to 20 years"},{id:"years_20_plus",text:"Over 20 years"}
+        ]}
+      ]}
+    ];
+
+    // =====================================================================
     // STATE
     // =====================================================================
     let messages = [];
@@ -607,6 +688,8 @@
     let sectionStartTime = Date.now();
     const sectionTimes = {};
     let sectionCount = 0;
+    let currentScreenIndex = 0;
+    const screenResponses = {}; // keyed by screen id
 
     // Session ID for analytics
     const analyticsSessionId = (function() {
@@ -740,143 +823,45 @@
     }
 
     // =====================================================================
-    // RESPONSE PARSING
+    // RENDER SCREEN (from pre-defined QUIZ_SCREENS data)
     // =====================================================================
-    function parseProgressFromResponse(text) {
-      const match = text.match(/\[PROGRESS:(\d+)\]/);
-      if (match) {
-        const pct = parseInt(match[1], 10);
-        updateProgress(pct);
-        if (pct >= 98) trackEvent("reveal_shown", { progress: pct });
-      }
-      return text.replace(/\[PROGRESS:\d+\]/g, "").trim();
-    }
-
-    function cleanDisplayText(text) {
-      return text
-        .replace(/\[PROGRESS:\d+\]/g, "")
-        .replace(/\[CRISIS_DETECTED\]/g, "")
-        .replace(/\[CONTACT_CAPTURE\]/g, "")
-        .replace(/\[CTA_PLACEHOLDER\]/g, "")
-        .replace(/\[BOOKING_CTA\]/g, "")
-        .replace(/\[MC_OPTIONS\][\s\S]*?\[\/MC_OPTIONS\]/g, "")
-        .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
-        .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
-        .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "")
-        .trim();
-    }
-
-    function getTextBeforeQuizBlocks(text) {
-      const firstBlock = text.search(/\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]/);
-      if (firstBlock <= 0) return cleanDisplayText(text);
-      const before = text.substring(0, firstBlock);
-      return cleanDisplayText(before).replace(/^["']+|["']+$/g, "").trim();
-    }
-
-    function parseQuizBlocks(text) {
-      const blocks = [];
-      const cleanForLabels = text
-        .replace(/\[PROGRESS:\d+\]/g, "")
-        .replace(/\[CONTACT_CAPTURE\]/g, "")
-        .replace(/\[CRISIS_DETECTED\]/g, "")
-        .replace(/\[BOOKING_CTA\]/g, "");
-
-      const regex = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
-      let lastIndex = 0;
-      let match;
-      let isFirstBlock = true;
-
-      while ((match = regex.exec(cleanForLabels)) !== null) {
-        const between = cleanForLabels.substring(lastIndex, match.index).trim();
-        if (!isFirstBlock && between && between.length > 2) {
-          const labelText = between.replace(/^["']+|["']+$/g, "").trim();
-          if (labelText) blocks.push({ type: "label", text: labelText });
-        }
-        isFirstBlock = false;
-        lastIndex = match.index + match[0].length;
-
-        const type = match[1];
-        const content = match[2].trim();
-        if (type === "TEXT_INPUT") {
-          blocks.push({ type: "text_input", placeholder: content });
-        } else {
-          const lines = content.split("\n").filter(l => l.trim());
-          const options = lines.map(line => {
-            const idx = line.indexOf("|");
-            if (idx > 0) {
-              return { id: line.substring(0, idx).trim(), text: line.substring(idx + 1).trim() };
-            }
-            return null;
-          }).filter(Boolean);
-          blocks.push({ type: type === "MULTI_SELECT" ? "multi" : "single", options });
-        }
-      }
-      return blocks.length > 0 ? blocks : null;
-    }
-
-    // =====================================================================
-    // RENDER SECTION (quiz blocks into the card)
-    // =====================================================================
-    function renderSection(fullResponse) {
+    function renderScreen(screen) {
       sectionContent.innerHTML = "";
       btnContinue.disabled = true;
       btnContinue.textContent = "Continue";
 
-      // Parse intro text
-      const introText = getTextBeforeQuizBlocks(fullResponse);
-      const quizBlocks = parseQuizBlocks(fullResponse);
-
-      // Extract section header — try first line as title
-      if (introText) {
-        const lines = introText.split("\n").filter(l => l.trim());
-        let titleText = "";
-        let bodyLines = lines;
-
-        // First line is often the section title if short
-        if (lines.length > 0 && lines[0].length < 100) {
-          titleText = lines[0];
-          bodyLines = lines.slice(1);
-        }
-
-        if (titleText) {
-          const sLabel = document.createElement("div");
-          sLabel.className = "section-label";
-          sLabel.textContent = "Section " + (sectionCount);
-          sectionContent.appendChild(sLabel);
-
-          const sTitle = document.createElement("h2");
-          sTitle.className = "section-title";
-          sTitle.textContent = titleText;
-          sectionContent.appendChild(sTitle);
-        }
-
-        if (bodyLines.length > 0) {
-          const sIntro = document.createElement("p");
-          sIntro.className = "section-intro";
-          sIntro.textContent = bodyLines.join("\n");
-          sectionContent.appendChild(sIntro);
-        }
+      // Section label (only on first screen of a new section)
+      if (screen.sectionLabel) {
+        const sLabel = document.createElement("div");
+        sLabel.className = "section-label";
+        sLabel.textContent = screen.sectionLabel;
+        sectionContent.appendChild(sLabel);
       }
 
-      if (!quizBlocks) {
-        // No quiz blocks — this might be a reveal or plain text
-        btnContinue.disabled = false;
-        return;
+      // Title
+      if (screen.title) {
+        const sTitle = document.createElement("h2");
+        sTitle.className = "section-title";
+        sTitle.textContent = screen.title;
+        sectionContent.appendChild(sTitle);
       }
 
-      // Track selections across all blocks
+      // Intro text
+      if (screen.intro) {
+        const sIntro = document.createElement("p");
+        sIntro.className = "section-intro";
+        sIntro.textContent = screen.intro;
+        sectionContent.appendChild(sIntro);
+      }
+
+      // Progress
+      updateProgress(screen.progress);
+
+      // Blocks (options + text inputs)
       const allSelections = {};
       let textInputValue = "";
 
-      quizBlocks.forEach((block, blockIdx) => {
-        if (block.type === "label") {
-          const label = document.createElement("div");
-          label.className = "section-sublabel";
-          label.textContent = block.text;
-          sectionContent.appendChild(label);
-          return;
-        }
-
+      screen.blocks.forEach((block, blockIdx) => {
         if (block.type === "text_input") {
           const input = document.createElement("textarea");
           input.className = "quiz-textarea";
@@ -887,7 +872,6 @@
           return;
         }
 
-        // multi or single select
         allSelections[blockIdx] = new Set();
         const group = document.createElement("div");
         group.className = "option-group";
@@ -927,27 +911,31 @@
         sectionContent.appendChild(group);
       });
 
-      // Validation function
       function validateContinue() {
         let valid = true;
         for (const [idx, sel] of Object.entries(allSelections)) {
-          const b = quizBlocks[parseInt(idx)];
-          if (!b) continue;
+          const b = screen.blocks[parseInt(idx)];
+          if (!b || b.type === "text_input") continue;
           if (b.type === "single" && sel.size === 0) { valid = false; break; }
         }
         if (valid) {
-          const hasMultis = Object.entries(allSelections).some(([idx]) => quizBlocks[parseInt(idx)]?.type === "multi");
+          const hasMultis = Object.entries(allSelections).some(([idx]) => {
+            const b = screen.blocks[parseInt(idx)];
+            return b && b.type === "multi";
+          });
           if (hasMultis) {
-            const anyMultiFilled = Object.entries(allSelections).some(([idx, sel]) => quizBlocks[parseInt(idx)]?.type === "multi" && sel.size > 0);
+            const anyMultiFilled = Object.entries(allSelections).some(([idx, sel]) => {
+              const b = screen.blocks[parseInt(idx)];
+              return b && b.type === "multi" && sel.size > 0;
+            });
             if (!anyMultiFilled) valid = false;
           }
         }
         btnContinue.disabled = !valid;
       }
 
-      // Store submit handler on continue button
+      // Submit handler
       btnContinue._submitHandler = () => {
-        // Disable everything
         sectionContent.querySelectorAll(".option-card").forEach(c => {
           if (!c.classList.contains("selected")) c.classList.add("disabled");
           c.style.pointerEvents = "none";
@@ -955,11 +943,11 @@
         sectionContent.querySelectorAll(".quiz-textarea").forEach(t => { t.disabled = true; });
         btnContinue.disabled = true;
 
-        // Build user message
         const selectedIds = [];
         const selectedTexts = [];
         Object.keys(allSelections).forEach(idx => {
-          const block = quizBlocks[parseInt(idx)];
+          const block = screen.blocks[parseInt(idx)];
+          if (!block || block.type === "text_input") return;
           allSelections[idx].forEach(id => {
             selectedIds.push(id);
             const opt = block.options.find(o => o.id === id);
@@ -972,7 +960,17 @@
           userMsg += "\nAdditional: " + textInputValue.trim();
         }
 
-        // Track
+        // Store response for this screen
+        screenResponses[screen.id] = { selectedIds, selectedTexts, textInput: textInputValue.trim() || null };
+
+        // Build messages for AI context
+        const screenTitle = screen.title || ("Screen " + screen.id);
+        messages.push({ role: "assistant", content: screenTitle + "\n[PROGRESS:" + screen.progress + "]" });
+        messages.push({ role: "user", content: userMsg });
+
+        sectionCount++;
+
+        // Track analytics
         trackEvent("section_" + sectionCount + "_complete", {
           selections: selectedIds,
           textInput: textInputValue.trim() || null,
@@ -982,22 +980,30 @@
           email: currentUser ? currentUser.email : null,
         });
 
-        // Meta pixel
         if (typeof fbq === "function") {
           fbq("trackCustom", "QuizSection", { section: sectionCount });
         }
 
-        // Add to messages and send
-        messages.push({ role: "user", content: userMsg });
+        // Advance to next screen or call AI for reveal
+        currentScreenIndex++;
         saveState();
-        sendToAI();
+
+        if (currentScreenIndex < QUIZ_SCREENS.length) {
+          // Instant transition to next screen
+          renderScreen(QUIZ_SCREENS[currentScreenIndex]);
+          showScreen(screenSection);
+          window.scrollTo(0, 0);
+        } else {
+          // All sections done — call AI for the personalized reveal
+          sendToAIForReveal();
+        }
       };
     }
 
     // =====================================================================
-    // SEND TO AI (streaming)
+    // SEND TO AI — ONLY for the final reveal after all 8 sections
     // =====================================================================
-    async function sendToAI() {
+    async function sendToAIForReveal() {
       if (isProcessing) return;
       isProcessing = true;
       showScreen(screenLoading);
@@ -1031,74 +1037,49 @@
               if (data === "[DONE]") break;
               try {
                 const parsed = JSON.parse(data);
-                if (parsed.text) {
-                  fullResponse += parsed.text;
-                }
+                if (parsed.text) fullResponse += parsed.text;
               } catch(e) {}
             }
           }
         }
 
-        // Parse progress
-        parseProgressFromResponse(fullResponse);
+        // Update progress to 100
+        updateProgress(100);
+        trackEvent("reveal_shown", { progress: 100 });
 
-        // Store response
+        // Clean display text
+        const cleanText = fullResponse
+          .replace(/\[PROGRESS:\d+\]/g, "")
+          .replace(/\[CONTACT_CAPTURE\]/g, "")
+          .replace(/\[CRISIS_DETECTED\]/g, "")
+          .replace(/\[BOOKING_CTA\]/g, "")
+          .replace(/\[CTA_PLACEHOLDER\]/g, "")
+          .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
+          .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
+          .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "")
+          .trim();
+
         messages.push({ role: "assistant", content: fullResponse.trim() });
-        sectionCount++;
+        diagnosticComplete = true;
         saveState();
 
-        // Determine what to show
-        const hasQuizBlocks = parseQuizBlocks(fullResponse) !== null;
-        const hasContactCapture = fullResponse.includes("[CONTACT_CAPTURE]");
-        const cleanText = cleanDisplayText(fullResponse);
-
-        if (hasContactCapture) {
-          // Show the reveal text first, then contact capture
-          if (cleanText.length > 50) {
-            revealText.textContent = cleanText;
-            showScreen(screenReveal);
-          } else {
-            // Skip reveal, go straight to contact
-            if (currentUser) {
-              handleAutoReport();
-            } else {
-              showScreen(screenContact);
-            }
-          }
-        } else if (hasQuizBlocks) {
-          // Render next section
-          renderSection(fullResponse);
-          showScreen(screenSection);
+        if (cleanText.length > 50) {
+          revealText.textContent = cleanText;
+          showScreen(screenReveal);
         } else {
-          // Plain text response (could be reveal or transition)
-          if (cleanText.length > 50) {
-            revealText.textContent = cleanText;
-            // Check if there are more sections or if this is the final reveal
-            if (currentProgress >= 95) {
-              showScreen(screenReveal);
-            } else {
-              // Intermediate text — auto-continue
-              revealText.textContent = cleanText;
-              showScreen(screenReveal);
-              btnAfterReveal.textContent = "Continue";
-            }
+          if (currentUser) {
+            handleAutoReport();
           } else {
-            // Very short response, auto-continue
-            sendToAI();
-            return;
+            showScreen(screenContact);
           }
         }
 
       } catch(error) {
         console.error("API error:", error);
-        // Show error in section screen
         sectionContent.innerHTML = '<p class="section-intro" style="color:#fc5454;">Connection error. Please try again.</p>';
         btnContinue.disabled = false;
         btnContinue.textContent = "Retry";
-        btnContinue._submitHandler = () => {
-          messages.pop(); // Remove last failed assistant message if any
-          sendToAI();
-        };
+        btnContinue._submitHandler = () => { sendToAIForReveal(); };
         showScreen(screenSection);
       }
 
@@ -1270,6 +1251,8 @@
           currentProgress,
           sectionCount,
           diagnosticComplete,
+          currentScreenIndex,
+          screenResponses,
           timestamp: Date.now(),
         }));
       } catch(e) {}
@@ -1301,62 +1284,47 @@
     function restoreFromState(state) {
       messages = state.messages || [];
       conversationSummary = state.conversationSummary || null;
-      currentProgress = 0; // Will be set by updateProgress
+      currentProgress = 0;
       sectionCount = state.sectionCount || 0;
       diagnosticComplete = state.diagnosticComplete || false;
+      currentScreenIndex = state.currentScreenIndex || 0;
+      if (state.screenResponses) Object.assign(screenResponses, state.screenResponses);
 
       if (state.currentProgress > 0) {
         updateProgress(state.currentProgress);
       }
 
-      // Find the last assistant message to determine what screen to show
-      const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
-      if (!lastAssistant) {
-        // No assistant messages yet — show landing
-        return false;
-      }
+      // If quiz is complete (all screens done), check for reveal
+      if (currentScreenIndex >= QUIZ_SCREENS.length || diagnosticComplete) {
+        const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+        if (lastAssistant) {
+          const lastContent = lastAssistant.content;
+          const hasContactCapture = lastContent.includes("[CONTACT_CAPTURE]");
+          const cleanText = lastContent
+            .replace(/\[PROGRESS:\d+\]/g, "").replace(/\[CONTACT_CAPTURE\]/g, "")
+            .replace(/\[CRISIS_DETECTED\]/g, "").replace(/\[BOOKING_CTA\]/g, "")
+            .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
+            .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
+            .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "").trim();
 
-      const lastContent = lastAssistant.content;
-      const hasQuizBlocks = parseQuizBlocks(lastContent) !== null;
-      const hasContactCapture = lastContent.includes("[CONTACT_CAPTURE]");
-
-      // Check if the last message was from user (meaning we need to send to AI)
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg && lastMsg.role === "user") {
-        // Need to re-send to AI
-        sendToAI();
-        return true;
-      }
-
-      if (hasContactCapture) {
-        if (currentUser) {
-          handleAutoReport();
-        } else {
-          const cleanText = cleanDisplayText(lastContent);
-          if (cleanText.length > 50) {
+          if (hasContactCapture && cleanText.length > 50) {
             revealText.textContent = cleanText;
             showScreen(screenReveal);
-          } else {
-            showScreen(screenContact);
+            return true;
+          } else if (hasContactCapture) {
+            if (currentUser) { handleAutoReport(); } else { showScreen(screenContact); }
+            return true;
           }
         }
+        // Need to call AI for reveal
+        sendToAIForReveal();
         return true;
       }
 
-      if (hasQuizBlocks) {
-        renderSection(lastContent);
+      // Still in quiz — show current screen
+      if (currentScreenIndex > 0) {
+        renderScreen(QUIZ_SCREENS[currentScreenIndex]);
         showScreen(screenSection);
-        return true;
-      }
-
-      // Plain text — show as reveal
-      const cleanText = cleanDisplayText(lastContent);
-      if (cleanText.length > 10) {
-        revealText.textContent = cleanText;
-        showScreen(screenReveal);
-        if (currentProgress < 95) {
-          btnAfterReveal.textContent = "Continue";
-        }
         return true;
       }
 
@@ -1371,16 +1339,19 @@
     btnBegin.addEventListener("click", () => {
       trackEvent("quiz_start", { timestamp: new Date().toISOString() });
 
-      // Meta pixel: ViewContent
       if (typeof fbq === "function") {
         fbq("track", "ViewContent");
       }
 
-      // Send the welcome message + user "Yes" to kick off
+      // Add welcome exchange to messages for AI context later
       messages.push({ role: "assistant", content: WELCOME_MESSAGE });
       messages.push({ role: "user", content: "Yes" });
+
+      // Instantly show first screen — no API call needed
+      currentScreenIndex = 0;
+      renderScreen(QUIZ_SCREENS[0]);
+      showScreen(screenSection);
       saveState();
-      sendToAI();
     });
 
     // Continue button (section complete)
@@ -1392,17 +1363,10 @@
 
     // After reveal — go to contact capture
     btnAfterReveal.addEventListener("click", () => {
-      if (currentProgress >= 95) {
-        if (currentUser) {
-          handleAutoReport();
-        } else {
-          showScreen(screenContact);
-        }
+      if (currentUser) {
+        handleAutoReport();
       } else {
-        // Not done yet — this was an intermediate text, auto-continue
-        // The user already saw the text; no new message needed
-        // Check if last message was assistant — if so, just continue
-        sendToAI();
+        showScreen(screenContact);
       }
     });
 
