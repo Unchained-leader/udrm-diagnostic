@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>UDRM Assessment — Unchained Leader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', 'PIXEL_ID_HERE');
+  fbq('track', 'PageView');
+  </script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: #000;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e0e0e0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    :root {
+      --gold: #b99c4f;
+      --gold-light: #DFC468;
+      --gold-dark: #9A7730;
+      --gold-gradient: linear-gradient(135deg, #DFC468, #9A7730);
+      --gold-gradient-hover: linear-gradient(135deg, #e8d07a, #a88335);
+      --black: #000000;
+      --white: #ffffff;
+      --surface: #0d0d0d;
+      --surface-raised: #151515;
+      --border-subtle: #222;
+      --border-gold: rgba(185, 156, 79, 0.3);
+    }
+
+    /* ===== LAYOUT ===== */
+    .quiz-page {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .quiz-card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--surface);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ===== PROGRESS BAR (top of card) ===== */
+    .progress-strip {
+      width: 100%;
+      height: 5px;
+      background: #1a1a1a;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gold-gradient);
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 28px 0;
+      font-size: 11px;
+      color: #555;
+      letter-spacing: 0.3px;
+      min-height: 26px;
+    }
+    .progress-info.hidden { visibility: hidden; }
+    .progress-pct {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ===== CARD BODY ===== */
+    .card-body {
+      padding: 28px 28px 32px;
+      position: relative;
+      min-height: 200px;
+    }
+
+    /* ===== SCREENS (transition between them) ===== */
+    .screen {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    .screen.active {
+      display: block;
+      opacity: 1;
+    }
+    .screen.fade-out {
+      opacity: 0;
+    }
+
+    /* ===== LANDING SCREEN ===== */
+    .landing-logo {
+      display: block;
+      margin: 0 auto 24px;
+      height: 64px;
+      width: auto;
+    }
+    .landing-title {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--gold);
+      text-align: center;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .landing-subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 24px;
+      letter-spacing: 0.3px;
+    }
+    .landing-text {
+      color: #ccc;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+      text-align: center;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .landing-meta {
+      text-align: center;
+      color: #555;
+      font-size: 12px;
+      margin-bottom: 24px;
+    }
+
+    /* ===== SECTION SCREEN ===== */
+    .section-label {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+    .section-intro {
+      color: #bbb;
+      font-size: 14px;
+      line-height: 1.65;
+      margin-bottom: 20px;
+    }
+    .section-sublabel {
+      font-size: 13px;
+      color: var(--gold-light);
+      font-weight: 500;
+      margin-top: 18px;
+      margin-bottom: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-gold);
+      line-height: 1.4;
+    }
+    .section-sublabel:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    /* ===== OPTION CARDS ===== */
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .option-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 16px;
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .option-card:hover {
+      background: rgba(185, 156, 79, 0.06);
+      border-color: rgba(185, 156, 79, 0.5);
+    }
+    .option-card.selected {
+      background: rgba(185, 156, 79, 0.12);
+      border-color: var(--gold);
+    }
+    .option-card.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .option-indicator {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-gold);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      transition: all 0.2s;
+    }
+    .option-card.radio-mode .option-indicator {
+      border-radius: 50%;
+    }
+    .option-card.selected .option-indicator {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+    .option-card.selected .option-indicator::after {
+      content: '\2713';
+      color: #000;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .option-card.radio-mode.selected .option-indicator::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #000;
+      border-radius: 50%;
+      display: block;
+    }
+    .option-text {
+      color: #ddd;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .option-card.selected .option-text {
+      color: var(--gold-light);
+    }
+
+    /* ===== TEXT INPUT ===== */
+    .quiz-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      color: #e0e0e0;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      resize: vertical;
+      min-height: 42px;
+      max-height: 120px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      transition: border-color 0.2s;
+    }
+    .quiz-textarea::placeholder { color: #555; }
+    .quiz-textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-gold {
+      display: block;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto;
+      padding: 15px 28px;
+      background: var(--gold-gradient);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+    .btn-gold:hover {
+      background: var(--gold-gradient-hover);
+      box-shadow: 0 4px 20px rgba(185, 156, 79, 0.3);
+    }
+    .btn-gold:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-continue {
+      margin-top: 20px;
+    }
+
+    /* ===== CONTACT FORM ===== */
+    .contact-form { margin-top: 4px; }
+    .contact-form input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      background: var(--surface-raised);
+      color: #e0e0e0;
+      font-size: 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 12px;
+    }
+    .contact-form input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 1px rgba(185, 156, 79, 0.15);
+    }
+    .contact-form input::placeholder { color: #555; }
+    .form-error {
+      color: #fc5454;
+      font-size: 12px;
+      min-height: 18px;
+      margin-bottom: 8px;
+    }
+
+    /* ===== REVEAL SCREEN ===== */
+    .reveal-text {
+      color: #ddd;
+      font-size: 14.5px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* ===== CONFIRMATION SCREEN ===== */
+    .confirm-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(185, 156, 79, 0.15);
+      border: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 26px;
+    }
+    .confirm-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .confirm-text {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.65;
+      text-align: center;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ===== LOADING SPINNER ===== */
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border-subtle);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 24px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .quiz-page { padding: 12px 8px; align-items: flex-start; padding-top: 16px; }
+      .quiz-card { border-radius: 16px; }
+      .card-body { padding: 20px 18px 24px; }
+      .landing-title { font-size: 18px; }
+      .section-title { font-size: 16px; }
+      .landing-logo { height: 50px; }
+      .progress-info { padding: 8px 18px 0; }
+      .btn-gold { font-size: 14px; padding: 14px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-page">
+    <div class="quiz-card">
+      <!-- Progress bar at top of card -->
+      <div class="progress-strip">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-info hidden" id="progressInfo">
+        <span id="progressLabel">Diagnostic in progress</span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+
+      <div class="card-body">
+
+        <!-- SCREEN: Landing -->
+        <div class="screen active" id="screenLanding">
+          <img src="/images/unchained-logo.png" alt="Unchained Leader" class="landing-logo" />
+          <h1 class="landing-title">Unwanted Desire Root Mapping</h1>
+          <p class="landing-subtitle">Powered by Unchained Leader</p>
+          <p class="landing-text">
+            This assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does &mdash; including the things that confuse you most.
+          </p>
+          <p class="landing-text" style="margin-bottom:8px;">
+            Select everything that applies. There are no wrong answers.<br>100% private. 100% confidential.
+          </p>
+          <p class="landing-meta">8 sections &bull; About 5 minutes &bull; All clicks, no typing required</p>
+          <button class="btn-gold" id="btnBegin">Begin Assessment</button>
+        </div>
+
+        <!-- SCREEN: Section (dynamic) -->
+        <div class="screen" id="screenSection">
+          <div id="sectionContent"></div>
+          <button class="btn-gold btn-continue" id="btnContinue" disabled>Continue</button>
+        </div>
+
+        <!-- SCREEN: Loading between sections -->
+        <div class="screen" id="screenLoading">
+          <div class="spinner"></div>
+          <p class="loading-text">Processing your responses...</p>
+        </div>
+
+        <!-- SCREEN: Reveal (preview finding) -->
+        <div class="screen" id="screenReveal">
+          <div class="section-label" style="margin-bottom:12px;">Your Preview Finding</div>
+          <div class="reveal-text" id="revealText"></div>
+          <button class="btn-gold btn-continue" id="btnAfterReveal" style="margin-top:28px;">Get My Full Report</button>
+        </div>
+
+        <!-- SCREEN: Contact Capture -->
+        <div class="screen" id="screenContact">
+          <img src="/images/unchained-logo.png" alt="Unchained Leader" class="landing-logo" style="margin-bottom:16px;" />
+          <h2 class="section-title" style="text-align:center;">Where should we send your report?</h2>
+          <p class="section-intro" style="text-align:center; color:#777; font-size:13px;">
+            Unchained Leader exists because of trust. Your information is 100% confidential. We never share it. Ever.
+          </p>
+          <div class="contact-form" id="contactForm">
+            <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
+            <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
+            <input type="tel" id="inputPhone" placeholder="Phone number (we'll text you a discreet private link)" autocomplete="tel" />
+            <input type="password" id="inputPin" placeholder="Choose a 4-digit PIN (secures your report)" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
+            <div class="form-error" id="formError"></div>
+            <button class="btn-gold" id="btnSubmitContact">Build My Report</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: Confirmation -->
+        <div class="screen" id="screenConfirm">
+          <div class="confirm-icon">&#10003;</div>
+          <h2 class="confirm-title">Locked In</h2>
+          <p class="confirm-text" id="confirmText">
+            Your 25-page Unwanted Desire Root Map is being generated now and will arrive at your email within the next few minutes. A discreet link is being texted to you as well.
+          </p>
+          <p class="confirm-text" style="margin-top:16px; color:#666; font-size:12px;">
+            You can log back in anytime using your email and PIN.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =====================================================================
+    // UNCHAINED UDRM QUIZ — STANDALONE ASSESSMENT UI
+    // =====================================================================
+
+    const BASE_URL = window.UNCHAINED_MKT_API_URL || (window.location.hostname === 'localhost' ? '' : "https://unchained-marketing-coach.vercel.app");
+    const API_URL = BASE_URL + "/api/chat";
+    const AUTH_URL = BASE_URL + "/api/auth";
+    const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
+    const REPORT_URL = BASE_URL + "/api/report";
+    const ANALYTICS_URL = BASE_URL + "/api/analytics";
+
+    const SESSION_KEY = "unchained_quiz_session";
+    const STATE_KEY = "unchained_quiz_state";
+
+    const WELCOME_MESSAGE = "Welcome, brother.\n\nThis assessment maps your specific behaviors and patterns to their psychological roots. Every selection you make helps decode why your brain does what it does, including the things that confuse you most.\n\nSelect everything that applies. There are no wrong answers. 100% private. 100% confidential.\n\n8 sections. About 5 minutes. All clicks, no typing required.\n\nReady? Click below to start.";
+
+    // =====================================================================
+    // STATE
+    // =====================================================================
+    let messages = [];
+    let conversationSummary = null;
+    let currentUser = null;
+    let currentProgress = 0;
+    let diagnosticComplete = false;
+    let isProcessing = false;
+    let sectionStartTime = Date.now();
+    const sectionTimes = {};
+    let sectionCount = 0;
+
+    // Session ID for analytics
+    const analyticsSessionId = (function() {
+      try {
+        return crypto.randomUUID();
+      } catch(e) {
+        return "s_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      }
+    })();
+
+    // Device info
+    const deviceInfo = {
+      type: /Mobi|Android/i.test(navigator.userAgent) ? "mobile" : /Tablet|iPad/i.test(navigator.userAgent) ? "tablet" : "desktop",
+      browser: /Chrome/i.test(navigator.userAgent) ? "Chrome" : /Safari/i.test(navigator.userAgent) ? "Safari" : /Firefox/i.test(navigator.userAgent) ? "Firefox" : "Other",
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+    };
+
+    // =====================================================================
+    // DOM REFS
+    // =====================================================================
+    const progressFill = document.getElementById("progressFill");
+    const progressInfo = document.getElementById("progressInfo");
+    const progressLabel = document.getElementById("progressLabel");
+    const progressPct = document.getElementById("progressPct");
+
+    const screenLanding = document.getElementById("screenLanding");
+    const screenSection = document.getElementById("screenSection");
+    const screenLoading = document.getElementById("screenLoading");
+    const screenReveal = document.getElementById("screenReveal");
+    const screenContact = document.getElementById("screenContact");
+    const screenConfirm = document.getElementById("screenConfirm");
+    const sectionContent = document.getElementById("sectionContent");
+    const btnContinue = document.getElementById("btnContinue");
+    const btnBegin = document.getElementById("btnBegin");
+    const btnAfterReveal = document.getElementById("btnAfterReveal");
+    const btnSubmitContact = document.getElementById("btnSubmitContact");
+    const revealText = document.getElementById("revealText");
+    const confirmText = document.getElementById("confirmText");
+    const formError = document.getElementById("formError");
+
+    // =====================================================================
+    // ANALYTICS
+    // =====================================================================
+    function trackEvent(eventType, eventData, extra) {
+      if (eventType.startsWith("section_") && eventType.endsWith("_complete")) {
+        const elapsed = Math.round((Date.now() - sectionStartTime) / 1000);
+        const sectionNum = eventType.match(/section_(\d+)/)?.[1] || "0";
+        sectionTimes[sectionNum] = elapsed;
+        eventData = { ...eventData, sectionSeconds: elapsed, device: deviceInfo };
+        sectionStartTime = Date.now();
+      }
+      if (eventType === "quiz_start") {
+        sectionStartTime = Date.now();
+        eventData = { ...eventData, device: deviceInfo };
+      }
+
+      const payload = {
+        sessionId: analyticsSessionId,
+        product: "udrm",
+        eventType,
+        eventData: eventData || {},
+        ...(extra || {}),
+      };
+      fetch(ANALYTICS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+
+    // =====================================================================
+    // SCREEN TRANSITIONS
+    // =====================================================================
+    const allScreens = [screenLanding, screenSection, screenLoading, screenReveal, screenContact, screenConfirm];
+
+    function showScreen(target) {
+      const current = allScreens.find(s => s.classList.contains("active"));
+      if (current === target) return;
+
+      if (current) {
+        current.classList.add("fade-out");
+        setTimeout(() => {
+          current.classList.remove("active", "fade-out");
+          current.style.display = "none";
+          target.style.display = "block";
+          // Force reflow for transition
+          void target.offsetWidth;
+          target.classList.add("active");
+        }, 250);
+      } else {
+        target.style.display = "block";
+        void target.offsetWidth;
+        target.classList.add("active");
+      }
+    }
+
+    // =====================================================================
+    // PROGRESS BAR
+    // =====================================================================
+    function updateProgress(percent) {
+      if (percent <= currentProgress && percent !== 100) return;
+      currentProgress = percent;
+      progressInfo.classList.remove("hidden");
+      progressFill.style.width = percent + "%";
+      progressPct.textContent = percent + "%";
+
+      if (percent >= 100) {
+        progressLabel.textContent = "Diagnostic complete";
+        diagnosticComplete = true;
+      } else if (percent >= 92) {
+        progressLabel.textContent = "Almost done";
+      } else if (percent >= 67) {
+        progressLabel.textContent = "Home stretch";
+      } else if (percent >= 50) {
+        progressLabel.textContent = "Halfway there";
+      } else {
+        progressLabel.textContent = "Diagnostic in progress";
+      }
+    }
+
+    // =====================================================================
+    // RESPONSE PARSING
+    // =====================================================================
+    function parseProgressFromResponse(text) {
+      const match = text.match(/\[PROGRESS:(\d+)\]/);
+      if (match) {
+        const pct = parseInt(match[1], 10);
+        updateProgress(pct);
+        if (pct >= 98) trackEvent("reveal_shown", { progress: pct });
+      }
+      return text.replace(/\[PROGRESS:\d+\]/g, "").trim();
+    }
+
+    function cleanDisplayText(text) {
+      return text
+        .replace(/\[PROGRESS:\d+\]/g, "")
+        .replace(/\[CRISIS_DETECTED\]/g, "")
+        .replace(/\[CONTACT_CAPTURE\]/g, "")
+        .replace(/\[CTA_PLACEHOLDER\]/g, "")
+        .replace(/\[BOOKING_CTA\]/g, "")
+        .replace(/\[MC_OPTIONS\][\s\S]*?\[\/MC_OPTIONS\]/g, "")
+        .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
+        .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
+        .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "")
+        .trim();
+    }
+
+    function getTextBeforeQuizBlocks(text) {
+      const firstBlock = text.search(/\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]/);
+      if (firstBlock <= 0) return cleanDisplayText(text);
+      const before = text.substring(0, firstBlock);
+      return cleanDisplayText(before).replace(/^["']+|["']+$/g, "").trim();
+    }
+
+    function parseQuizBlocks(text) {
+      const blocks = [];
+      const cleanForLabels = text
+        .replace(/\[PROGRESS:\d+\]/g, "")
+        .replace(/\[CONTACT_CAPTURE\]/g, "")
+        .replace(/\[CRISIS_DETECTED\]/g, "")
+        .replace(/\[BOOKING_CTA\]/g, "");
+
+      const regex = /\[(MULTI_SELECT|SINGLE_SELECT|TEXT_INPUT)\]([\s\S]*?)\[\/\1\]/g;
+      let lastIndex = 0;
+      let match;
+      let isFirstBlock = true;
+
+      while ((match = regex.exec(cleanForLabels)) !== null) {
+        const between = cleanForLabels.substring(lastIndex, match.index).trim();
+        if (!isFirstBlock && between && between.length > 2) {
+          const labelText = between.replace(/^["']+|["']+$/g, "").trim();
+          if (labelText) blocks.push({ type: "label", text: labelText });
+        }
+        isFirstBlock = false;
+        lastIndex = match.index + match[0].length;
+
+        const type = match[1];
+        const content = match[2].trim();
+        if (type === "TEXT_INPUT") {
+          blocks.push({ type: "text_input", placeholder: content });
+        } else {
+          const lines = content.split("\n").filter(l => l.trim());
+          const options = lines.map(line => {
+            const idx = line.indexOf("|");
+            if (idx > 0) {
+              return { id: line.substring(0, idx).trim(), text: line.substring(idx + 1).trim() };
+            }
+            return null;
+          }).filter(Boolean);
+          blocks.push({ type: type === "MULTI_SELECT" ? "multi" : "single", options });
+        }
+      }
+      return blocks.length > 0 ? blocks : null;
+    }
+
+    // =====================================================================
+    // RENDER SECTION (quiz blocks into the card)
+    // =====================================================================
+    function renderSection(fullResponse) {
+      sectionContent.innerHTML = "";
+      btnContinue.disabled = true;
+      btnContinue.textContent = "Continue";
+
+      // Parse intro text
+      const introText = getTextBeforeQuizBlocks(fullResponse);
+      const quizBlocks = parseQuizBlocks(fullResponse);
+
+      // Extract section header — try first line as title
+      if (introText) {
+        const lines = introText.split("\n").filter(l => l.trim());
+        let titleText = "";
+        let bodyLines = lines;
+
+        // First line is often the section title if short
+        if (lines.length > 0 && lines[0].length < 100) {
+          titleText = lines[0];
+          bodyLines = lines.slice(1);
+        }
+
+        if (titleText) {
+          const sLabel = document.createElement("div");
+          sLabel.className = "section-label";
+          sLabel.textContent = "Section " + (sectionCount);
+          sectionContent.appendChild(sLabel);
+
+          const sTitle = document.createElement("h2");
+          sTitle.className = "section-title";
+          sTitle.textContent = titleText;
+          sectionContent.appendChild(sTitle);
+        }
+
+        if (bodyLines.length > 0) {
+          const sIntro = document.createElement("p");
+          sIntro.className = "section-intro";
+          sIntro.textContent = bodyLines.join("\n");
+          sectionContent.appendChild(sIntro);
+        }
+      }
+
+      if (!quizBlocks) {
+        // No quiz blocks — this might be a reveal or plain text
+        btnContinue.disabled = false;
+        return;
+      }
+
+      // Track selections across all blocks
+      const allSelections = {};
+      let textInputValue = "";
+
+      quizBlocks.forEach((block, blockIdx) => {
+        if (block.type === "label") {
+          const label = document.createElement("div");
+          label.className = "section-sublabel";
+          label.textContent = block.text;
+          sectionContent.appendChild(label);
+          return;
+        }
+
+        if (block.type === "text_input") {
+          const input = document.createElement("textarea");
+          input.className = "quiz-textarea";
+          input.placeholder = block.placeholder;
+          input.rows = 1;
+          input.addEventListener("input", () => { textInputValue = input.value; });
+          sectionContent.appendChild(input);
+          return;
+        }
+
+        // multi or single select
+        allSelections[blockIdx] = new Set();
+        const group = document.createElement("div");
+        group.className = "option-group";
+
+        block.options.forEach(opt => {
+          const card = document.createElement("div");
+          card.className = "option-card" + (block.type === "single" ? " radio-mode" : "");
+
+          const indicator = document.createElement("div");
+          indicator.className = "option-indicator";
+
+          const text = document.createElement("div");
+          text.className = "option-text";
+          text.textContent = opt.text;
+
+          card.appendChild(indicator);
+          card.appendChild(text);
+
+          card.addEventListener("click", () => {
+            if (block.type === "single") {
+              group.querySelectorAll(".option-card").forEach(c => c.classList.remove("selected"));
+              allSelections[blockIdx] = new Set([opt.id]);
+            } else {
+              if (card.classList.contains("selected")) {
+                allSelections[blockIdx].delete(opt.id);
+              } else {
+                allSelections[blockIdx].add(opt.id);
+              }
+            }
+            card.classList.toggle("selected");
+            validateContinue();
+          });
+
+          group.appendChild(card);
+        });
+
+        sectionContent.appendChild(group);
+      });
+
+      // Validation function
+      function validateContinue() {
+        let valid = true;
+        for (const [idx, sel] of Object.entries(allSelections)) {
+          const b = quizBlocks[parseInt(idx)];
+          if (!b) continue;
+          if (b.type === "single" && sel.size === 0) { valid = false; break; }
+        }
+        if (valid) {
+          const hasMultis = Object.entries(allSelections).some(([idx]) => quizBlocks[parseInt(idx)]?.type === "multi");
+          if (hasMultis) {
+            const anyMultiFilled = Object.entries(allSelections).some(([idx, sel]) => quizBlocks[parseInt(idx)]?.type === "multi" && sel.size > 0);
+            if (!anyMultiFilled) valid = false;
+          }
+        }
+        btnContinue.disabled = !valid;
+      }
+
+      // Store submit handler on continue button
+      btnContinue._submitHandler = () => {
+        // Disable everything
+        sectionContent.querySelectorAll(".option-card").forEach(c => {
+          if (!c.classList.contains("selected")) c.classList.add("disabled");
+          c.style.pointerEvents = "none";
+        });
+        sectionContent.querySelectorAll(".quiz-textarea").forEach(t => { t.disabled = true; });
+        btnContinue.disabled = true;
+
+        // Build user message
+        const selectedIds = [];
+        const selectedTexts = [];
+        Object.keys(allSelections).forEach(idx => {
+          const block = quizBlocks[parseInt(idx)];
+          allSelections[idx].forEach(id => {
+            selectedIds.push(id);
+            const opt = block.options.find(o => o.id === id);
+            if (opt) selectedTexts.push(opt.text);
+          });
+        });
+
+        let userMsg = "Selected: " + selectedIds.join(", ");
+        if (textInputValue.trim()) {
+          userMsg += "\nAdditional: " + textInputValue.trim();
+        }
+
+        // Track
+        trackEvent("section_" + sectionCount + "_complete", {
+          selections: selectedIds,
+          textInput: textInputValue.trim() || null,
+        }, {
+          selections: selectedIds,
+          sectionNum: sectionCount,
+          email: currentUser ? currentUser.email : null,
+        });
+
+        // Meta pixel
+        if (typeof fbq === "function") {
+          fbq("trackCustom", "QuizSection", { section: sectionCount });
+        }
+
+        // Add to messages and send
+        messages.push({ role: "user", content: userMsg });
+        saveState();
+        sendToAI();
+      };
+    }
+
+    // =====================================================================
+    // SEND TO AI (streaming)
+    // =====================================================================
+    async function sendToAI() {
+      if (isProcessing) return;
+      isProcessing = true;
+      showScreen(screenLoading);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages,
+            userId: currentUser ? currentUser.email : null,
+            userName: currentUser ? currentUser.name : null,
+            conversationSummary,
+          }),
+        });
+
+        if (!response.ok) throw new Error("API error " + response.status);
+
+        let fullResponse = "";
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") break;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.text) {
+                  fullResponse += parsed.text;
+                }
+              } catch(e) {}
+            }
+          }
+        }
+
+        // Parse progress
+        parseProgressFromResponse(fullResponse);
+
+        // Store response
+        messages.push({ role: "assistant", content: fullResponse.trim() });
+        sectionCount++;
+        saveState();
+
+        // Determine what to show
+        const hasQuizBlocks = parseQuizBlocks(fullResponse) !== null;
+        const hasContactCapture = fullResponse.includes("[CONTACT_CAPTURE]");
+        const cleanText = cleanDisplayText(fullResponse);
+
+        if (hasContactCapture) {
+          // Show the reveal text first, then contact capture
+          if (cleanText.length > 50) {
+            revealText.textContent = cleanText;
+            showScreen(screenReveal);
+          } else {
+            // Skip reveal, go straight to contact
+            if (currentUser) {
+              handleAutoReport();
+            } else {
+              showScreen(screenContact);
+            }
+          }
+        } else if (hasQuizBlocks) {
+          // Render next section
+          renderSection(fullResponse);
+          showScreen(screenSection);
+        } else {
+          // Plain text response (could be reveal or transition)
+          if (cleanText.length > 50) {
+            revealText.textContent = cleanText;
+            // Check if there are more sections or if this is the final reveal
+            if (currentProgress >= 95) {
+              showScreen(screenReveal);
+            } else {
+              // Intermediate text — auto-continue
+              revealText.textContent = cleanText;
+              showScreen(screenReveal);
+              btnAfterReveal.textContent = "Continue";
+            }
+          } else {
+            // Very short response, auto-continue
+            sendToAI();
+            return;
+          }
+        }
+
+      } catch(error) {
+        console.error("API error:", error);
+        // Show error in section screen
+        sectionContent.innerHTML = '<p class="section-intro" style="color:#fc5454;">Connection error. Please try again.</p>';
+        btnContinue.disabled = false;
+        btnContinue.textContent = "Retry";
+        btnContinue._submitHandler = () => {
+          messages.pop(); // Remove last failed assistant message if any
+          sendToAI();
+        };
+        showScreen(screenSection);
+      }
+
+      isProcessing = false;
+    }
+
+    // =====================================================================
+    // CONTACT CAPTURE
+    // =====================================================================
+    async function handleContactSubmit() {
+      const name = document.getElementById("inputName").value.trim();
+      const email = document.getElementById("inputEmail").value.trim();
+      const phone = document.getElementById("inputPhone").value.trim();
+      const pin = document.getElementById("inputPin").value.trim();
+
+      formError.textContent = "";
+
+      if (!name) { formError.textContent = "Please enter your first name."; return; }
+      if (!email) { formError.textContent = "Please enter your email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { formError.textContent = "PIN must be exactly 4 digits."; return; }
+
+      btnSubmitContact.disabled = true;
+      btnSubmitContact.textContent = "Saving...";
+
+      try {
+        // Register
+        const res = await fetch(AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "register", email, pin, name, phone }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          if (res.status === 409) {
+            // Already registered — try login
+            const loginRes = await fetch(AUTH_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "login", email, pin }),
+            });
+            const loginData = await loginRes.json();
+            if (!loginRes.ok) {
+              formError.textContent = loginData.error || "That email is already registered with a different PIN.";
+              btnSubmitContact.disabled = false;
+              btnSubmitContact.textContent = "Build My Report";
+              return;
+            }
+          } else {
+            formError.textContent = data.error || "Something went wrong.";
+            btnSubmitContact.disabled = false;
+            btnSubmitContact.textContent = "Build My Report";
+            return;
+          }
+        }
+
+        // Success
+        currentUser = { email: email.toLowerCase(), pin, name };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
+
+        trackEvent("contact_capture_complete", { email: email.toLowerCase(), name });
+
+        // Meta pixel: Lead
+        if (typeof fbq === "function") {
+          fbq("track", "Lead");
+        }
+
+        // Save diagnostic data, then generate report
+        try {
+          await saveDiagnosticData();
+        } catch(e) {
+          console.log("Diagnostic save error:", e.message);
+        }
+
+        // Small delay for Redis propagation
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Generate report (fire and forget)
+        generateAndSendReport();
+
+        // Meta pixel: Report Generated
+        if (typeof fbq === "function") {
+          fbq("trackCustom", "ReportGenerated");
+        }
+
+        // Update confirmation text
+        confirmText.textContent = "Your 25-page Unwanted Desire Root Map is being generated now and will arrive at " + email + " within the next few minutes. A discreet link is being texted to you as well.";
+
+        showScreen(screenConfirm);
+        clearState(); // Quiz is done
+
+      } catch(e) {
+        formError.textContent = "Connection error. Please try again.";
+        btnSubmitContact.disabled = false;
+        btnSubmitContact.textContent = "Build My Report";
+      }
+    }
+
+    // Auto-report for already-logged-in users
+    async function handleAutoReport() {
+      trackEvent("contact_capture_auto", { email: currentUser.email });
+
+      try {
+        await saveDiagnosticData();
+      } catch(e) {}
+
+      await new Promise(r => setTimeout(r, 1000));
+      generateAndSendReport();
+
+      if (typeof fbq === "function") {
+        fbq("track", "Lead");
+        fbq("trackCustom", "ReportGenerated");
+      }
+
+      confirmText.textContent = "Your report is being generated and will be sent to " + currentUser.email + " within 5 minutes. Check your inbox.";
+      showScreen(screenConfirm);
+      clearState();
+    }
+
+    // =====================================================================
+    // DIAGNOSTIC DATA + REPORT
+    // =====================================================================
+    async function saveDiagnosticData() {
+      if (!currentUser) return;
+      await fetch(DIAGNOSTIC_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentUser.email,
+          pin: currentUser.pin,
+          name: currentUser.name,
+          messages: messages,
+          completedAt: new Date().toISOString(),
+        }),
+      });
+    }
+
+    async function generateAndSendReport() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(REPORT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            pin: currentUser.pin,
+            name: currentUser.name,
+            diagnosticData: messages,
+          }),
+        });
+        if (res.ok) {
+          console.log("Report generated and sent successfully");
+        } else {
+          console.log("Report generation failed:", await res.text());
+        }
+      } catch(e) {
+        console.log("Could not generate report:", e.message);
+      }
+    }
+
+    // =====================================================================
+    // STATE PERSISTENCE (localStorage)
+    // =====================================================================
+    function saveState() {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify({
+          messages,
+          conversationSummary,
+          currentProgress,
+          sectionCount,
+          diagnosticComplete,
+          timestamp: Date.now(),
+        }));
+      } catch(e) {}
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return null;
+        const state = JSON.parse(raw);
+        // Expire after 24 hours
+        if (Date.now() - state.timestamp > 24 * 60 * 60 * 1000) {
+          localStorage.removeItem(STATE_KEY);
+          return null;
+        }
+        return state;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function clearState() {
+      try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+    }
+
+    // =====================================================================
+    // RESTORE SESSION
+    // =====================================================================
+    function restoreFromState(state) {
+      messages = state.messages || [];
+      conversationSummary = state.conversationSummary || null;
+      currentProgress = 0; // Will be set by updateProgress
+      sectionCount = state.sectionCount || 0;
+      diagnosticComplete = state.diagnosticComplete || false;
+
+      if (state.currentProgress > 0) {
+        updateProgress(state.currentProgress);
+      }
+
+      // Find the last assistant message to determine what screen to show
+      const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
+      if (!lastAssistant) {
+        // No assistant messages yet — show landing
+        return false;
+      }
+
+      const lastContent = lastAssistant.content;
+      const hasQuizBlocks = parseQuizBlocks(lastContent) !== null;
+      const hasContactCapture = lastContent.includes("[CONTACT_CAPTURE]");
+
+      // Check if the last message was from user (meaning we need to send to AI)
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && lastMsg.role === "user") {
+        // Need to re-send to AI
+        sendToAI();
+        return true;
+      }
+
+      if (hasContactCapture) {
+        if (currentUser) {
+          handleAutoReport();
+        } else {
+          const cleanText = cleanDisplayText(lastContent);
+          if (cleanText.length > 50) {
+            revealText.textContent = cleanText;
+            showScreen(screenReveal);
+          } else {
+            showScreen(screenContact);
+          }
+        }
+        return true;
+      }
+
+      if (hasQuizBlocks) {
+        renderSection(lastContent);
+        showScreen(screenSection);
+        return true;
+      }
+
+      // Plain text — show as reveal
+      const cleanText = cleanDisplayText(lastContent);
+      if (cleanText.length > 10) {
+        revealText.textContent = cleanText;
+        showScreen(screenReveal);
+        if (currentProgress < 95) {
+          btnAfterReveal.textContent = "Continue";
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    // =====================================================================
+    // EVENT HANDLERS
+    // =====================================================================
+
+    // Begin Assessment
+    btnBegin.addEventListener("click", () => {
+      trackEvent("quiz_start", { timestamp: new Date().toISOString() });
+
+      // Meta pixel: ViewContent
+      if (typeof fbq === "function") {
+        fbq("track", "ViewContent");
+      }
+
+      // Send the welcome message + user "Yes" to kick off
+      messages.push({ role: "assistant", content: WELCOME_MESSAGE });
+      messages.push({ role: "user", content: "Yes" });
+      saveState();
+      sendToAI();
+    });
+
+    // Continue button (section complete)
+    btnContinue.addEventListener("click", () => {
+      if (btnContinue._submitHandler) {
+        btnContinue._submitHandler();
+      }
+    });
+
+    // After reveal — go to contact capture
+    btnAfterReveal.addEventListener("click", () => {
+      if (currentProgress >= 95) {
+        if (currentUser) {
+          handleAutoReport();
+        } else {
+          showScreen(screenContact);
+        }
+      } else {
+        // Not done yet — this was an intermediate text, auto-continue
+        // The user already saw the text; no new message needed
+        // Check if last message was assistant — if so, just continue
+        sendToAI();
+      }
+    });
+
+    // Contact form submit
+    btnSubmitContact.addEventListener("click", handleContactSubmit);
+    document.getElementById("inputPin").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleContactSubmit();
+    });
+
+    // =====================================================================
+    // INIT
+    // =====================================================================
+    (function init() {
+      // Check for existing user session
+      try {
+        const saved = localStorage.getItem(SESSION_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.email && parsed.pin) {
+            currentUser = parsed;
+          }
+        }
+      } catch(e) {}
+
+      // Check for saved quiz state
+      const state = loadState();
+      if (state && state.messages && state.messages.length > 1) {
+        const restored = restoreFromState(state);
+        if (restored) return;
+      }
+
+      // Fresh start — show landing
+      showScreen(screenLanding);
+    })();
+  </script>
+</body>
+</html>
