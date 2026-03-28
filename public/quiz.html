@@ -110,6 +110,26 @@
       font-weight: 600;
     }
 
+    /* ===== RESET BUTTON ===== */
+    .reset-btn {
+      background: none;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #888;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-btn:hover {
+      color: #fc5454;
+      border-color: #fc5454;
+    }
+
     /* ===== CARD BODY ===== */
     .card-body {
       padding: 28px 28px 32px;
@@ -455,7 +475,10 @@
       </div>
       <div class="progress-info hidden" id="progressInfo">
         <span id="progressLabel">Diagnostic in progress</span>
-        <span class="progress-pct" id="progressPct">0%</span>
+        <span style="display:flex; align-items:center; gap:12px;">
+          <button id="btnReset" class="reset-btn" title="Start over">Reset</button>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </span>
       </div>
 
       <div class="card-body">
@@ -613,6 +636,17 @@
     const revealText = document.getElementById("revealText");
     const confirmText = document.getElementById("confirmText");
     const formError = document.getElementById("formError");
+    const btnReset = document.getElementById("btnReset");
+
+    // =====================================================================
+    // RESET
+    // =====================================================================
+    btnReset.addEventListener("click", function() {
+      if (!confirm("Start over? All your progress will be cleared.")) return;
+      try { localStorage.removeItem(STATE_KEY); } catch(e) {}
+      try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+      window.location.reload();
+    });
 
     // =====================================================================
     // ANALYTICS
