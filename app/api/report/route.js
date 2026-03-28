@@ -324,7 +324,7 @@ async function analyzeConversation(messages, userName, demographics = {}) {
       role: "user",
       content: `${MARKETING_BIBLE_REPORT_GUIDE}
 
-Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections. ALL report text MUST follow the Marketing Bible guardrails, voice, and language rules above.
+Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections. ALL report text MUST follow the Marketing Bible guardrails, voice, and language rules above. IMPORTANT: Always spell out the full word "porn" and "pornography" — never censor with asterisks (never write "p*rn" or "p*rnography"). Use the full words.
 
 DEMOGRAPHICS:
 Gender: ${demographics.gender || "not specified"}

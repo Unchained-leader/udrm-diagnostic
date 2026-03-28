@@ -13,15 +13,33 @@ const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiag
 
 const GOLD = "#C9A227";
 
+// Fix censored words in stored analysis data
+function uncensor(text) {
+  if (typeof text !== "string") return text;
+  return text.replace(/p\*rn/gi, "porn").replace(/p\*rnography/gi, "pornography");
+}
+
+function uncensorDeep(obj) {
+  if (typeof obj === "string") return uncensor(obj);
+  if (Array.isArray(obj)) return obj.map(uncensorDeep);
+  if (obj && typeof obj === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) out[k] = uncensorDeep(v);
+    return out;
+  }
+  return obj;
+}
+
 function ContentBlock({ title, body, borderColor }) {
   if (!body) return null;
-  const paragraphs = typeof body === "string" ? body.split("\n").filter(p => p.trim()) : [String(body)];
+  const text = uncensor(typeof body === "string" ? body : String(body));
+  const paragraphs = text.split("\n").filter(p => p.trim());
   return (
     <div style={{
       background: "#1a1a1a", borderRadius: 10, padding: "16px 18px",
       border: `1px solid ${borderColor || "#2a2a2a"}`, marginBottom: 10,
     }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{uncensor(title)}</div>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: "#999" }}>{p}</p>
       ))}
@@ -76,6 +94,7 @@ export default function OverviewPage() {
           }
           setError(d.error);
         } else {
+          if (d.analysis) d.analysis = uncensorDeep(d.analysis);
           setData(d);
         }
         setLoading(false);
@@ -143,10 +162,22 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* Welcome */}
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{name}, here are your results.</h1>
-        <p style={{ color: "#888", fontSize: 15, marginTop: 8 }}>Your Unwanted Desire Root Mapping decoded.</p>
+      {/* Cover / Hero Section */}
+      <div style={{
+        textAlign: "center", padding: "40px 20px 32px",
+        background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)",
+        borderRadius: 16, border: `1px solid ${GOLD}22`, marginBottom: 24,
+      }}>
+        <div style={{ color: GOLD, fontSize: 14, letterSpacing: 4, marginBottom: 16, textTransform: "uppercase" }}>Unchained Leader</div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "#fff", lineHeight: 1.3 }}>UNWANTED DESIRE</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 20px", color: "#fff", lineHeight: 1.3 }}>ROOT MAPPING</h1>
+        <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
+        <div style={{ fontSize: 16, color: "#ccc" }}>Personalized for {name}</div>
+        <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>{data.generatedAt ? new Date(data.generatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+        <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
+        <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
+          This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
+        </div>
       </div>
 
       {/* Grid layout */}
