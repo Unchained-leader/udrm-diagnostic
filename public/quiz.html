@@ -539,7 +539,6 @@
             <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
             <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
             <input type="tel" id="inputPhone" placeholder="Phone number (we'll text you a discreet private link)" autocomplete="tel" />
-            <input type="password" id="inputPin" placeholder="Choose a 4-digit PIN (secures your report)" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" />
             <div class="form-error" id="formError"></div>
             <button class="btn-gold" id="btnSubmitContact">Build My Report</button>
           </div>
@@ -553,7 +552,7 @@
             Your 25-page Unwanted Desire Root Map is being generated now and will arrive at your email within the next few minutes. A discreet link is being texted to you as well.
           </p>
           <p class="confirm-text" style="margin-top:16px; color:#666; font-size:12px;">
-            You can log back in anytime using your email and PIN.
+            You can log back in anytime using your email.
           </p>
         </div>
 
@@ -1093,13 +1092,12 @@
       const name = document.getElementById("inputName").value.trim();
       const email = document.getElementById("inputEmail").value.trim();
       const phone = document.getElementById("inputPhone").value.trim();
-      const pin = document.getElementById("inputPin").value.trim();
+      const pin = String(Math.floor(1000 + Math.random() * 9000)); // auto-generate 4-digit PIN
 
       formError.textContent = "";
 
       if (!name) { formError.textContent = "Please enter your first name."; return; }
       if (!email) { formError.textContent = "Please enter your email."; return; }
-      if (!pin || !/^\d{4}$/.test(pin)) { formError.textContent = "PIN must be exactly 4 digits."; return; }
 
       btnSubmitContact.disabled = true;
       btnSubmitContact.textContent = "Saving...";
@@ -1123,7 +1121,7 @@
             });
             const loginData = await loginRes.json();
             if (!loginRes.ok) {
-              formError.textContent = loginData.error || "That email is already registered with a different PIN.";
+              formError.textContent = loginData.error || "That email is already registered.";
               btnSubmitContact.disabled = false;
               btnSubmitContact.textContent = "Build My Report";
               return;
@@ -1372,9 +1370,6 @@
 
     // Contact form submit
     btnSubmitContact.addEventListener("click", handleContactSubmit);
-    document.getElementById("inputPin").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleContactSubmit();
-    });
 
     // =====================================================================
     // INIT
@@ -1385,7 +1380,7 @@
         const saved = localStorage.getItem(SESSION_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.email && parsed.pin) {
+          if (parsed.email) {
             currentUser = parsed;
           }
         }
