@@ -3,11 +3,11 @@
 const GOLD = "#C9A227";
 
 const AREAS = [
-  { key: "romantic", label: "Romantic Relationship", icon: "💍" },
-  { key: "health", label: "Physical Health", icon: "🏃" },
-  { key: "financial", label: "Financial Situation", icon: "💰" },
-  { key: "work", label: "Work Fulfillment", icon: "⚡" },
-  { key: "god", label: "Relationship with God", icon: "✝️" },
+  { key: "romantic", label: "Romantic Relationship" },
+  { key: "health", label: "Physical Health" },
+  { key: "financial", label: "Financial Situation" },
+  { key: "work", label: "Work Fulfillment" },
+  { key: "god", label: "Relationship with God" },
 ];
 
 function StabilityMeter({ value, label }) {
@@ -98,7 +98,7 @@ export default function StressHeatmap({ analysis }) {
       {/* Individual area meters */}
       <div style={{ display: "grid", gap: 8, marginBottom: 20 }}>
         {areaData.map(area => (
-          <StabilityMeter key={area.key} value={area.value} label={`${area.icon}  ${area.label}`} />
+          <StabilityMeter key={area.key} value={area.value} label={area.label} />
         ))}
       </div>
 
