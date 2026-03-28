@@ -45,15 +45,19 @@ export async function GET(request) {
     // Build history array — if no history key exists, create one from current report
     let reports = [];
     if (Array.isArray(historyData) && historyData.length > 0) {
-      reports = historyData.map((entry, i) => ({
-        id: i,
-        generatedAt: entry.generatedAt,
-        reportUrl: entry.reportUrl || null,
-        arousalTemplateType: entry.arousalTemplateType || entry.analysis?.arousalTemplateType,
-        neuropathway: entry.neuropathway || entry.analysis?.neuropathway,
-        attachmentStyle: entry.attachmentStyle || entry.analysis?.attachmentStyle,
-        analysis: entry.analysis || null,
-      }));
+      reports = historyData.map((entry, i) => {
+        // Try multiple paths to find the generated date
+        const generatedAt = entry.generatedAt || entry.analysis?.generatedAt || null;
+        return {
+          id: i,
+          generatedAt,
+          reportUrl: entry.reportUrl || entry.analysis?.reportUrl || null,
+          arousalTemplateType: entry.arousalTemplateType || entry.analysis?.arousalTemplateType,
+          neuropathway: entry.neuropathway || entry.analysis?.neuropathway,
+          attachmentStyle: entry.attachmentStyle || entry.analysis?.attachmentStyle,
+          analysis: entry.analysis || null,
+        };
+      });
     } else {
       // Backwards compatibility: single report, no history yet
       reports = [{

@@ -9,8 +9,8 @@ export default function ReportSelector({ reports, activeIndex, onSelect }) {
   if (!reports || reports.length <= 1) return null;
 
   const active = reports[activeIndex];
-  const formatDate = (iso) => {
-    if (!iso) return "Unknown date";
+  const formatDate = (iso, index) => {
+    if (!iso) return `Report #${index + 1}`;
     return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
   };
 
@@ -27,7 +27,7 @@ export default function ReportSelector({ reports, activeIndex, onSelect }) {
       >
         <div>
           <span style={{ fontSize: 12, color: GOLD, letterSpacing: 1, marginRight: 8 }}>REPORT</span>
-          <span style={{ fontSize: 14, color: "#ccc" }}>{formatDate(active?.generatedAt)}</span>
+          <span style={{ fontSize: 14, color: "#ccc" }}>{formatDate(active?.generatedAt, activeIndex)}</span>
           <span style={{ fontSize: 12, color: "#666", marginLeft: 8 }}>({reports.length} total)</span>
         </div>
         <span style={{ color: "#666", fontSize: 16, transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>&#9662;</span>
@@ -53,7 +53,7 @@ export default function ReportSelector({ reports, activeIndex, onSelect }) {
             >
               <div>
                 <div style={{ fontSize: 14, color: i === activeIndex ? GOLD : "#ccc", fontWeight: i === activeIndex ? 600 : 400 }}>
-                  {formatDate(r.generatedAt)}
+                  {formatDate(r.generatedAt, i)}
                   {i === reports.length - 1 && <span style={{ fontSize: 11, color: "#22c55e", marginLeft: 8 }}>Latest</span>}
                   {i === 0 && reports.length > 1 && <span style={{ fontSize: 11, color: "#888", marginLeft: 8 }}>First</span>}
                 </div>
