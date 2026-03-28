@@ -1317,6 +1317,13 @@
 
     async function generateAndSendReport() {
       if (!currentUser) return;
+
+      // Extract gender and age from the "About You" screen (screen 0)
+      const aboutYou = screenResponses["0"] || {};
+      const aboutYouIds = aboutYou.selectedIds || [];
+      const gender = aboutYouIds.find(id => id === "male" || id === "female") || null;
+      const ageRange = aboutYouIds.find(id => id.startsWith("age_")) || null;
+
       try {
         const res = await fetch(REPORT_URL, {
           method: "POST",
@@ -1325,6 +1332,8 @@
             email: currentUser.email,
             name: currentUser.name,
             diagnosticData: messages,
+            gender,
+            ageRange,
           }),
         });
         if (res.ok) {
