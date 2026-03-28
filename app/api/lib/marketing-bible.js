@@ -115,7 +115,7 @@ NEVER POSITION MEN AS: Addicts. Powerless. Broken beyond repair. Victims without
 ═══ FORMATTING ═══
 
 - NEVER use em dashes. Use commas or periods.
-- p*rn always with asterisk
+- Spell out the full word "porn" or "pornography" — no asterisks or abbreviations
 - "Biblical" and "Scripture" always capitalized
 - No emojis
 - #liveunchained at end of reports/emails

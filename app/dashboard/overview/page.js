@@ -3,13 +3,61 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import ResultCard from "../components/ResultCard";
-import ExpandableCard from "../components/ExpandableCard";
 
 const ScoreRadar = dynamic(() => import("../components/ScoreRadar"), { ssr: false });
 const RelationalBars = dynamic(() => import("../components/RelationalBars"), { ssr: false });
 const StressHeatmap = dynamic(() => import("../components/StressHeatmap"), { ssr: false });
+const EscalationGauge = dynamic(() => import("../components/EscalationGauge"), { ssr: false });
+const ScorecardBreakdown = dynamic(() => import("../components/ScorecardBreakdown"), { ssr: false });
+const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiagram"), { ssr: false });
 
 const GOLD = "#C9A227";
+
+function ContentBlock({ title, body, borderColor }) {
+  if (!body) return null;
+  const paragraphs = typeof body === "string" ? body.split("\n").filter(p => p.trim()) : [String(body)];
+  return (
+    <div style={{
+      background: "#1a1a1a", borderRadius: 10, padding: "16px 18px",
+      border: `1px solid ${borderColor || "#2a2a2a"}`, marginBottom: 10,
+    }}>
+      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{title}</div>
+      {paragraphs.map((p, i) => (
+        <p key={i} style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: "#999" }}>{p}</p>
+      ))}
+    </div>
+  );
+}
+
+function ResourceCard({ priority, label, price, title, body, link }) {
+  const isPrimary = priority === 1;
+  const isFree = price === "FREE";
+  return (
+    <div style={{
+      background: "#111", borderRadius: 10, padding: "20px",
+      border: `1px solid ${isPrimary ? GOLD + "66" : "#2a2a2a"}`,
+      marginBottom: 12,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase" }}>{label}</div>
+        <div style={{
+          padding: "4px 12px", borderRadius: 4, fontSize: 13, fontWeight: 700,
+          background: isFree ? "#14532d" : "#3d2e0a",
+          color: isFree ? "#22c55e" : GOLD,
+        }}>{price}</div>
+      </div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{title}</div>
+      <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>{body}</p>
+      <a href={link} target="_blank" rel="noopener noreferrer" style={{
+        display: "block", textAlign: "center", padding: "12px",
+        background: isPrimary ? "linear-gradient(135deg, #DFC468, #9A7730)" : "none",
+        border: isPrimary ? "none" : `1px solid ${GOLD}`,
+        color: isPrimary ? "#000" : GOLD,
+        fontSize: 13, fontWeight: 700, borderRadius: 8, textDecoration: "none", letterSpacing: 1,
+      }}>{isFree ? "ACCESS NOW" : "GET STARTED"}</a>
+    </div>
+  );
+}
 
 export default function OverviewPage() {
   const [data, setData] = useState(null);
@@ -107,13 +155,18 @@ export default function OverviewPage() {
         {/* Arousal Template */}
         <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
           {a.arousalTemplateSecondary && <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
-          <div style={{ fontSize: 14, color: GOLD, fontStyle: "italic", marginTop: 8 }}>Root Narrative: "{a.rootNarrativeStatement}"</div>
+          <div style={{ fontSize: 14, color: GOLD, fontStyle: "italic", marginTop: 8 }}>Root Narrative: &ldquo;{a.rootNarrativeStatement}&rdquo;</div>
           {a.whatBrainCounterfeits && <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>What your brain counterfeits: {a.whatBrainCounterfeits}</div>}
         </ResultCard>
 
         {/* Scorecard Radar */}
         <ResultCard title="Your Diagnostic Scorecard">
           <ScoreRadar analysis={a} />
+        </ResultCard>
+
+        {/* Scorecard Breakdown Bars */}
+        <ResultCard title="Scorecard Breakdown">
+          <ScorecardBreakdown analysis={a} />
         </ResultCard>
 
         {/* Imprinting Origin */}
@@ -133,24 +186,32 @@ export default function OverviewPage() {
 
         {/* Neuropathway */}
         <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.neuropathwayExplanation}</p>
+          <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
+          <NeuropathwayDiagram neuropathway={a.neuropathway} manages={a.neuropathwayManages} />
+          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "12px 0 0" }}>{a.neuropathwayExplanation}</p>
         </ResultCard>
 
-        {/* Behavior Root Map */}
+        {/* Escalation Gauge */}
+        {a.escalationPresent && (
+          <ResultCard title="Escalation Risk">
+            <EscalationGauge severity={Number(a.escalationSeverity) || 0} />
+          </ResultCard>
+        )}
+
+        {/* Behavior Root Map — fully expanded */}
         <ResultCard title="Behavior-Root Map">
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
           {(a.behaviorRootMap || []).map((item, i) => (
-            <ExpandableCard key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
+            <ContentBlock key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
           ))}
         </ResultCard>
 
-        {/* Confusing Patterns */}
+        {/* Confusing Patterns — fully expanded */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
           <ResultCard title="Confusing Patterns Decoded" gold>
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
             {a.confusingPatternsDecoded.map((item, i) => (
-              <ExpandableCard key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
+              <ContentBlock key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
             ))}
           </ResultCard>
         )}
@@ -184,6 +245,27 @@ export default function OverviewPage() {
           </div>
         </ResultCard>
 
+        {/* Isolation Indicator */}
+        {a.isolationScore > 0 && (
+          <ResultCard title="Isolation Level">
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
+              <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, height: 20, overflow: "hidden" }}>
+                <div style={{
+                  width: `${Math.min((Number(a.isolationScore) / 5) * 100, 100)}%`,
+                  height: "100%",
+                  background: Number(a.isolationScore) >= 4 ? "linear-gradient(90deg, #ef4444, #dc2626)" : Number(a.isolationScore) >= 2 ? "linear-gradient(90deg, #f59e0b, #d97706)" : "linear-gradient(90deg, #22c55e, #16a34a)",
+                  borderRadius: 8,
+                  transition: "width 0.5s ease",
+                }} />
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", minWidth: 40, textAlign: "right" }}>{a.isolationScore}/5</div>
+            </div>
+            <div style={{ fontSize: 13, color: "#888" }}>
+              {a.isolationLevel ? `Level: ${a.isolationLevel}` : `${Number(a.isolationScore) >= 4 ? "High isolation — the cycle thrives in secrecy" : Number(a.isolationScore) >= 2 ? "Moderate isolation detected" : "Low isolation"}`}
+            </div>
+          </ResultCard>
+        )}
+
         {/* Life Stress Landscape */}
         {a.lifeStressAnalysis && (
           <ResultCard title="Your Stress Landscape">
@@ -191,26 +273,26 @@ export default function OverviewPage() {
           </ResultCard>
         )}
 
-        {/* Co-Coping Behaviors */}
+        {/* Co-Coping Behaviors — fully expanded */}
         {a.coCopingBehaviors && (
           <ResultCard title="Your Brain's Other Escape Routes">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
             {Array.isArray(a.coCopingBehaviors) ? a.coCopingBehaviors.map((item, i) => (
-              <ExpandableCard key={i} title={item.behavior} body={item.connection} borderColor="#C9A227" />
+              <ContentBlock key={i} title={item.behavior} body={item.connection} borderColor={GOLD} />
             )) : (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
             )}
           </ResultCard>
         )}
 
-        {/* Strategy Autopsy */}
+        {/* Strategy Audit — fully expanded */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
           <ResultCard title="Strategy Audit">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>
               {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
             </div>
             {a.strategyBreakdowns.map((s, i) => (
-              <ExpandableCard key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor="#666" />
+              <ContentBlock key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor="#666" />
             ))}
           </ResultCard>
         )}
@@ -224,6 +306,42 @@ export default function OverviewPage() {
         {/* Closing Statement */}
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
           <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: 0, textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
+        </ResultCard>
+
+        {/* Next Steps & Resources */}
+        <ResultCard title="Your Next Step and Additional Resources">
+          <ResourceCard
+            priority={1}
+            label="PRIORITY 1 — YOUR NEXT STEP"
+            price="FREE"
+            title="Watch the Art of Freedom Training"
+            body={`Your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`}
+            link="https://unchained-leader.com/aof"
+          />
+          <ResourceCard
+            priority={2}
+            label="OPTION 2"
+            price="$27"
+            title="Book a 30-Minute Clarity Call"
+            body="Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts."
+            link="https://unchained-leader.com/clarity-call"
+          />
+          <ResourceCard
+            priority={3}
+            label="OPTION 3"
+            price="FREE"
+            title="7-Day Devotional: 7 Lies of the Divided Leader"
+            body="A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you."
+            link="https://unchained-leader.com/7-lies"
+          />
+          <ResourceCard
+            priority={4}
+            label="OPTION 4"
+            price="$27"
+            title="The Unchained Leader Black Book"
+            body="The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and extensive research."
+            link="https://unchained-leader.com/black-book"
+          />
         </ResultCard>
 
         {/* PDF Download */}
