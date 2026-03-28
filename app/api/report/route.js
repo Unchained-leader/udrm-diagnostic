@@ -40,7 +40,7 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, name, diagnosticData } = body;
+    const { email, name, diagnosticData, gender, ageRange } = body;
 
     if (!email) {
       return Response.json({ error: "Email is required." }, { status: 400, headers: CORS_HEADERS });
@@ -78,7 +78,7 @@ export async function POST(request) {
     // Analyze with Claude
     console.log("Starting Opus analysis...");
     const analysisStart = Date.now();
-    const rawAnalysis = await analyzeConversation(messages, userName);
+    const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange });
     console.log(`Opus analysis completed in ${((Date.now() - analysisStart) / 1000).toFixed(1)}s`);
 
     // Sanitize all string values: strip em dashes + internal code identifiers
@@ -122,7 +122,7 @@ export async function POST(request) {
     const analysis = sanitizeObj(rawAnalysis);
 
     // Generate PDF
-    const pdfResult = await generatePDF(analysis, firstName);
+    const pdfResult = await generatePDF(analysis, firstName, { gender });
     let pdfBuffer = pdfResult.buffer;
 
     // ═══════════════════════════════════════
@@ -186,7 +186,7 @@ export async function POST(request) {
     // If any QC issues found, regenerate with tighter spacing to fix layout problems
     if (qcIssues.length > 0) {
       console.warn("QC FAILED — regenerating with tighter layout (spacing: 0.85)");
-      const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85 });
+      const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85, gender });
       const pdfStr2 = pdfResult2.buffer.toString("latin1");
       const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
 
@@ -306,7 +306,7 @@ export async function POST(request) {
 // CLAUDE ANALYSIS — Extract structured diagnostic data
 // ═══════════════════════════════════════════════════════════════
 
-async function analyzeConversation(messages, userName) {
+async function analyzeConversation(messages, userName, demographics = {}) {
   const client = new Anthropic();
 
   const conversationText = messages
@@ -322,6 +322,12 @@ async function analyzeConversation(messages, userName) {
       content: `${MARKETING_BIBLE_REPORT_GUIDE}
 
 Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections. ALL report text MUST follow the Marketing Bible guardrails, voice, and language rules above.
+
+DEMOGRAPHICS:
+Gender: ${demographics.gender || "not specified"}
+Age Range: ${demographics.ageRange ? demographics.ageRange.replace("age_", "").replace("_", "-").replace("plus", "+") : "not specified"}
+
+IMPORTANT: Adapt ALL report language to match the person's gender and age. If female, use "woman," "her," "she," "wife/mother/daughter" framing instead of "man," "him," "he," "husband/father/son." Adjust life-stage references to match their age range (e.g. a man in his 20s has different concerns than a man in his 50s). If gender is "female," replace masculine kingdom language ("man of God," "kingdom man," "his assignment") with feminine equivalents ("woman of God," "kingdom woman," "her assignment"). The Marketing Bible defaults to male language because the primary audience is men, but the report must be personalized to whoever is taking it.
 
 CONVERSATION:
 ${conversationText}
