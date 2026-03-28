@@ -994,6 +994,7 @@
         block.options.forEach(opt => {
           const card = document.createElement("div");
           card.className = "option-card" + (block.type === "single" ? " radio-mode" : "");
+          card.dataset.optId = opt.id;
 
           const indicator = document.createElement("div");
           indicator.className = "option-indicator";
@@ -1014,6 +1015,15 @@
                 allSelections[blockIdx].delete(opt.id);
               } else {
                 allSelections[blockIdx].add(opt.id);
+                // Mutual exclusion for life_ abundance/lack pairs
+                const lifeMatch = opt.id.match(/^(life_\w+)_(abundance|lack)$/);
+                if (lifeMatch) {
+                  const opposite = lifeMatch[1] + "_" + (lifeMatch[2] === "abundance" ? "lack" : "abundance");
+                  allSelections[blockIdx].delete(opposite);
+                  group.querySelectorAll(".option-card").forEach(c => {
+                    if (c.dataset.optId === opposite) c.classList.remove("selected");
+                  });
+                }
               }
             }
             card.classList.toggle("selected");
