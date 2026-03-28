@@ -195,7 +195,11 @@ export default function OverviewPage() {
         {a.coCopingBehaviors && (
           <ResultCard title="Your Brain's Other Escape Routes">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.coCopingBehaviors}</p>
+            {Array.isArray(a.coCopingBehaviors) ? a.coCopingBehaviors.map((item, i) => (
+              <ExpandableCard key={i} title={item.behavior} body={item.connection} borderColor="#C9A227" />
+            )) : (
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
+            )}
           </ResultCard>
         )}
 
