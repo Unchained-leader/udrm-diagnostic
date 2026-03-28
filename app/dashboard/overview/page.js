@@ -11,6 +11,8 @@ const EscalationGauge = dynamic(() => import("../components/EscalationGauge"), {
 const ScorecardBreakdown = dynamic(() => import("../components/ScorecardBreakdown"), { ssr: false });
 const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiagram"), { ssr: false });
 const ViceBalanceDiagram = dynamic(() => import("../components/ViceBalanceDiagram"), { ssr: false });
+const TrendOverlay = dynamic(() => import("../components/TrendOverlay"), { ssr: false });
+import ReportSelector from "../components/ReportSelector";
 
 const GOLD = "#C9A227";
 
@@ -82,6 +84,8 @@ export default function OverviewPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeReportIndex, setActiveReportIndex] = useState(-1); // -1 = latest
+  const [showTrends, setShowTrends] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -96,7 +100,9 @@ export default function OverviewPage() {
           setError(d.error);
         } else {
           if (d.analysis) d.analysis = uncensorDeep(d.analysis);
+          if (d.reports) d.reports = d.reports.map(r => r.analysis ? { ...r, analysis: uncensorDeep(r.analysis) } : r);
           setData(d);
+          if (d.reports) setActiveReportIndex(d.reports.length - 1);
         }
         setLoading(false);
       })
@@ -131,8 +137,13 @@ export default function OverviewPage() {
     );
   }
 
-  const a = data.analysis;
+  const reports = data.reports || [];
+  const activeIdx = activeReportIndex >= 0 && activeReportIndex < reports.length ? activeReportIndex : reports.length - 1;
+  const activeReport = reports[activeIdx] || {};
+  const a = activeReport.analysis || data.analysis;
   const name = data.name || "there";
+  const activeReportUrl = activeReport.reportUrl || data.reportUrl;
+  const activeGeneratedAt = activeReport.generatedAt || data.generatedAt;
 
   if (!a) {
     return (
@@ -156,13 +167,35 @@ export default function OverviewPage() {
           <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Your Root Mapping Results</div>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          {data.reportUrl && (
-            <a href={data.reportUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6, textDecoration: "none", letterSpacing: 1 }}>PDF REPORT</a>
+          {reports.length > 1 && (
+            <button onClick={() => setShowTrends(!showTrends)} style={{
+              padding: "8px 16px", background: showTrends ? `${GOLD}22` : "none",
+              border: `1px solid ${showTrends ? GOLD : "#333"}`, color: showTrends ? GOLD : "#888",
+              fontSize: 12, borderRadius: 6, cursor: "pointer", fontWeight: showTrends ? 700 : 400,
+            }}>{showTrends ? "VIEW REPORT" : "TRENDS"}</button>
+          )}
+          {activeReportUrl && (
+            <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6, textDecoration: "none", letterSpacing: 1 }}>PDF REPORT</a>
           )}
           <button onClick={handleLogout} style={{ padding: "8px 16px", background: "none", border: "1px solid #333", color: "#888", fontSize: 12, borderRadius: 6, cursor: "pointer" }}>Sign Out</button>
         </div>
       </div>
 
+      {/* Report Selector */}
+      <ReportSelector reports={reports} activeIndex={activeIdx} onSelect={(i) => { setActiveReportIndex(i); setShowTrends(false); }} />
+
+      {/* Trend Overlay View */}
+      {showTrends && reports.length > 1 ? (
+        <div style={{ display: "grid", gap: 16 }}>
+          <ResultCard title="Progress Over Time" gold>
+            <div style={{ fontSize: 13, color: "#888", marginBottom: 16 }}>
+              {reports.length} assessments from {new Date(reports[0]?.generatedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })} to {new Date(reports[reports.length - 1]?.generatedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+            </div>
+            <TrendOverlay reports={reports} />
+          </ResultCard>
+        </div>
+      ) : (
+      <>
       {/* Cover / Hero Section */}
       <div style={{
         textAlign: "center", padding: "40px 20px 32px",
@@ -175,7 +208,7 @@ export default function OverviewPage() {
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 20px", color: "#fff", lineHeight: 1.3 }}>ROOT MAPPING</h1>
         <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
         <div style={{ fontSize: 16, color: "#ccc" }}>Personalized for {name}</div>
-        <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>{data.generatedAt ? new Date(data.generatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+        <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
         <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
@@ -390,9 +423,9 @@ export default function OverviewPage() {
         </ResultCard>
 
         {/* PDF Download */}
-        {data.reportUrl && (
+        {activeReportUrl && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <a href={data.reportUrl} target="_blank" rel="noopener noreferrer" style={{
+            <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-block", padding: "14px 40px",
               background: "linear-gradient(135deg, #DFC468, #9A7730)",
               color: "#000", fontSize: 14, fontWeight: 700, borderRadius: 8,
@@ -402,6 +435,7 @@ export default function OverviewPage() {
         )}
 
       </div>
+      </>)}
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "40px 0 20px", borderTop: "1px solid #1f1f1f", marginTop: 40 }}>

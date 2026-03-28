@@ -3,6 +3,11 @@ import { jwtVerify } from "jose";
 
 const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
 
+function parseRedis(val) {
+  if (!val) return null;
+  return typeof val === "string" ? JSON.parse(val) : val;
+}
+
 export async function GET(request) {
   try {
     const cookie = request.headers.get("cookie") || "";
@@ -21,19 +26,46 @@ export async function GET(request) {
 
     const email = payload.email;
 
-    const [analysis, reportMeta, user] = await Promise.all([
+    const [analysis, reportMeta, user, historyRaw] = await Promise.all([
       redis.get(`mkt:analysis:${email}`),
       redis.get(`mkt:report:${email}`),
       redis.get(`mkt:user:${email}`),
+      redis.get(`mkt:history:${email}`),
     ]);
 
     if (!analysis) {
       return Response.json({ error: "No results found. Your report may still be processing." }, { status: 404 });
     }
 
-    const userData = typeof user === "string" ? JSON.parse(user) : user;
-    const reportData = typeof reportMeta === "string" ? JSON.parse(reportMeta) : reportMeta;
-    const analysisData = typeof analysis === "string" ? JSON.parse(analysis) : analysis;
+    const userData = parseRedis(user);
+    const reportData = parseRedis(reportMeta);
+    const analysisData = parseRedis(analysis);
+    const historyData = parseRedis(historyRaw);
+
+    // Build history array — if no history key exists, create one from current report
+    let reports = [];
+    if (Array.isArray(historyData) && historyData.length > 0) {
+      reports = historyData.map((entry, i) => ({
+        id: i,
+        generatedAt: entry.generatedAt,
+        reportUrl: entry.reportUrl || null,
+        arousalTemplateType: entry.arousalTemplateType || entry.analysis?.arousalTemplateType,
+        neuropathway: entry.neuropathway || entry.analysis?.neuropathway,
+        attachmentStyle: entry.attachmentStyle || entry.analysis?.attachmentStyle,
+        analysis: entry.analysis || null,
+      }));
+    } else {
+      // Backwards compatibility: single report, no history yet
+      reports = [{
+        id: 0,
+        generatedAt: reportData?.generatedAt || null,
+        reportUrl: reportData?.reportUrl || null,
+        arousalTemplateType: analysisData?.arousalTemplateType,
+        neuropathway: analysisData?.neuropathway,
+        attachmentStyle: analysisData?.attachmentStyle,
+        analysis: analysisData,
+      }];
+    }
 
     return Response.json({
       success: true,
@@ -41,6 +73,7 @@ export async function GET(request) {
       analysis: analysisData,
       reportUrl: reportData?.reportUrl || null,
       generatedAt: reportData?.generatedAt || null,
+      reports,
     });
   } catch (error) {
     console.error("Dashboard results error:", error);
