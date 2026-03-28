@@ -352,7 +352,7 @@ export default function OverviewPage() {
             label="PRIORITY 1 — YOUR NEXT STEP"
             price="FREE"
             title="Watch the Art of Freedom Training"
-            body={`Your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`}
+            body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`}
             link="https://unchained-leader.com/aof"
           />
           <ResourceCard
