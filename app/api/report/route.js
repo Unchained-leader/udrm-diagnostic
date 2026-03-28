@@ -6,6 +6,7 @@ import { ghlDiagnosticComplete, ghlSendReportData } from "../lib/ghl";
 import fs from "fs";
 import path from "path";
 import { getDb } from "../lib/db";
+import { MARKETING_BIBLE_REPORT_GUIDE } from "../lib/marketing-bible";
 
 export const maxDuration = 800;
 
@@ -318,7 +319,9 @@ async function analyzeConversation(messages, userName) {
     max_tokens: 16384,
     messages: [{
       role: "user",
-      content: `Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections.
+      content: `${MARKETING_BIBLE_REPORT_GUIDE}
+
+Analyze this Unwanted Desire Root Mapping (UDRM) quiz conversation. The quiz uses select-all-that-apply checkboxes. The user's responses contain IDs like "viewing_porn", "tab_wrong", "conf_wife_others" etc. Pay close attention to ALL selections. ALL report text MUST follow the Marketing Bible guardrails, voice, and language rules above.
 
 CONVERSATION:
 ${conversationText}
