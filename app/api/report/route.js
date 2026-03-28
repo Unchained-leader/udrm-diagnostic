@@ -1397,7 +1397,7 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
           </div>
           <div style="text-align:center;margin:0 0 30px;">
             <p style="font-size:13px;color:#888;margin-bottom:12px;">You also have an interactive dashboard with your full results:</p>
-            <a href="https://unchained-leader.com/dashboard/register" style="display:inline-block;padding:12px 28px;border:1px solid #c5a55a;color:#c5a55a;font-size:13px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">ACCESS YOUR DASHBOARD</a>
+            <a href="https://unchained-marketing-coach.vercel.app/dashboard/register" style="display:inline-block;padding:12px 28px;border:1px solid #c5a55a;color:#c5a55a;font-size:13px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">ACCESS YOUR DASHBOARD</a>
           </div>
           <div style="border-top:1px solid #333;padding-top:20px;margin-top:20px;text-align:center;">
             <div style="color:#c5a55a;font-size:11px;letter-spacing:2px;">#liveunchained</div>
