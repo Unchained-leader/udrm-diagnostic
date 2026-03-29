@@ -84,35 +84,85 @@ export default function OverviewPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(null);
   const [activeReportIndex, setActiveReportIndex] = useState(-1); // -1 = latest
   const [showTrends, setShowTrends] = useState(false);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const [stickyDismissed, setStickyDismissed] = useState(false);
+  const [revealedSections, setRevealedSections] = useState(-1); // -1 = not started, increments to reveal sections
+  const [freshReveal, setFreshReveal] = useState(false); // true = animate sections in
   const keyInsightRef = useRef(null);
   const nextStepsRef = useRef(null);
   const bridgeRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/dashboard/results")
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) {
-          if (d.error.includes("authenticated") || d.error.includes("expired")) {
-            router.push("/dashboard/login");
+    let pollTimer = null;
+    let cancelled = false;
+    let wasPolling = false;
+
+    function fetchResults() {
+      fetch("/api/dashboard/results")
+        .then(r => r.json())
+        .then(d => {
+          if (cancelled) return;
+          if (d.error) {
+            if (d.error.includes("authenticated") || d.error.includes("expired")) {
+              router.push("/dashboard/login");
+              return;
+            }
+            // If processing status unknown, show processing screen and poll
+            if (d.error.includes("processing") || d.error.includes("No results found")) {
+              wasPolling = true;
+              setProcessing(true);
+              setProcessingStatus({ step: "analyzing", message: "Analyzing your responses..." });
+              setLoading(false);
+              pollTimer = setTimeout(fetchResults, 4000);
+              return;
+            }
+            setError(d.error);
+          } else if (d.processing) {
+            // Report is being generated — show processing screen and poll
+            wasPolling = true;
+            setProcessing(true);
+            setProcessingStatus(d.status || { step: "analyzing", message: "Analyzing your responses..." });
+            setLoading(false);
+            pollTimer = setTimeout(fetchResults, 4000);
             return;
+          } else {
+            if (d.analysis) d.analysis = uncensorDeep(d.analysis);
+            if (d.reports) d.reports = d.reports.map(r => r.analysis ? { ...r, analysis: uncensorDeep(r.analysis) } : r);
+            // If we were polling (processing), trigger fresh reveal animation
+            if (wasPolling) setFreshReveal(true);
+            setProcessing(false);
+            setProcessingStatus(null);
+            setData(d);
+            if (d.reports) setActiveReportIndex(d.reports.length - 1);
           }
-          setError(d.error);
-        } else {
-          if (d.analysis) d.analysis = uncensorDeep(d.analysis);
-          if (d.reports) d.reports = d.reports.map(r => r.analysis ? { ...r, analysis: uncensorDeep(r.analysis) } : r);
-          setData(d);
-          if (d.reports) setActiveReportIndex(d.reports.length - 1);
-        }
-        setLoading(false);
-      })
-      .catch(() => { setError("Failed to load results."); setLoading(false); });
+          setLoading(false);
+        })
+        .catch(() => { if (!cancelled) { setError("Failed to load results."); setLoading(false); } });
+    }
+
+    fetchResults();
+    return () => { cancelled = true; if (pollTimer) clearTimeout(pollTimer); };
   }, [router]);
+
+  // Progressive reveal: animate sections in one-by-one
+  const TOTAL_SECTIONS = 22;
+  useEffect(() => {
+    if (!freshReveal || !data) return;
+    // Start revealing sections one by one
+    setRevealedSections(0);
+    let current = 0;
+    const timer = setInterval(() => {
+      current++;
+      setRevealedSections(current);
+      if (current >= TOTAL_SECTIONS) clearInterval(timer);
+    }, 800);
+    return () => clearInterval(timer);
+  }, [freshReveal, data]);
 
   // Sticky CTA: show after Key Insight, hide at Next Steps
   useEffect(() => {
@@ -175,18 +225,75 @@ export default function OverviewPage() {
   const activeReportUrl = activeReport.reportUrl || data.reportUrl;
   const activeGeneratedAt = activeReport.generatedAt || data.generatedAt;
 
-  if (!a) {
+  if (processing || !a) {
+    const statusMsg = processingStatus?.message || "Analyzing your responses...";
+    const statusStep = processingStatus?.step || "analyzing";
+    const progressMessages = [
+      { step: "analyzing", label: "Analyzing your responses", detail: "Your conversation is being read at the root level. Every answer you gave is being mapped." },
+      { step: "complete", label: "Building your root map", detail: "Your personalized diagnostic sections are being assembled now." },
+      { step: "pdf_ready", label: "Generating your PDF report", detail: "A downloadable copy of your full report is being created." },
+    ];
+    const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
-        <div style={{ textAlign: "center", maxWidth: 400, padding: 40 }}>
-          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 12 }}>UNCHAINED LEADER</div>
-          <div style={{ color: "#ccc", fontSize: 16, marginBottom: 8 }}>Your report is still processing.</div>
-          <div style={{ color: "#888", fontSize: 14 }}>This can take up to 5 minutes. Please check back shortly.</div>
-          <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: "10px 24px", background: "none", border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 8, cursor: "pointer", fontSize: 13 }}>Refresh</button>
+        <div style={{ textAlign: "center", maxWidth: 440, padding: 40 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 40, width: "auto", marginBottom: 24 }} />
+          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 8 }}>YOUR SECURE PORTAL</div>
+          <div style={{ color: "#ccc", fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Building Your Root Map Live</div>
+
+          {/* Spinner */}
+          <div style={{ marginBottom: 32 }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: "50%", margin: "0 auto 20px",
+              border: `2px solid ${GOLD}44`,
+              borderTopColor: GOLD,
+              animation: "spin 1.2s linear infinite",
+            }} />
+            <div style={{ color: "#ccc", fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{currentProgress.label}</div>
+            <div style={{ color: "#777", fontSize: 14, lineHeight: 1.6 }}>{currentProgress.detail}</div>
+          </div>
+
+          {/* Progress steps */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", maxWidth: 300, margin: "0 auto" }}>
+            {progressMessages.map((p, i) => {
+              const isActive = p.step === statusStep;
+              const isPast = progressMessages.indexOf(progressMessages.find(pm => pm.step === statusStep)) > i;
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                    background: isPast ? GOLD : isActive ? `${GOLD}44` : "#222",
+                    border: isActive ? `2px solid ${GOLD}` : isPast ? "none" : "1px solid #333",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 10, color: isPast ? "#000" : isActive ? GOLD : "#555",
+                    fontWeight: 700,
+                  }}>{isPast ? "✓" : i + 1}</div>
+                  <div style={{ fontSize: 13, color: isActive ? "#ccc" : isPast ? "#888" : "#555" }}>{p.label}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ color: "#555", fontSize: 12, marginTop: 32 }}>Your results will appear on this page. This typically takes 2–3 minutes.</div>
+
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+          `}</style>
         </div>
       </div>
     );
   }
+
+  // Reveal wrapper — sections fade in progressively or show instantly
+  const isRevealing = freshReveal && revealedSections >= 0;
+  const Reveal = ({ idx, children }) => isRevealing ? (
+    <div style={{
+      opacity: revealedSections >= idx ? 1 : 0,
+      transform: revealedSections >= idx ? "translateY(0)" : "translateY(20px)",
+      transition: "opacity 0.6s ease, transform 0.6s ease",
+    }}>{children}</div>
+  ) : <>{children}</>;
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px" }}>
@@ -227,6 +334,7 @@ export default function OverviewPage() {
       ) : (
       <>
       {/* Cover / Hero Section */}
+      <Reveal idx={0}>
       <div style={{
         textAlign: "center", padding: "40px 20px 32px",
         background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)",
@@ -249,28 +357,36 @@ export default function OverviewPage() {
           DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide &amp; Crisis Lifeline immediately.
         </div>
       </div>
+      </Reveal>
 
       {/* Grid layout */}
       <div style={{ display: "grid", gap: 16 }}>
 
         {/* Arousal Template */}
+        <Reveal idx={1}>
         <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
           {a.arousalTemplateSecondary && <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
           <div style={{ fontSize: 14, color: GOLD, fontStyle: "italic", marginTop: 8 }}>Root Narrative: &ldquo;{a.rootNarrativeStatement}&rdquo;</div>
           {a.whatBrainCounterfeits && <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>What your brain counterfeits: {a.whatBrainCounterfeits}</div>}
         </ResultCard>
+        </Reveal>
 
         {/* Scorecard Radar */}
+        <Reveal idx={2}>
         <ResultCard title="Your Diagnostic Scorecard">
           <ScoreRadar analysis={a} />
         </ResultCard>
+        </Reveal>
 
         {/* Scorecard Breakdown Bars */}
+        <Reveal idx={3}>
         <ResultCard title="Scorecard Breakdown">
           <ScorecardBreakdown analysis={a} />
         </ResultCard>
+        </Reveal>
 
         {/* Imprinting Origin */}
+        <Reveal idx={4}>
         <ResultCard title="Your Arousal Template Origin">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8 }}>
@@ -284,47 +400,59 @@ export default function OverviewPage() {
           </div>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.imprintingFusion}</p>
         </ResultCard>
+        </Reveal>
 
         {/* Neuropathway */}
+        <Reveal idx={5}>
         <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
           <NeuropathwayDiagram neuropathway={a.neuropathway} manages={a.neuropathwayManages} />
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "12px 0 0" }}>{a.neuropathwayExplanation}</p>
         </ResultCard>
+        </Reveal>
 
         {/* Escalation Gauge */}
         {a.escalationPresent && (
+          <Reveal idx={6}>
           <ResultCard title="Escalation Risk">
             <EscalationGauge severity={Number(a.escalationSeverity) || 0} />
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Behavior Root Map — fully expanded */}
+        <Reveal idx={7}>
         <ResultCard title="Behavior-Root Map">
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
           {(a.behaviorRootMap || []).map((item, i) => (
             <ContentBlock key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
           ))}
         </ResultCard>
+        </Reveal>
 
         {/* Confusing Patterns — fully expanded */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
+          <Reveal idx={8}>
           <ResultCard title="Confusing Patterns Decoded" gold>
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
             {a.confusingPatternsDecoded.map((item, i) => (
               <ContentBlock key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
             ))}
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Gap-widening */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
+          <Reveal idx={8}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             These patterns did not form by accident. They were encoded in a system designed to stay hidden.
           </div>
+          </Reveal>
         )}
 
         {/* Attachment Style */}
+        <Reveal idx={9}>
         <ResultCard title="Your Attachment Style" subtitle={a.attachmentStyle || "Unknown"}>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
           {a.godAttachment && (
@@ -334,15 +462,19 @@ export default function OverviewPage() {
             </div>
           )}
         </ResultCard>
+        </Reveal>
 
         {/* Spiritual Integration */}
         {a.purityCultureImpact && (
+          <Reveal idx={10}>
           <ResultCard title="Spiritual Integration">
             <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.purityCultureImpact}</p>
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Relational Patterns */}
+        <Reveal idx={11}>
         <ResultCard title="Relational Pattern Scores">
           <RelationalBars analysis={a} />
           <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
@@ -357,9 +489,11 @@ export default function OverviewPage() {
         <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
           The relational patterns in your life are not separate from your behavior. They are the soil it grows in.
         </div>
+        </Reveal>
 
         {/* Isolation Indicator */}
         {a.isolationScore > 0 && (
+          <Reveal idx={12}>
           <ResultCard title="Isolation Level">
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
               <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, height: 20, overflow: "hidden" }}>
@@ -377,24 +511,30 @@ export default function OverviewPage() {
               {a.isolationLevel ? `Level: ${a.isolationLevel}` : `${Number(a.isolationScore) >= 4 ? "High isolation — the cycle thrives in secrecy" : Number(a.isolationScore) >= 2 ? "Moderate isolation detected" : "Low isolation"}`}
             </div>
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Life Stress Landscape */}
         {a.lifeStressAnalysis && (
+          <Reveal idx={13}>
           <ResultCard title="Your Stress Landscape">
             <StressHeatmap analysis={a} />
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Gap-widening */}
         {a.lifeStressAnalysis && (
+          <Reveal idx={13}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Root-level healing does not just address behavior. It rebuilds your capacity to carry the weight of real life.
           </div>
+          </Reveal>
         )}
 
         {/* Co-Coping Behaviors — fully expanded */}
         {a.coCopingBehaviors && (
+          <Reveal idx={14}>
           <ResultCard title="Your Brain's Other Escape Routes">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
             {Array.isArray(a.coCopingBehaviors) ? a.coCopingBehaviors.map((item, i) => (
@@ -403,24 +543,30 @@ export default function OverviewPage() {
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
             )}
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Substance vs Behavior Vice Diagram */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
+          <Reveal idx={15}>
           <ResultCard title="Substance vs. Behavior — Same Root">
             <ViceBalanceDiagram coCopingBehaviors={a.coCopingBehaviors} />
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Gap-widening */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
+          <Reveal idx={15}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             You cannot win whack-a-mole with your nervous system. Every time you shut down one behavior without addressing the root, your brain finds another.
           </div>
+          </Reveal>
         )}
 
         {/* Strategy Audit — fully expanded */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
+          <Reveal idx={16}>
           <ResultCard title="Strategy Audit">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>
               {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
@@ -429,16 +575,20 @@ export default function OverviewPage() {
               <ContentBlock key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor={GOLD} />
             ))}
           </ResultCard>
+          </Reveal>
         )}
 
         {/* Gap-widening after Strategy Audit */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
+          <Reveal idx={16}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Every strategy on this list was aimed at managing behavior. Not one reached the root. That is not a failure of effort. It is a failure of targeting.
           </div>
+          </Reveal>
         )}
 
         {/* Full Picture Bridge — synthesizes everything into one devastating paragraph */}
+        <Reveal idx={17}>
         <div ref={bridgeRef} style={{
           background: "#0d0d0d", borderRadius: 12, padding: "28px 24px",
           borderTop: `3px solid ${GOLD}`, marginBottom: 0,
@@ -451,21 +601,27 @@ export default function OverviewPage() {
             You can see the system now. Most men never get this far. But seeing the prison does not open the door.
           </p>
         </div>
+        </Reveal>
 
         {/* Key Insight */}
+        <Reveal idx={18}>
         <ResultCard ref={keyInsightRef} gold style={{ borderColor: `${GOLD}66` }}>
           <div style={{ fontSize: 12, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 12 }}>Key Insight</div>
           <p style={{ fontSize: 18, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
         </ResultCard>
+        </Reveal>
 
         {/* Closing Statement */}
+        <Reveal idx={19}>
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>WHAT THIS MEANS</div>
           <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>The path is laid out. The question is whether you will take the first step.</p>
         </ResultCard>
+        </Reveal>
 
         {/* Next Steps & Resources */}
+        <Reveal idx={20}>
         <div ref={nextStepsRef} style={{ display: "grid", gap: 0 }}>
           {/* Personalized recommendation */}
           <ResultCard title="Your Recommended Next Step">
@@ -520,9 +676,11 @@ export default function OverviewPage() {
             />
           </div>
         </div>
+        </Reveal>
 
         {/* PDF Download */}
         {activeReportUrl && (
+          <Reveal idx={21}>
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-block", padding: "14px 40px",
@@ -531,6 +689,7 @@ export default function OverviewPage() {
               textDecoration: "none", letterSpacing: 1,
             }}>DOWNLOAD FULL PDF REPORT</a>
           </div>
+          </Reveal>
         )}
 
       </div>

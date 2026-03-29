@@ -75,6 +75,9 @@ export async function POST(request) {
       return Response.json({ error: "No diagnostic data found." }, { status: 400, headers: CORS_HEADERS });
     }
 
+    // Set processing status so dashboard can show progress
+    await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
+
     // Analyze with Claude
     console.log("Starting Opus analysis...");
     const analysisStart = Date.now();
@@ -121,6 +124,39 @@ export async function POST(request) {
     }
     const analysis = sanitizeObj(rawAnalysis);
 
+    // ═══════════════════════════════════════
+    // STORE DASHBOARD DATA FIRST (PRIORITY)
+    // Dashboard works even if PDF generation fails
+    // ═══════════════════════════════════════
+    console.log("Storing dashboard data to Redis...");
+    const reportMeta = {
+      generatedAt: new Date().toISOString(),
+      arousalTemplateType: analysis.arousalTemplateType,
+      attachmentStyle: analysis.attachmentStyle,
+      neuropathway: analysis.neuropathway,
+      reportUrl: null, // Will be updated after PDF upload
+    };
+    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis);
+
+    // Append to report history
+    const historyEntry = { ...reportMeta, analysis };
+    const existingHistory = await redis.get(`mkt:history:${normalizedEmail}`);
+    const history = Array.isArray(existingHistory) ? existingHistory : [];
+    history.push(historyEntry);
+    await redis.set(`mkt:history:${normalizedEmail}`, history);
+    console.log("Dashboard data stored successfully.");
+
+    // Update status — results are now available in dashboard
+    await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
+
+    // ═══════════════════════════════════════
+    // GENERATE PDF + EMAIL (SECONDARY)
+    // Wrapped in try/catch so failures don't affect dashboard
+    // ═══════════════════════════════════════
+    let reportUrl = null;
+
+    try {
     // Generate PDF
     console.log("Starting PDF generation...");
     let pdfResult;
@@ -238,7 +274,6 @@ export async function POST(request) {
     const pdfBase64 = finalBuffer.toString("base64");
 
     // Upload PDF to Vercel Blob for permanent storage
-    let reportUrl = null;
     try {
       const timestamp = Date.now();
       const blob = await put(
@@ -248,6 +283,7 @@ export async function POST(request) {
       );
       reportUrl = blob.url;
       console.log("PDF uploaded to Blob:", reportUrl);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (e) {
       console.error("Blob upload failed (continuing without URL):", e.message);
     }
@@ -255,32 +291,33 @@ export async function POST(request) {
     // Send via Resend (with download link if available)
     try {
       await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (emailErr) {
       console.error("Email delivery error:", emailErr.message);
     }
 
-    // Store report metadata (including PDF URL)
-    const reportMeta = {
-      generatedAt: new Date().toISOString(),
-      arousalTemplateType: analysis.arousalTemplateType,
-      attachmentStyle: analysis.attachmentStyle,
-      neuropathway: analysis.neuropathway,
-      reportUrl: reportUrl || null,
-    };
-    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+    // Update Redis with PDF URL now that it's available
+    if (reportUrl) {
+      try {
+        reportMeta.reportUrl = reportUrl;
+        await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+        // Update the last history entry with the report URL
+        const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
+        if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
+          updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
+          await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
+        }
+        console.log("Redis updated with PDF URL.");
+      } catch (redisUpdateErr) {
+        console.error("Redis URL update error (non-fatal):", redisUpdateErr.message);
+      }
+    }
 
-    // Store full analysis for client dashboard (latest)
-    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis);
-
-    // Append to report history list for trend tracking
-    const historyEntry = {
-      ...reportMeta,
-      analysis,
-    };
-    const existingHistory = await redis.get(`mkt:history:${normalizedEmail}`);
-    const history = Array.isArray(existingHistory) ? existingHistory : [];
-    history.push(historyEntry);
-    await redis.set(`mkt:history:${normalizedEmail}`, history);
+    } catch (pdfPipelineErr) {
+      // PDF/email pipeline failed — dashboard data is already stored
+      console.error("PDF/EMAIL PIPELINE FAILED (dashboard data safe):", pdfPipelineErr.message);
+      console.error("Pipeline error stack:", pdfPipelineErr.stack);
+    }
 
     // Send to GoHighLevel CRM via webhook (with PDF URL)
     ghlDiagnosticComplete({
