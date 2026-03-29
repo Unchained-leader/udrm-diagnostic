@@ -1615,6 +1615,7 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
   }
 
   const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.RESET_FROM_EMAIL || "Unchained Leader <reports@unchained.support>";
+  const dashboardUrl = "https://unchained-marketing-coach.vercel.app/dashboard/login";
 
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -1630,26 +1631,19 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
         <div style="background:#111;padding:40px 20px;font-family:Helvetica,Arial,sans-serif;color:#ccc;max-width:600px;margin:0 auto;">
           <div style="text-align:center;margin-bottom:30px;">
             <div style="color:#c5a55a;font-size:12px;letter-spacing:3px;margin-bottom:6px;">UNCHAINED LEADER</div>
-            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Mapping Report</div>
+            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Map Is Ready</div>
           </div>
           <p style="font-size:15px;line-height:1.7;color:#ccc;">
-            ${firstName}, your Unwanted Desire Root Map is attached.
+            ${firstName}, your personalized Unwanted Desire Root Map is ready inside your secure dashboard.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
             This report maps every behavior in your pattern to its psychological root, decodes your attachment style, reveals your relational patterns, and connects it all to your childhood environment and first exposure. It shows you what is actually driving the cycle, not just the symptom.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
-            Read this as soon as possible. It connects dots you have never seen before. Your next steps and resources are on the final page.
+            Log in with the email and PIN you created during the assessment to view your full results.
           </p>
           <div style="text-align:center;margin:30px 0;">
-            ${reportUrl
-              ? `<a href="${reportUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">VIEW YOUR REPORT</a>`
-              : `<div style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">PDF REPORT ATTACHED BELOW</div>`
-            }
-          </div>
-          <div style="text-align:center;margin:0 0 30px;">
-            <p style="font-size:13px;color:#888;margin-bottom:12px;">You also have an interactive dashboard with your full results:</p>
-            <a href="https://unchained-marketing-coach.vercel.app/dashboard/register" style="display:inline-block;padding:12px 28px;border:1px solid #c5a55a;color:#c5a55a;font-size:13px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">ACCESS YOUR DASHBOARD</a>
+            <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">VIEW MY DASHBOARD</a>
           </div>
           <div style="border-top:1px solid #333;padding-top:20px;margin-top:20px;text-align:center;">
             <div style="color:#c5a55a;font-size:11px;letter-spacing:2px;">#liveunchained</div>
@@ -1657,13 +1651,6 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
           </div>
         </div>
       `,
-      attachments: [
-        {
-          filename: `UDRM-Report-${firstName}.pdf`,
-          content: pdfBase64,
-          type: "application/pdf",
-        },
-      ],
     }),
   });
 
