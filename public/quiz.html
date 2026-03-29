@@ -1563,7 +1563,15 @@
     // Fullscreen helper — CSS fullscreen always applies; native API as bonus
     function enterFullscreen() {
       document.body.classList.add("quiz-fullscreen");
-      // Try native Fullscreen API (works on Chrome/Android, not iOS Safari)
+
+      // If we're in an iframe, message the parent page to expand the iframe
+      if (window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: "unchained-quiz-fullscreen", action: "enter" }, "*");
+        } catch (e) {}
+      }
+
+      // Try native Fullscreen API (works on Chrome/Android when not cross-origin)
       const el = document.documentElement;
       if (el.requestFullscreen) {
         el.requestFullscreen().catch(() => {});
