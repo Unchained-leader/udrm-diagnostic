@@ -412,7 +412,7 @@ VOICE PRINCIPLES:
 7. Frame the arousal template origin as an attack on destiny. The enemy does not waste ammunition on men with no assignment.
 8. Connect attachment style to capacity for intimacy with God. The same attachment style limiting his marriage is limiting his kingdom capacity.
 9. Frame relational patterns as the environment the cycle needs to survive. Isolation, overperformance, and boundary collapse keep him from the community God designed him to heal in.
-10. The keyInsight and closingStatement should inflate the complexity of the problem. This is NOT one root narrative — it is a system of hundreds of interlocking root narratives, each reinforcing the others, encoded across decades. No one can untangle this system alone. It requires a guided, structured process (Root Narrative Restructuring) with trained support. Frame freedom as real and available, but make clear the depth and complexity demand professional guidance. Use the most direct kingdom language.
+10. The keyInsight and closingStatement must drive home TWO truths simultaneously: (1) The system of root narratives is staggeringly complex — hundreds of interlocking roots encoded across decades, each reinforcing the others. No one can even SEE the full system on their own, let alone untangle it. (2) BUT — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. Frame it like a maze: impossibly complex from the inside, simple when someone hands you the map. Freedom is not complicated — it has just been hidden behind complexity. Use the most direct kingdom language.
 
 Return ONLY valid JSON, no markdown:
 {
@@ -472,8 +472,8 @@ Return ONLY valid JSON, no markdown:
   "yearsFighting": "from the duration question (e.g. '10 to 20', 'Over 20'). Do NOT include the word 'years' in this value.",
   "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure."}],
 
-  "keyInsight": "The single most powerful paragraph. 5-7 sentences. Start with the man's first name (${userName}), NOT 'Brother.' This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across his entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. No amount of willpower, accountability software, or even awareness can untangle a system this deep without a structured, guided process. Frame the enemy as having built this system deliberately because of the assignment on his life. The complexity of this system is evidence of how dangerous he is to the kingdom of darkness. Make it clear: he now sees the surface, but what lies beneath requires Root Narrative Restructuring with trained support to fully map, expose, and dismantle. Write directly to him as Mason would.",
-  "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. But you are also standing at the edge of something you cannot navigate alone. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that pulling on one thread without guidance can tighten another. Freedom is real. It is neurological, spiritual, and relational. But a system this complex was not designed to be untangled alone. The question is not whether freedom is possible — the question is whether you are ready to let someone walk you through it."
+  "keyInsight": "The single most powerful paragraph. 5-7 sentences. Start with the man's first name (${userName}), NOT 'Brother.' This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across his entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. The enemy built this system deliberately because of the assignment on his life. The complexity is evidence of how dangerous he is to the kingdom of darkness. No amount of willpower, accountability software, or even awareness can untangle a system this deep alone. BUT — and this is the part most men never hear — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. It is like a maze: impossibly complex from the inside, simple when someone hands you the map. Write directly to him as Mason would.",
+  "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
 }`
     }],
   });
@@ -522,8 +522,8 @@ Return ONLY valid JSON, no markdown:
       escalationPresent: false,
       isolationLevel: "Unknown",
       strategyBreakdowns: [],
-      keyInsight: "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives that have been encoding since childhood. No amount of willpower can untangle a system this deep without guided, structured support.",
-      closingStatement: "You are not broken. You are not disqualified. But what is operating beneath the surface is far more complex than any single behavior. A system this interconnected was not designed to be dismantled alone. Freedom is real — but the question is whether you are ready to let someone walk you through it.",
+      keyInsight: "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives encoded across your entire life. The system is complex — but the process of healing is not. When the path is laid out for you, the invisible becomes visible and the overwhelming becomes manageable.",
+      closingStatement: "You are not broken. You are not disqualified. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is closer than you think. The question is whether you are ready to see the map.",
     };
   }
 }
@@ -1410,7 +1410,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     sectionHeader("THE FULL PICTURE");
 
     // Force first name at start of key insight
-    let keyInsightText = sanitize(analysis.keyInsight || "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives. A system this deep cannot be untangled alone.");
+    let keyInsightText = sanitize(analysis.keyInsight || "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives. The system is complex — but the process of healing is remarkably simple when the path is laid out for you.");
     // Strip any leading "Brother," or "Man," or generic opener and prepend first name
     keyInsightText = keyInsightText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
     if (!keyInsightText.startsWith(firstName)) {
@@ -1429,7 +1429,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
     y += 24;
 
-    let closingText = sanitize(analysis.closingStatement || "You are not broken. You are not disqualified. But what is operating beneath the surface is far more complex than any single behavior. Freedom is real — but a system this interconnected was not designed to be dismantled alone.");
+    let closingText = sanitize(analysis.closingStatement || "You are not broken. You are not disqualified. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is closer than you think.");
     closingText = closingText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
     if (!closingText.startsWith(firstName)) {
       closingText = `${firstName}, ${closingText.charAt(0).toLowerCase()}${closingText.slice(1)}`;
