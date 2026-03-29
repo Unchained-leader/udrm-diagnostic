@@ -134,8 +134,8 @@ export async function POST(request) {
       ? `\n═══ PREVIOUS CONVERSATION CONTEXT ═══\nThe following is a summary of your earlier conversations with this user. Use it to maintain continuity and reference past discussions when relevant:\n${conversationSummary}\n═══ END PREVIOUS CONTEXT ═══\n`
       : "";
 
-    // Format messages for Claude API (keep last 20 for context window management)
-    const recentMessages = messages.slice(-20).map((msg) => ({
+    // Format messages for Claude API (send all — full quiz is ~32 messages)
+    const recentMessages = messages.map((msg) => ({
       role: msg.role === "assistant" ? "assistant" : "user",
       content: msg.content,
     }));
