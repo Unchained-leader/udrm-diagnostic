@@ -403,8 +403,17 @@ export default function OverviewPage() {
         </ResultCard>
         </Reveal>
 
+        {/* Generational Influence */}
+        {a.generationalInfluence && (
+          <Reveal idx={5}>
+          <ResultCard title="Generational Influence" subtitle={a.generationLabel || null}>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.generationalInfluence}</p>
+          </ResultCard>
+          </Reveal>
+        )}
+
         {/* Neuropathway */}
-        <Reveal idx={5}>
+        <Reveal idx={6}>
         <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
           <NeuropathwayDiagram neuropathway={a.neuropathway} manages={a.neuropathwayManages} />
