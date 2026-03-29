@@ -533,6 +533,40 @@
       .confirm-title { font-size: 22px; }
       .confirm-text { font-size: 16px; }
     }
+
+    /* ===== FULLSCREEN MODE ===== */
+    .quiz-fullscreen .site-header { display: none; }
+    .quiz-fullscreen .quiz-page {
+      padding: 0;
+      align-items: stretch;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .quiz-fullscreen .quiz-card {
+      max-width: 100%;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    .quiz-fullscreen .card-body {
+      padding: 20px 24px 32px;
+      min-height: calc(100vh - 52px);
+      min-height: calc(100dvh - 52px);
+    }
+    @media (min-width: 601px) {
+      .quiz-fullscreen .card-body {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+    }
+    /* Native fullscreen overrides */
+    .quiz-card:fullscreen,
+    .quiz-card:-webkit-full-screen {
+      background: var(--surface);
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -1493,6 +1527,9 @@
       sectionCount = state.sectionCount || 0;
       diagnosticComplete = state.diagnosticComplete || false;
       currentScreenIndex = state.currentScreenIndex || 0;
+
+      // Restore fullscreen CSS (no native API without user gesture)
+      document.body.classList.add("quiz-fullscreen");
       if (state.screenResponses) Object.assign(screenResponses, state.screenResponses);
 
       if (state.currentProgress > 0) {
@@ -1541,6 +1578,24 @@
     // EVENT HANDLERS
     // =====================================================================
 
+    // Fullscreen helper
+    function enterFullscreen() {
+      document.body.classList.add("quiz-fullscreen");
+      const card = document.querySelector(".quiz-card");
+      if (card && card.requestFullscreen) {
+        card.requestFullscreen().catch(() => {});
+      } else if (card && card.webkitRequestFullscreen) {
+        card.webkitRequestFullscreen();
+      }
+    }
+
+    // Exit fullscreen on native API exit (e.g. user presses Escape)
+    document.addEventListener("fullscreenchange", () => {
+      if (!document.fullscreenElement) {
+        // Keep the CSS fullscreen class — only native overlay exits
+      }
+    });
+
     // Begin Assessment
     btnBegin.addEventListener("click", () => {
       trackEvent("quiz_start", { timestamp: new Date().toISOString() });
@@ -1548,6 +1603,9 @@
       if (typeof fbq === "function") {
         fbq("track", "ViewContent");
       }
+
+      // Enter fullscreen experience
+      enterFullscreen();
 
       // Add welcome exchange to messages for AI context later
       messages.push({ role: "assistant", content: WELCOME_MESSAGE });
