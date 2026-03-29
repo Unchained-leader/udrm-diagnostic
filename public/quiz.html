@@ -535,37 +535,32 @@
     }
 
     /* ===== FULLSCREEN MODE ===== */
-    .quiz-fullscreen .site-header { display: none; }
-    .quiz-fullscreen .quiz-page {
-      padding: 0;
-      align-items: stretch;
+    body.quiz-fullscreen .site-header { display: none !important; }
+    body.quiz-fullscreen {
+      background: var(--surface) !important;
+    }
+    body.quiz-fullscreen .quiz-page {
+      padding: 0 !important;
+      align-items: stretch !important;
       min-height: 100vh;
       min-height: 100dvh;
     }
-    .quiz-fullscreen .quiz-card {
-      max-width: 100%;
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
+    body.quiz-fullscreen .quiz-card {
+      max-width: 100% !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
       min-height: 100vh;
       min-height: 100dvh;
     }
-    .quiz-fullscreen .card-body {
-      padding: 20px 24px 32px;
-      min-height: calc(100vh - 52px);
-      min-height: calc(100dvh - 52px);
+    body.quiz-fullscreen .card-body {
+      padding: 20px 24px 32px !important;
     }
     @media (min-width: 601px) {
-      .quiz-fullscreen .card-body {
+      body.quiz-fullscreen .card-body {
         max-width: 720px;
         margin: 0 auto;
       }
-    }
-    /* Native fullscreen overrides */
-    .quiz-card:fullscreen,
-    .quiz-card:-webkit-full-screen {
-      background: var(--surface);
-      overflow-y: auto;
     }
   </style>
 </head>
@@ -1578,23 +1573,17 @@
     // EVENT HANDLERS
     // =====================================================================
 
-    // Fullscreen helper
+    // Fullscreen helper — CSS fullscreen always applies; native API as bonus
     function enterFullscreen() {
       document.body.classList.add("quiz-fullscreen");
-      const card = document.querySelector(".quiz-card");
-      if (card && card.requestFullscreen) {
-        card.requestFullscreen().catch(() => {});
-      } else if (card && card.webkitRequestFullscreen) {
-        card.webkitRequestFullscreen();
+      // Try native Fullscreen API (works on Chrome/Android, not iOS Safari)
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
       }
     }
-
-    // Exit fullscreen on native API exit (e.g. user presses Escape)
-    document.addEventListener("fullscreenchange", () => {
-      if (!document.fullscreenElement) {
-        // Keep the CSS fullscreen class — only native overlay exits
-      }
-    });
 
     // Begin Assessment
     btnBegin.addEventListener("click", () => {
