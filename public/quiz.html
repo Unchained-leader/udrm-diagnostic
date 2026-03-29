@@ -84,7 +84,7 @@
     /* ===== PROGRESS BAR (top of card) ===== */
     .progress-strip {
       width: 100%;
-      height: 8px;
+      height: 12px;
       background: #1a1a1a;
       position: relative;
     }
@@ -244,7 +244,7 @@
       display: flex;
       align-items: flex-start;
       gap: 12px;
-      padding: 13px 16px;
+      padding: 16px 20px;
       background: transparent;
       border: 1px solid var(--border-gold);
       border-radius: 12px;
@@ -318,7 +318,7 @@
       font-size: 16px;
       resize: vertical;
       min-height: 56px;
-      max-height: 140px;
+      max-height: 200px;
       margin-top: 16px;
       margin-bottom: 4px;
       transition: border-color 0.2s;
@@ -358,6 +358,18 @@
       cursor: not-allowed;
       box-shadow: none;
     }
+    .btn-gold:focus-visible {
+      outline: 2px solid var(--gold-light);
+      outline-offset: 2px;
+    }
+    .reset-btn:focus-visible {
+      outline: 2px solid var(--gold-light);
+      outline-offset: 2px;
+    }
+    .option-card:focus-visible {
+      outline: 2px solid var(--gold-light);
+      outline-offset: 2px;
+    }
     .btn-continue {
       margin-top: 20px;
     }
@@ -375,7 +387,7 @@
       flex: 1 1 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
+      padding-bottom: 80px;
     }
     #screenSection .btn-continue,
     #screenReveal .btn-continue {
@@ -396,7 +408,7 @@
       flex: 1 1 auto;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 4px;
+      padding-bottom: 80px;
     }
     .scroll-hint {
       text-align: center;
@@ -434,14 +446,16 @@
     .contact-form input::placeholder { color: #999; }
     .form-error {
       color: #fc5454;
-      font-size: 12px;
+      font-size: 13px;
       min-height: 18px;
-      margin-bottom: 8px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      text-align: center;
     }
 
     /* ===== REVEAL SCREEN ===== */
     .reveal-text {
-      color: #ddd;
+      color: #e0e0e0;
       font-size: 14.5px;
       line-height: 1.7;
       white-space: pre-wrap;
@@ -485,7 +499,7 @@
       border: 2px solid var(--border-subtle);
       border-top-color: var(--gold);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 1.2s linear infinite;
       margin: 24px auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -530,7 +544,7 @@
   <div class="quiz-page">
     <div class="quiz-card">
       <!-- Progress bar at top of card -->
-      <div class="progress-strip">
+      <div class="progress-strip" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Quiz progress">
         <div class="progress-fill" id="progressFill"></div>
       </div>
       <div class="progress-info hidden" id="progressInfo">
@@ -555,7 +569,7 @@
           <p class="landing-text" style="margin-bottom:8px;">
             Select everything that applies. There are no wrong answers.
           </p>
-          <button class="btn-gold" id="btnBegin">Begin Assessment</button>
+          <button class="btn-gold" id="btnBegin" aria-label="Begin the UDRM assessment">Begin Assessment</button>
           <p class="landing-text" style="margin-top:18px;margin-bottom:8px;">
             100% private. 100% confidential.
           </p>
@@ -565,7 +579,7 @@
         <!-- SCREEN: Section (dynamic) -->
         <div class="screen" id="screenSection">
           <div id="sectionContent"></div>
-          <button class="btn-gold btn-continue" id="btnContinue" disabled>Continue</button>
+          <button class="btn-gold btn-continue" id="btnContinue" disabled aria-label="Continue to next section">Continue</button>
         </div>
 
         <!-- SCREEN: Loading between sections -->
@@ -600,8 +614,8 @@
             <div style="margin-top:8px; padding-top:12px; border-top:1px solid #2a2a2a;">
               <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to secure your portal</p>
               <div style="display:flex; gap:8px;">
-                <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
-                <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
+                <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
+                <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
               </div>
             </div>
             <div class="form-error" id="formError"></div>
@@ -617,7 +631,7 @@
           <p class="confirm-text" id="confirmText">
             Your personalized Unwanted Desire Root Map is being built live inside your secure portal.<br><br><span style="text-align:left;display:block;max-width:360px;margin:0 auto;"><strong style="color:#c5a55a;">1.</strong> Results are typically ready in 2-3 minutes.<br><strong style="color:#c5a55a;">2.</strong> A copy will also be sent to your email from <strong>Unchained Support</strong>.<br><strong style="color:#c5a55a;">3.</strong> Check your spam folder if you don't see the email.</span>
           </p>
-          <a href="/dashboard/login" style="display:inline-block; margin-top:20px; padding:12px 28px; background:linear-gradient(135deg, #DFC468, #9A7730); color:#000; font-size:13px; font-weight:700; border-radius:8px; text-decoration:none; letter-spacing:1px;">OPEN MY DASHBOARD</a>
+          <div style="text-align:center;"><a href="/dashboard/login" style="display:inline-block; margin-top:20px; padding:12px 28px; background:linear-gradient(135deg, #DFC468, #9A7730); color:#000; font-size:13px; font-weight:700; border-radius:8px; text-decoration:none; letter-spacing:1px;">OPEN MY DASHBOARD</a></div>
           <p class="confirm-text" style="margin-top:16px; color:#666; font-size:12px;">
             Log in with your email and PIN to view your results.
           </p>
@@ -912,6 +926,7 @@
       currentProgress = percent;
       progressInfo.classList.remove("hidden");
       progressFill.style.width = percent + "%";
+      progressFill.parentElement.setAttribute("aria-valuenow", percent);
       progressPct.textContent = percent + "%";
 
       if (percent >= 100) {
