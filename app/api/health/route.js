@@ -70,24 +70,15 @@ export async function GET() {
     results.services.resend = { status: "down", error: e.message };
   }
 
-  // Log to Postgres
-  try {
-    const sql = getDb();
-    const downServices = Object.entries(results.services).filter(([_, v]) => v.status === "down").map(([k]) => k);
-    await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
-      VALUES ('system', 'system', 'health_check', ${JSON.stringify({ status: results.status, services: results.services, downServices })})`;
-
-    // Slack alert if down
-    if (downServices.length > 0 && process.env.SLACK_WEBHOOK_URL) {
-      const details = downServices.map(s => `*${s}*: ${results.services[s].error || "unreachable"}`).join("\n");
-      fetch(process.env.SLACK_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: `:rotating_light: *SYSTEM ALERT*\nStatus: *${results.status}*\nTime: ${results.timestamp}\n\n*Down:*\n${details}` }),
-      }).catch(() => {});
-    }
-  } catch (e) {
-    console.error("Health log error:", e.message);
+  // Slack alert if any service is down
+  const downServices = Object.entries(results.services).filter(([_, v]) => v.status === "down").map(([k]) => k);
+  if (downServices.length > 0 && process.env.SLACK_WEBHOOK_URL) {
+    const details = downServices.map(s => `*${s}*: ${results.services[s].error || "unreachable"}`).join("\n");
+    fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: `:rotating_light: *SYSTEM ALERT*\nStatus: *${results.status}*\nTime: ${results.timestamp}\n\n*Down:*\n${details}` }),
+    }).catch(() => {});
   }
 
   return Response.json(results, { status: results.status === "healthy" ? 200 : 503, headers: CORS_HEADERS });
