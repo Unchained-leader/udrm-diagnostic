@@ -37,7 +37,7 @@ export async function GET(request) {
       // Check if report is currently being generated
       const status = await redis.get(`mkt:status:${email}`);
       const statusData = parseRedis(status);
-      if (statusData && (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready")) {
+      if (statusData && (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready" || statusData.step === "emailed")) {
         return Response.json({
           success: true,
           processing: true,
