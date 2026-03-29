@@ -1,5 +1,5 @@
 import redis from "../../lib/redis";
-import { SECRET, jwtVerify } from "../../lib/auth";
+import { getJwtSecret, jwtVerify } from "../../lib/auth";
 import { parseRedis } from "../../lib/utils";
 
 export async function GET(request) {
@@ -12,7 +12,7 @@ export async function GET(request) {
 
     let payload;
     try {
-      const result = await jwtVerify(tokenMatch[1], SECRET);
+      const result = await jwtVerify(tokenMatch[1], getJwtSecret());
       payload = result.payload;
     } catch {
       return Response.json({ error: "Session expired. Please log in again." }, { status: 401 });

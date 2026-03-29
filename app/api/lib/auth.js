@@ -1,18 +1,27 @@
 import { SignJWT, jwtVerify } from "jose";
 
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
+function getSecret() {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
 }
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+// Lazy — evaluated on first request, not at build time
+let _secret;
+export function getJwtSecret() {
+  if (!_secret) _secret = getSecret();
+  return _secret;
+}
 
-export { SECRET, jwtVerify };
+// Re-export for convenience
+export { jwtVerify };
 
 export async function createDashboardToken(email, name) {
   return new SignJWT({ email, name })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("7d")
-    .sign(SECRET);
+    .sign(getJwtSecret());
 }
 
 export function setTokenCookie(response, token) {
