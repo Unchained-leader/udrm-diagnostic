@@ -31,7 +31,8 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (data.success) {
-        router.push("/dashboard/overview");
+        window.location.href = "/dashboard/overview";
+        return;
       } else {
         setError(data.error || "Registration failed.");
       }
