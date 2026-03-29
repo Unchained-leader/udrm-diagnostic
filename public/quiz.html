@@ -295,6 +295,39 @@
       color: var(--gold-light);
     }
 
+    /* ===== LIFE STRESS COLOR HINTS ===== */
+    .option-card.life-abundance {
+      border-color: rgba(76, 175, 80, 0.35);
+    }
+    .option-card.life-abundance:hover {
+      background: rgba(76, 175, 80, 0.06);
+      border-color: rgba(76, 175, 80, 0.5);
+    }
+    .option-card.life-abundance .option-indicator {
+      border-color: rgba(76, 175, 80, 0.5);
+    }
+    .option-card.life-lack {
+      border-color: rgba(239, 83, 80, 0.3);
+    }
+    .option-card.life-lack:hover {
+      background: rgba(239, 83, 80, 0.06);
+      border-color: rgba(239, 83, 80, 0.45);
+    }
+    .option-card.life-lack .option-indicator {
+      border-color: rgba(239, 83, 80, 0.45);
+    }
+    /* Selected overrides — always gold */
+    .option-card.life-abundance.selected,
+    .option-card.life-lack.selected {
+      background: rgba(185, 156, 79, 0.12);
+      border-color: var(--gold);
+    }
+    .option-card.life-abundance.selected .option-indicator,
+    .option-card.life-lack.selected .option-indicator {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
     /* ===== TEXT INPUT ===== */
     .quiz-textarea {
       width: 100%;
@@ -743,9 +776,21 @@
           {id:"calm_stress",text:"I use sexual behavior to calm down or manage stress"},{id:"feel_less_alone",text:"I use sexual behavior to feel less alone"},{id:"feel_powerful",text:"I use sexual behavior to feel powerful or in control"},{id:"numb_checkout",text:"I use sexual behavior to feel numb or check out"},{id:"feel_wanted",text:"I use sexual behavior to feel wanted or desired"},{id:"escape_reality",text:"I use sexual behavior to escape from reality"},{id:"manage_anger",text:"I use sexual behavior to manage anger I cannot express"},{id:"feel_something",text:"I use sexual behavior to feel something when I feel empty"},{id:"after_conflict",text:"I act out after conflict with my wife/partner"},{id:"after_serving",text:"I act out after serving at church or leading in ministry"},{id:"distant_god",text:"I act out when I feel distant from God"},{id:"spiritual_growth",text:"I feel MORE pulled toward the behavior during seasons of spiritual growth"}
         ]}
       ]},
-      { id:"4", section:4, sectionLabel:"Section 4", title:"Section 4 of 9 \u2014 Life Stress Analysis", intro:"Your brain does not act out in a vacuum. Select the areas where you are currently experiencing abundance or lack. Your report will map how stress in these areas directly fuels the cycle.", progress:42, blocks:[
-        {type:"multi", label:"Select all that apply", options:[
-          {id:"life_romantic_abundance",text:"Romantic relationship \u2014 healthy and fulfilling"},{id:"life_romantic_lack",text:"Romantic relationship \u2014 strained, absent, or unfulfilling"},{id:"life_health_abundance",text:"Physical health \u2014 strong and consistent"},{id:"life_health_lack",text:"Physical health \u2014 struggling or declining"},{id:"life_financial_abundance",text:"Financial situation \u2014 stable and sufficient"},{id:"life_financial_lack",text:"Financial situation \u2014 strained or a source of stress"},{id:"life_work_abundance",text:"Fulfillment in work \u2014 purposeful and energizing"},{id:"life_work_lack",text:"Fulfillment in work \u2014 draining, meaningless, or stagnant"},{id:"life_god_abundance",text:"Relationship with God \u2014 close and growing"},{id:"life_god_lack",text:"Relationship with God \u2014 distant or disconnected"}
+      { id:"4", section:4, sectionLabel:"Section 4", title:"Section 4 of 9 \u2014 Life Stress Analysis", intro:"Your brain does not act out in a vacuum. For each area, select the option that best describes where you are right now. Your report will map how stress in these areas directly fuels the cycle.", progress:42, blocks:[
+        {type:"single", label:"Romantic Relationship", options:[
+          {id:"life_romantic_abundance",text:"Healthy and fulfilling",lifeHint:"abundance"},{id:"life_romantic_lack",text:"Strained, absent, or unfulfilling",lifeHint:"lack"}
+        ]},
+        {type:"single", label:"Physical Health", options:[
+          {id:"life_health_abundance",text:"Strong and consistent",lifeHint:"abundance"},{id:"life_health_lack",text:"Struggling or declining",lifeHint:"lack"}
+        ]},
+        {type:"single", label:"Financial Situation", options:[
+          {id:"life_financial_abundance",text:"Stable and sufficient",lifeHint:"abundance"},{id:"life_financial_lack",text:"Strained or a source of stress",lifeHint:"lack"}
+        ]},
+        {type:"single", label:"Fulfillment in Work", options:[
+          {id:"life_work_abundance",text:"Purposeful and energizing",lifeHint:"abundance"},{id:"life_work_lack",text:"Draining, meaningless, or stagnant",lifeHint:"lack"}
+        ]},
+        {type:"single", label:"Relationship with God", options:[
+          {id:"life_god_abundance",text:"Close and growing",lifeHint:"abundance"},{id:"life_god_lack",text:"Distant or disconnected",lifeHint:"lack"}
         ]}
       ]},
       { id:"4a", section:5, sectionLabel:"Section 5", title:"Section 5 of 9 \u2014 First Exposure", intro:"How old were you when you were first exposed to sexual content? Your report will trace your current pattern back to this moment.", progress:48, blocks:[
@@ -1041,7 +1086,9 @@
 
         block.options.forEach(opt => {
           const card = document.createElement("div");
-          card.className = "option-card" + (block.type === "single" ? " radio-mode" : "");
+          card.className = "option-card" + (block.type === "single" ? " radio-mode" : "")
+            + (opt.lifeHint === "abundance" ? " life-abundance" : "")
+            + (opt.lifeHint === "lack" ? " life-lack" : "");
           card.dataset.optId = opt.id;
 
           const indicator = document.createElement("div");
@@ -1063,15 +1110,6 @@
                 allSelections[blockIdx].delete(opt.id);
               } else {
                 allSelections[blockIdx].add(opt.id);
-                // Mutual exclusion for life_ abundance/lack pairs
-                const lifeMatch = opt.id.match(/^(life_\w+)_(abundance|lack)$/);
-                if (lifeMatch) {
-                  const opposite = lifeMatch[1] + "_" + (lifeMatch[2] === "abundance" ? "lack" : "abundance");
-                  allSelections[blockIdx].delete(opposite);
-                  group.querySelectorAll(".option-card").forEach(c => {
-                    if (c.dataset.optId === opposite) c.classList.remove("selected");
-                  });
-                }
               }
             }
             card.classList.toggle("selected");
@@ -1127,16 +1165,6 @@
               return b && b.type === "multi" && sel.size > 0;
             });
             if (!anyMultiFilled) valid = false;
-          }
-        }
-        // Life Stress section: require at least one selection per category
-        if (valid && screen.id === "4") {
-          const lifeCategories = ["life_romantic", "life_health", "life_financial", "life_work", "life_god"];
-          const allSelected = new Set();
-          Object.values(allSelections).forEach(sel => sel.forEach(id => allSelected.add(id)));
-          for (const cat of lifeCategories) {
-            const hasOne = allSelected.has(cat + "_abundance") || allSelected.has(cat + "_lack");
-            if (!hasOne) { valid = false; break; }
           }
         }
         btnContinue.disabled = !valid;
@@ -1563,7 +1591,15 @@
     // Fullscreen helper — CSS fullscreen always applies; native API as bonus
     function enterFullscreen() {
       document.body.classList.add("quiz-fullscreen");
-      // Try native Fullscreen API (works on Chrome/Android, not iOS Safari)
+
+      // If we're in an iframe, message the parent page to expand the iframe
+      if (window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: "unchained-quiz-fullscreen", action: "enter" }, "*");
+        } catch (e) {}
+      }
+
+      // Try native Fullscreen API (works on Chrome/Android when not cross-origin)
       const el = document.documentElement;
       if (el.requestFullscreen) {
         el.requestFullscreen().catch(() => {});
