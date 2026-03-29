@@ -122,7 +122,16 @@ export async function POST(request) {
     const analysis = sanitizeObj(rawAnalysis);
 
     // Generate PDF
-    const pdfResult = await generatePDF(analysis, firstName, { gender });
+    console.log("Starting PDF generation...");
+    let pdfResult;
+    try {
+      pdfResult = await generatePDF(analysis, firstName, { gender });
+      console.log("PDF generation completed, pages:", pdfResult?.pageContentLog?.length || "unknown");
+    } catch (pdfErr) {
+      console.error("PDF GENERATION CRASHED:", pdfErr.message);
+      console.error("PDF crash stack:", pdfErr.stack);
+      throw pdfErr;
+    }
     let pdfBuffer = pdfResult.buffer;
 
     // ═══════════════════════════════════════
