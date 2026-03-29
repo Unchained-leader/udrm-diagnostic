@@ -45,8 +45,9 @@ export async function GET(request) {
     // Build history array — if no history key exists, create one from current report
     let reports = [];
     if (Array.isArray(historyData) && historyData.length > 0) {
-      reports = historyData.map((entry, i) => {
-        // Try multiple paths to find the generated date
+      // Filter out corrupt/empty entries (no analysis data)
+      const validEntries = historyData.filter(entry => entry && (entry.analysis || entry.generatedAt));
+      reports = validEntries.map((entry, i) => {
         const generatedAt = entry.generatedAt || entry.analysis?.generatedAt || null;
         return {
           id: i,
@@ -58,7 +59,8 @@ export async function GET(request) {
           analysis: entry.analysis || null,
         };
       });
-    } else {
+    }
+    if (reports.length === 0) {
       // Backwards compatibility: single report, no history yet
       reports = [{
         id: 0,

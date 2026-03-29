@@ -1423,14 +1423,19 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     sectionHeader("THE FULL PICTURE");
 
     // Personalized synthesis paragraph
-    const synthText = `Here is what your diagnostic revealed: A root narrative of "${sanitize(analysis.rootNarrativeStatement || "a core wound")}" formed in childhood, encoded into a ${sanitize(analysis.arousalTemplateType || "specific")} arousal template at age ${sanitize(analysis.imprintingAge || "unknown")}, running through the ${sanitize(analysis.neuropathway || "primary")} neuropathway, reinforced by ${sanitize(analysis.attachmentStyle || "your")} attachment, and defended against by ${sanitize(analysis.strategiesCount || "multiple")} strategies over ${sanitize(analysis.yearsFighting || "many")} years. None of those strategies failed because of you. They failed because they were aimed at a system they could not see.`;
-    _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(synthText, M, y, { width: CW, lineGap: 4 });
-    y = doc.y + 16;
-    _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
-      "You can see the system now. Most men never get this far. But seeing the prison does not open the door.",
-      M, y, { width: CW, lineGap: 4, align: "center" }
-    );
-    y = doc.y + 24;
+    try {
+      const synthText = `Here is what your diagnostic revealed: A root narrative of "${sanitize(analysis.rootNarrativeStatement || "a core wound")}" formed in childhood, encoded into a ${sanitize(analysis.arousalTemplateType || "specific")} arousal template at age ${sanitize(String(analysis.imprintingAge || "unknown"))}, running through the ${sanitize(analysis.neuropathway || "primary")} neuropathway, reinforced by ${sanitize(analysis.attachmentStyle || "your")} attachment, and defended against by ${sanitize(String(analysis.strategiesCount || "multiple"))} strategies over ${sanitize(String(analysis.yearsFighting || "many"))} years. None of those strategies failed because of you. They failed because they were aimed at a system they could not see.`;
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(synthText, M, y, { width: CW, lineGap: 4 });
+      y = doc.y + 16;
+      _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
+        "You can see the system now. Most men never get this far. But seeing the prison does not open the door.",
+        M, y, { width: CW, lineGap: 4, align: "center" }
+      );
+      y = doc.y + 24;
+    } catch (synthErr) {
+      console.error("PDF synthesis paragraph error:", synthErr.message);
+      y = doc.y + 24;
+    }
 
     // Force first name at start of key insight
     let keyInsightText = sanitize(analysis.keyInsight || "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives. The system is complex — but the process of healing is remarkably simple when the path is laid out for you.");
@@ -1464,12 +1469,16 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     y = doc.y + 20;
 
     // Final direct commitment line
-    checkFit(40);
-    doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
-      "The path is laid out. The question is whether you will take the first step.",
-      M, y, { width: CW, lineGap: 4, align: "center" }
-    );
-    y = doc.y + 20;
+    try {
+      checkFit(40);
+      doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
+        "The path is laid out. The question is whether you will take the first step.",
+        M, y, { width: CW, lineGap: 4, align: "center" }
+      );
+      y = doc.y + 20;
+    } catch (commitErr) {
+      console.error("PDF commitment line error:", commitErr.message);
+    }
 
     // ════════════════════════════════════════
     // SECTION 10 — NEXT STEPS & RESOURCES
@@ -1479,9 +1488,13 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     y = doc.y + 20;
 
     // Personalized recommendation
-    const recoText = `${firstName}, based on your ${sanitize(analysis.arousalTemplateType || "primary")} pattern, ${sanitize(analysis.neuropathway || "identified")} neuropathway, and ${sanitize(analysis.attachmentStyle || "your")} attachment style, this is the recommended next step for your specific diagnostic:`;
-    _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(recoText, M, y, { width: CW, lineGap: 3 });
-    y = doc.y + 16;
+    try {
+      const recoText = `${firstName}, based on your ${sanitize(analysis.arousalTemplateType || "primary")} pattern, ${sanitize(analysis.neuropathway || "identified")} neuropathway, and ${sanitize(analysis.attachmentStyle || "your")} attachment style, this is the recommended next step for your specific diagnostic:`;
+      _currentTextColor = GRAY; doc.fontSize(18).fillColor(GRAY).font("Helvetica").text(recoText, M, y, { width: CW, lineGap: 3 });
+      y = doc.y + 16;
+    } catch (recoErr) {
+      console.error("PDF recommendation text error:", recoErr.message);
+    }
 
     // Helper to draw a resource card with CTA button
     function drawResourceCard(priority, label, price, title, body, link) {
@@ -1524,20 +1537,27 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     const p1Body = `Your diagnostic revealed ${sanitize(analysis.arousalTemplateType || "your primary pattern")} as your primary pattern with ${sanitize(analysis.neuropathway || "a specific neuropathway")} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. Your diagnostic is the map of the maze. This training shows you the door out.`;
     drawResourceCard(1, "PRIORITY 1 — YOUR NEXT STEP", "FREE", "Watch the Art of Freedom Training", p1Body, "https://unchained-leader.com/aof");
 
-    // Social proof
-    checkFit(30);
-    doc.fontSize(14).fillColor([120, 120, 120]).font("Helvetica").text(
-      "Trusted by over 10,000 men across 33 countries. LegitScript-certified.",
-      M, y, { width: CW, align: "center" }
-    );
-    y = doc.y + 16;
+    // Social proof + divider
+    try {
+      checkFit(30);
+      doc.fontSize(14).fillColor([120, 120, 120]).font("Helvetica").text(
+        "Trusted by over 10,000 men across 33 countries. LegitScript-certified.",
+        M, y, { width: CW, align: "center" }
+      );
+      y = doc.y + 16;
 
-    // Additional Resources divider
-    checkFit(30);
-    doc.moveTo(M, y).lineTo(M + CW, y).strokeColor([60, 60, 60]).lineWidth(0.5).stroke();
-    y += 10;
-    doc.fontSize(12).fillColor([100, 100, 100]).font("Helvetica").text("ADDITIONAL RESOURCES", M, y, { width: CW, align: "center", characterSpacing: 2 });
-    y = doc.y + 16;
+      // Additional Resources divider
+      checkFit(30);
+      doc.save();
+      doc.moveTo(M, y).lineTo(M + CW, y).lineWidth(0.5).strokeColor(60, 60, 60).stroke();
+      doc.restore();
+      y += 10;
+      doc.fontSize(12).fillColor([100, 100, 100]).font("Helvetica").text("ADDITIONAL RESOURCES", M, y, { width: CW, align: "center", characterSpacing: 2 });
+      y = doc.y + 16;
+    } catch (divErr) {
+      console.error("PDF social proof/divider error:", divErr.message);
+      y = doc.y + 16;
+    }
 
     // Option 2 — $27
     const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
