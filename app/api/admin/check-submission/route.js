@@ -6,7 +6,7 @@ export async function GET(request) {
   const email = searchParams.get("email");
   const key = searchParams.get("key");
 
-  if (key !== process.env.ADMIN_KEY && key !== "unchained-debug-2026") {
+  if (key !== process.env.ADMIN_KEY) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
