@@ -50,7 +50,7 @@ export async function POST(request) {
         .setExpirationTime("7d")
         .sign(SECRET);
 
-      const response = Response.json({ success: true, name: userData.name || trimmedName }, { headers: CORS_HEADERS });
+      const response = Response.json({ success: true, name: userData.name || trimmedName, token }, { headers: CORS_HEADERS });
       response.headers.set("Set-Cookie", `dashboard_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
       return response;
     }
@@ -78,7 +78,7 @@ export async function POST(request) {
       .setExpirationTime("7d")
       .sign(SECRET);
 
-    const response = Response.json({ success: true, name: trimmedName }, { headers: CORS_HEADERS });
+    const response = Response.json({ success: true, name: trimmedName, token }, { headers: CORS_HEADERS });
     response.headers.set("Set-Cookie", `dashboard_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
     return response;
   } catch (error) {

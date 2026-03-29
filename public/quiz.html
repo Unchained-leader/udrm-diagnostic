@@ -1319,11 +1319,9 @@
 
         clearState(); // Quiz is done
 
-        // Brief delay to ensure report request is dispatched before navigation
-        await new Promise(r => setTimeout(r, 500));
-
-        // Redirect to dashboard — user will see live progress
-        window.location.href = "/dashboard/overview";
+        // Redirect to full dashboard site with auth token (breaks out of iframe)
+        const dashboardUrl = BASE_URL + "/dashboard/overview?token=" + encodeURIComponent(data.token);
+        try { window.top.location.href = dashboardUrl; } catch (e) { window.location.href = dashboardUrl; }
 
       } catch(e) {
         formError.textContent = "Connection error. Please try again.";
@@ -1385,6 +1383,7 @@
         const res = await fetch(REPORT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          keepalive: true,
           body: JSON.stringify({
             email: currentUser.email,
             name: currentUser.name,
