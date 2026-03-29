@@ -244,7 +244,11 @@ export async function POST(request) {
     }
 
     // Send via Resend (with download link if available)
-    await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+    try {
+      await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+    } catch (emailErr) {
+      console.error("Email delivery error:", emailErr.message);
+    }
 
     // Store report metadata (including PDF URL)
     const reportMeta = {
@@ -1556,9 +1560,9 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
     return;
   }
 
-  const fromEmail = process.env.RESET_FROM_EMAIL || "Unchained Leader <reports@unchained.support>";
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.RESET_FROM_EMAIL || "Unchained Leader <reports@unchained.support>";
 
-  await fetch("https://api.resend.com/emails", {
+  const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -1608,4 +1612,12 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
       ],
     }),
   });
+
+  if (!resp.ok) {
+    const errBody = await resp.text().catch(() => "unknown");
+    console.error("Resend email failed:", resp.status, errBody);
+  } else {
+    const result = await resp.json().catch(() => ({}));
+    console.log("Resend email sent:", result.id || "ok");
+  }
 }
