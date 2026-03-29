@@ -603,7 +603,7 @@
           <div class="confirm-icon">&#10003;</div>
           <h2 class="confirm-title">Locked In</h2>
           <p class="confirm-text" id="confirmText">
-            Your personalized Unwanted Desire Root Map is being built now. It may take up to 5 minutes for your results to fully process and arrive in your inbox. Look out for an email from Unchained Support.
+            Your personalized Unwanted Desire Root Map is being built now.<br><br><span style="text-align:left;display:block;max-width:360px;margin:0 auto;"><strong style="color:#c5a55a;">1.</strong> Results may take up to 5 minutes to process.<br><strong style="color:#c5a55a;">2.</strong> Look for an email from <strong>Unchained Support</strong>.<br><strong style="color:#c5a55a;">3.</strong> Check your spam folder if you don't see it.</span>
           </p>
           <p class="confirm-text" style="margin-top:16px; color:#666; font-size:12px;">
             You can log back in anytime using your email.
@@ -1316,7 +1316,7 @@
         }
 
         // Update confirmation text
-        confirmText.textContent = "Your personalized Unwanted Desire Root Map is being built now. It may take up to 5 minutes for your results to fully process and arrive in your inbox at " + email + ". Look out for an email from Unchained Support. Check your spam folder if you don't see it.";
+        confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built now.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results may take up to 5 minutes to process.<br><strong style=\"color:#c5a55a;\">2.</strong> Look for an email from <strong>Unchained Support</strong> at " + email + ".<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see it.</span>";
 
         showScreen(screenConfirm);
         clearState(); // Quiz is done
@@ -1344,7 +1344,7 @@
         fbq("trackCustom", "ReportGenerated");
       }
 
-      confirmText.textContent = "Your personalized Unwanted Desire Root Map is being built now. It may take up to 5 minutes for your results to fully process and arrive in your inbox at " + currentUser.email + ". Look out for an email from Unchained Support. Check your spam folder if you don't see it.";
+      confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built now.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results may take up to 5 minutes to process.<br><strong style=\"color:#c5a55a;\">2.</strong> Look for an email from <strong>Unchained Support</strong> at " + currentUser.email + ".<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see it.</span>";
       showScreen(screenConfirm);
       clearState();
     }
