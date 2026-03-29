@@ -1364,7 +1364,7 @@
         try {
           await saveDiagnosticData();
         } catch(e) {
-          console.log("Diagnostic save error:", e.message);
+          console.error("Diagnostic save error:", e.message);
         }
 
         // Small delay for Redis propagation
@@ -1453,13 +1453,11 @@
             ageRange,
           }),
         });
-        if (res.ok) {
-          console.log("Report generated and sent successfully");
-        } else {
-          console.log("Report generation failed:", await res.text());
+        if (!res.ok) {
+          console.error("Report generation failed:", await res.text());
         }
       } catch(e) {
-        console.log("Could not generate report:", e.message);
+        console.error("Could not generate report:", e.message);
       }
     }
 

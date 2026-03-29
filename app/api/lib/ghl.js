@@ -14,7 +14,7 @@
 export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl }) {
   const webhookUrl = process.env.GHL_WEBHOOK_URL;
   if (!webhookUrl) {
-    console.log("GHL_WEBHOOK_URL not configured — skipping CRM sync");
+    console.warn("GHL_WEBHOOK_URL not configured — skipping CRM sync");
     return;
   }
 
@@ -74,7 +74,6 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    console.log(`GHL webhook sent (${event}): ${res.status}`);
   } catch (e) {
     console.error("GHL webhook failed:", e.message);
   }
@@ -211,7 +210,7 @@ function buildDiagnosticNote(analysis, reportUrl, messages) {
 export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl }) {
   const webhookUrl = process.env.GHL_REPORT_WEBHOOK_URL;
   if (!webhookUrl) {
-    console.log("GHL_REPORT_WEBHOOK_URL not configured — skipping report delivery");
+    console.warn("GHL_REPORT_WEBHOOK_URL not configured — skipping report delivery");
     return;
   }
 
@@ -245,7 +244,6 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    console.log(`GHL report webhook sent: ${res.status}`);
   } catch (e) {
     console.error("GHL report webhook failed:", e.message);
   }
