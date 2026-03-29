@@ -377,6 +377,7 @@
       -webkit-overflow-scrolling: touch;
       padding-bottom: 4px;
     }
+    #screenSection .btn-continue,
     #screenReveal .btn-continue {
       flex-shrink: 0;
       position: sticky;
@@ -535,6 +536,7 @@
       <div class="progress-info hidden" id="progressInfo">
         <span id="progressLabel">Diagnostic in progress</span>
         <span style="display:flex; align-items:center; gap:12px;">
+          <button id="btnBack" class="reset-btn" title="Go back" style="display:none;">Back</button>
           <button id="btnReset" class="reset-btn" title="Start over">Reset</button>
           <span class="progress-pct" id="progressPct">0%</span>
         </span>
@@ -563,10 +565,7 @@
         <!-- SCREEN: Section (dynamic) -->
         <div class="screen" id="screenSection">
           <div id="sectionContent"></div>
-          <div id="sectionButtons" style="display:flex; gap:10px; flex-shrink:0; position:sticky; bottom:0; z-index:5;">
-            <button class="btn-gold" id="btnBack" style="flex:0 0 auto; padding:14px 20px; background:#222; color:#999; font-size:13px; border:1px solid #333;">Back</button>
-            <button class="btn-gold btn-continue" id="btnContinue" disabled style="flex:1; margin-top:0;">Continue</button>
-          </div>
+          <button class="btn-gold btn-continue" id="btnContinue" disabled>Continue</button>
         </div>
 
         <!-- SCREEN: Loading between sections -->
@@ -949,7 +948,7 @@
       hasSeenAllOptions = false;
       btnContinue.disabled = true;
       btnContinue.textContent = "Continue";
-      btnBack.style.display = currentScreenIndex > 0 ? "block" : "none";
+      btnBack.style.display = currentScreenIndex > 0 ? "inline-block" : "none";
       // Remove any existing scroll hint
       const oldHint = document.getElementById("scrollHint");
       if (oldHint) oldHint.remove();
@@ -1573,7 +1572,7 @@
           hint.id = "scrollHint";
           hint.className = "scroll-hint";
           hint.textContent = "\u2193 Scroll down to view all options";
-          document.getElementById("sectionButtons").parentNode.insertBefore(hint, document.getElementById("sectionButtons"));
+          btnContinue.parentNode.insertBefore(hint, btnContinue);
         }
         return;
       }
