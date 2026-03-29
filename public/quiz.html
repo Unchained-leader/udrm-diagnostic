@@ -725,7 +725,7 @@
       }
     }
 
-    const BASE_URL = window.UNCHAINED_MKT_API_URL || (window.location.hostname === 'localhost' ? '' : "https://unchained-marketing-coach.vercel.app");
+    const BASE_URL = window.UNCHAINED_MKT_API_URL || (window.location.hostname === 'localhost' ? '' : "https://unchainedleader.io");
     const API_URL = BASE_URL + "/api/chat";
     const AUTH_URL = BASE_URL + "/api/auth";
     const DIAGNOSTIC_URL = BASE_URL + "/api/diagnostic";
@@ -1352,7 +1352,7 @@
       formError.textContent = "";
 
       if (!name) { formError.textContent = "Please enter your first name."; return; }
-      if (!email) { formError.textContent = "Please enter your email."; return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { formError.textContent = "Please enter a valid email address."; return; }
       if (!pin || !/^\d{4}$/.test(pin)) { formError.textContent = "Please enter a 4-digit PIN."; return; }
       if (pin !== pinConfirm) { formError.textContent = "PINs do not match."; return; }
 

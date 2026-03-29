@@ -12,6 +12,10 @@ export async function POST(request) {
       return Response.json({ error: "Email and PIN are required." }, { status: 400 });
     }
 
+    if (!/^\d{4}$/.test(String(pin))) {
+      return Response.json({ error: "PIN must be exactly 4 digits." }, { status: 400 });
+    }
+
     const user = await redis.get(`mkt:user:${normalizedEmail}`);
     if (!user) {
       return Response.json({ error: "No account found." }, { status: 404 });

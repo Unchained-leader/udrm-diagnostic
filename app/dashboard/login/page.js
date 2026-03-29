@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GOLD, CARD_BG } from "../constants";
 
 export default function LoginPage() {
@@ -23,7 +24,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (data.success) {
-        window.location.href = "/dashboard/overview";
+        router.push("/dashboard/overview");
         return;
       } else {
         setError(data.error || "Login failed.");
@@ -83,9 +84,9 @@ export default function LoginPage() {
         </form>
 
         <div style={{ textAlign: "center", marginTop: 24, fontSize: 13 }}>
-          <a href="/dashboard/register" style={{ color: GOLD, textDecoration: "none" }}>First time? Set up your PIN</a>
+          <Link href="/dashboard/register" style={{ color: GOLD, textDecoration: "none" }}>First time? Set up your PIN</Link>
           <span style={{ color: "#444", margin: "0 12px" }}>|</span>
-          <a href="/dashboard/reset-pin" style={{ color: "#888", textDecoration: "none" }}>Forgot PIN?</a>
+          <Link href="/dashboard/reset-pin" style={{ color: "#888", textDecoration: "none" }}>Forgot PIN?</Link>
         </div>
       </div>
     </div>

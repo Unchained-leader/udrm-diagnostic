@@ -77,6 +77,7 @@ export async function POST(request) {
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
 
     // Analyze with Claude
+    const analysisStart = Date.now();
     const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange });
 
     // Sanitize all string values: strip em dashes + internal code identifiers
@@ -136,8 +137,9 @@ export async function POST(request) {
     // Append to report history
     const historyEntry = { ...reportMeta, analysis };
     const existingHistory = await redis.get(`mkt:history:${normalizedEmail}`);
-    const history = Array.isArray(existingHistory) ? existingHistory : [];
+    let history = Array.isArray(existingHistory) ? existingHistory : [];
     history.push(historyEntry);
+    if (history.length > 10) history = history.slice(-10);
     await redis.set(`mkt:history:${normalizedEmail}`, history);
 
     // Update status — results are now available in dashboard
@@ -280,6 +282,7 @@ export async function POST(request) {
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (emailErr) {
       console.error("Email delivery error:", emailErr.message);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
     }
 
     // Update Redis with PDF URL now that it's available
@@ -355,6 +358,17 @@ export async function POST(request) {
 // CLAUDE ANALYSIS — Extract structured diagnostic data
 // ═══════════════════════════════════════════════════════════════
 
+const GENERATION_MAP = {
+  "age_18_24": "Gen Z (born ~2002-2008)",
+  "age_25_34": "Millennial (born ~1992-2001)",
+  "age_35_44": "Millennial / Gen X (born ~1982-1991)",
+  "age_45_54": "Gen X (born ~1972-1981)",
+  "age_55_64": "Gen X / Baby Boomer (born ~1962-1971)",
+  "age_65_74": "Baby Boomer (born ~1952-1961)",
+  "age_75_84": "Baby Boomer / Silent Generation (born ~1942-1951)",
+  "age_85_plus": "Silent Generation (born before 1942)",
+};
+
 async function analyzeConversation(messages, userName, demographics = {}) {
   const client = new Anthropic();
 
@@ -362,6 +376,8 @@ async function analyzeConversation(messages, userName, demographics = {}) {
     .filter(m => m.content && !m.content.includes("[PROGRESS:"))
     .map(m => `${m.role === "assistant" ? "GUIDE" : "USER"}: ${m.content}`)
     .join("\n\n");
+
+  const generationLabel = GENERATION_MAP[demographics.ageRange] || "Unknown";
 
   const response = await client.messages.create({
     model: "claude-opus-4-6",
@@ -377,6 +393,19 @@ Gender: ${demographics.gender || "not specified"}
 Age Range: ${demographics.ageRange ? demographics.ageRange.replace("age_", "").replace("_", "-").replace("plus", "+") : "not specified"}
 
 IMPORTANT: Adapt ALL report language to match the person's gender and age. If female, use "woman," "her," "she," "wife/mother/daughter" framing instead of "man," "him," "he," "husband/father/son." Adjust life-stage references to match their age range (e.g. a man in his 20s has different concerns than a man in his 50s). If gender is "female," replace masculine kingdom language ("man of God," "kingdom man," "his assignment") with feminine equivalents ("woman of God," "kingdom woman," "her assignment"). The Marketing Bible defaults to male language because the primary audience is men, but the report must be personalized to whoever is taking it.
+
+GENERATIONAL CONTEXT:
+The user's age range (${demographics.ageRange || "not specified"}) places him in the ${generationLabel} cohort.
+
+Each generation encountered sexual content in radically different ways and carries distinct shame architectures:
+- Silent Generation / Boomers: Hidden magazines, film, extreme taboo. Exposure typically in late adolescence or adulthood. Church framed all sexuality as moral failure. "Don't ask, don't tell" silence culture. Recovery framing centers on willpower and moral failure.
+- Gen X: Cable TV, video rental, early internet. "Latchkey kid" autonomy meant unsupervised access. Less church messaging, more pragmatic "handle it yourself" coping. Compartmentalization as primary defense. Self-reliance delays help-seeking by years or decades.
+- Millennials: Internet explosion + smartphone adoption in adolescence. Peak evangelical purity culture (purity pledges, abstinence-only). Shame rooted in "damaged goods" narrative. BYU research shows abstinence pledges correlate with higher shame but not lower usage. Recovery framing: identity crisis ("I was supposed to be the good one").
+- Gen Z: Smartphone from childhood, algorithmic exposure, average first exposure age 11-12. More sex-positive cultural framing but highest anxiety and depression rates. Less religious framework, more performance/ethical guilt. Parasocial relationships blur connection lines. Most open to help-seeking but least equipped with spiritual framework.
+
+In your analysis, factor this generational context into the arousal template origin, shame architecture, and exposure timeline. Produce these additional output fields:
+"generationalLens": A 3-5 sentence paragraph connecting THIS person's generation to their specific arousal template, shame architecture, and exposure timeline. How did their generation's media landscape, parenting norms, and church messaging shape when and how they were first exposed and the shame pattern that formed? This is not deterministic. It provides context for why their brain wired the way it did. Write in the same Scripture + Science voice as the rest of the report. Connect the generational context to kingdom purpose.
+"generationalCohort": The generation label string (e.g. "Millennial", "Gen X", "Baby Boomer").
 
 CONVERSATION:
 ${conversationText}
@@ -472,14 +501,14 @@ Return ONLY valid JSON, no markdown:
   "imprintingContext": "how exposure happened in plain English",
   "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting. Frame the origin as an attack on destiny. The enemy targeted the template early because he knew what the man was designed to become. Include a Scripture connection.",
 
-  "generationLabel": "Gen Z|Millennial|Gen X|Baby Boomer|Silent Generation (derived from the age range selected in About You section: 18-24 = Gen Z, 25-34 = Millennial, 35-44 = Millennial/Gen X cusp, 45-54 = Gen X, 55-64 = Baby Boomer, 65-74 = Baby Boomer, 75-84 = Silent Generation, 85+ = Silent Generation)",
-  "generationalInfluence": "3-5 sentences explaining how this person's SPECIFIC generation shaped their exposure landscape and behavioral pattern. For Gen Z: raised inside the smartphone era, unlimited high-speed access from adolescence, algorithm-driven escalation, social media as a compounding factor, normalized sexualization in culture. For Millennials: the dial-up-to-broadband transition, first generation with internet access in the bedroom during adolescence, exposure often happened before any adult knew what was happening. For Gen X: exposure typically through magazines, cable TV, VHS, early internet — less volume but deeper shame because the culture offered zero language for it and the church only offered condemnation. For Boomers: exposure through print, theater, early cable — often decades of secrecy with no framework for understanding it as anything other than moral failure. The generational context matters because it determines how the imprinting happened, how much shame was encoded alongside it, and what narrative the person built to explain it to themselves. Connect to their specific root narrative type and explain how their generation's unique exposure landscape shaped the specific pattern this diagnostic revealed.",
-
   "attachmentStyle": "Anxious-Preoccupied|Dismissive-Avoidant|Fearful-Avoidant|Secure|Disorganized",
   "attachmentFuels": "2-3 sentences: how this attachment style fuels the cycle AND limits his kingdom capacity. Connect human attachment to his capacity for intimacy with God.",
 
   "godAttachment": "2-3 sentences: how he relates to God through the same template as his human attachment. Include specific Scripture (Psalm 139, Romans 8:1, etc.). The barrier between him and the Father is the same barrier between him and freedom.",
   "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null. Frame as: even with the best of intentions, Biblical truth can get misinterpreted through communication. Religiosity that sometimes finds its way inside the church can unintentionally reinforce shame rather than dismantle it. Show how this dynamic may have fused shame with arousal. NEVER frame the church itself as the problem. The church is not the enemy. Misapplied religiosity is.",
+
+  "generationalLens": "3-5 sentences connecting this person's generational cohort to their arousal template, shame architecture, and exposure timeline",
+  "generationalCohort": "generation label string (e.g. Millennial, Gen X, Baby Boomer, Gen Z)",
 
   "codependencyScore": "0-3 based on cod_ items",
   "enmeshmentScore": "0-3 based on enm_ items",
@@ -549,6 +578,8 @@ Return ONLY valid JSON, no markdown:
       attachmentFuels: "Further data needed.",
       godAttachment: null,
       purityCultureImpact: null,
+      generationalLens: null,
+      generationalCohort: null,
       codependencyScore: "0",
       enmeshmentScore: "0",
       relationalVoidScore: "0",
@@ -558,7 +589,21 @@ Return ONLY valid JSON, no markdown:
       relationalVoidExplanation: null,
       leadershipBurdenExplanation: null,
       escalationPresent: false,
+      escalationSeverity: "1",
+      patternYears: "many",
       isolationLevel: "Unknown",
+      isolationScore: "0",
+      scorecardBehaviorCount: "0",
+      scorecardContentThemeCount: "0",
+      scorecardConfusingPatternCount: "0",
+      scorecardEmotionalFunctionCount: "0",
+      scorecardChildhoodWoundScore: "1",
+      scorecardAttachmentSeverity: "1",
+      scorecardSpiritualDisconnect: "1",
+      scorecardRelationalBurden: "1",
+      strategiesTried: [],
+      strategiesCount: "0",
+      yearsFighting: "many",
       strategyBreakdowns: [],
       keyInsight: "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives encoded across your entire life. The system is complex — but the process of healing is not. When the path is laid out for you, the invisible becomes visible and the overwhelming becomes manageable.",
       closingStatement: "You are not broken. You are not disqualified. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is closer than you think. The question is whether you are ready to see the map.",
@@ -620,10 +665,8 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       doc.fillColor(_currentTextColor);
     });
 
-    // Strip em dashes from all analysis text — replace with commas
     function sanitize(text) {
-      if (!text) return "";
-      return text.replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",");
+      return text || "";
     }
 
     // Track content per page for QC
@@ -674,7 +717,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       doc.roundedRect(M, y, CW, cardH, 6).fill(CARD_BG);
       doc.fontSize(18).fillColor(GOLD).font("Helvetica").text(label, M + 14, y + labelTop, { characterSpacing: 1 });
       doc.fontSize(24).fillColor(WHITE).font("Helvetica-Bold").text(title || "", M + 14, y + titleTop);
-      if (body) { _currentTextColor = GRAY; _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: lg }); }
+      if (body) { _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(body, M + 14, y + bodyTop, { width: CW - 28, lineGap: lg }); }
       y += cardH + pad;
     }
     function writeGapWidening(text) {
@@ -696,6 +739,26 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       if (pct > 0) doc.roundedRect(M, y, CW * pct, 14, 7).fill(GOLD);
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(`${score || 0} / ${maxScore}`, M + CW + 6, y - 2);
       y += 24;
+    }
+
+    function writeBody(text, opts = {}) {
+      if (!text) return;
+      const content = sanitize(text);
+      const lg = opts.lineGap || 4;
+      const gap = opts.gap || 20;
+      const w = opts.width || CW;
+      const x = opts.x || M;
+      checkFit(opts.minHeight || 60);
+      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(content, x, y, { width: w, lineGap: lg });
+      y = doc.y + gap;
+    }
+
+    function writeSubheader(text, opts = {}) {
+      if (!text) return;
+      const gap = opts.gap || 28;
+      checkFit(opts.minHeight || 40);
+      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text(sanitize(text), M, y, { characterSpacing: 1 });
+      y += gap;
     }
 
     let y = 0;
@@ -1067,23 +1130,30 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
 
     if (analysis.godAttachment) {
       y += 10;
-      checkFit(100);
-      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("HOW THIS SHOWS UP WITH GOD", M, y, { characterSpacing: 1 });
-      y += 28;
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.godAttachment, M, y, { width: CW, lineGap: 4 });
-      y = doc.y + 20;
+      writeSubheader("HOW THIS SHOWS UP WITH GOD");
+      writeBody(analysis.godAttachment);
     }
 
     if (analysis.purityCultureImpact) {
       y += 10;
-      checkFit(100);
-      doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("SPIRITUAL INTEGRATION", M, y, { characterSpacing: 1 });
-      y += 28;
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.purityCultureImpact, M, y, { width: CW, lineGap: 4 });
-      y = doc.y + 20;
+      writeSubheader("SPIRITUAL INTEGRATION");
+      writeBody(analysis.purityCultureImpact);
     }
 
     writeGapWidening("Your attachment style has been your relational operating system since before you could speak. It shapes how you love, how you hide, how you connect with God, and how you relate to the behavior. Patterns this deep do not change through understanding alone. They were formed in relationship. The research is clear that they restructure the same way.");
+
+    // ════════════════════════════════════════
+    // YOUR GENERATIONAL CONTEXT (conditional)
+    // ════════════════════════════════════════
+    if (analysis.generationalLens) {
+      newPage(); y = CONTENT_TOP;
+      sectionHeader("YOUR GENERATIONAL CONTEXT");
+
+      writeSubheader(analysis.generationalCohort);
+      writeBody(analysis.generationalLens, { minHeight: 120 });
+
+      writeGapWidening("You did not choose the generation you were born into. You did not choose the media landscape that shaped your first exposure. You did not choose the shame framework your church or culture handed you. But you are choosing what happens next. The roots were planted by forces outside your control. The healing is a decision only you can make.");
+    }
 
     // ════════════════════════════════════════
     // SECTION 7 — RELATIONAL PATTERNS
@@ -1093,23 +1163,19 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
 
     writeGauge("Codependency", analysis.codependencyScore, 3);
     if (analysis.codependencyExplanation) {
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.codependencyExplanation, M, y, { width: CW, lineGap: 2 });
-      y = doc.y + 10;
+      writeBody(analysis.codependencyExplanation, { lineGap: 2, gap: 10 });
     }
     writeGauge("Enmeshment", analysis.enmeshmentScore, 3);
     if (analysis.enmeshmentExplanation) {
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.enmeshmentExplanation, M, y, { width: CW, lineGap: 2 });
-      y = doc.y + 10;
+      writeBody(analysis.enmeshmentExplanation, { lineGap: 2, gap: 10 });
     }
     writeGauge("Relational Void", analysis.relationalVoidScore, 3);
     if (analysis.relationalVoidExplanation) {
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.relationalVoidExplanation, M, y, { width: CW, lineGap: 2 });
-      y = doc.y + 10;
+      writeBody(analysis.relationalVoidExplanation, { lineGap: 2, gap: 10 });
     }
     writeGauge("Leadership Burden", analysis.leadershipBurdenScore, 3);
     if (analysis.leadershipBurdenExplanation) {
-      _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(analysis.leadershipBurdenExplanation, M, y, { width: CW, lineGap: 2 });
-      y = doc.y + 10;
+      writeBody(analysis.leadershipBurdenExplanation, { lineGap: 2, gap: 10 });
     }
 
     writeGapWidening("The relational patterns in your life are not separate from your sexual behavior. They are the soil it grows in. Isolation feeds the cycle. Codependency drains you until the behavior becomes the only thing that is yours. The leadership burden ensures you carry everyone while no one carries you. These patterns do not resolve by being identified. They resolve by being experienced differently.");
@@ -1615,7 +1681,6 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
   }
 
   const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.RESET_FROM_EMAIL || "Unchained Leader <reports@unchained.support>";
-  const dashboardUrl = "https://unchained-marketing-coach.vercel.app/dashboard/login";
 
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -1631,19 +1696,26 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
         <div style="background:#111;padding:40px 20px;font-family:Helvetica,Arial,sans-serif;color:#ccc;max-width:600px;margin:0 auto;">
           <div style="text-align:center;margin-bottom:30px;">
             <div style="color:#c5a55a;font-size:12px;letter-spacing:3px;margin-bottom:6px;">UNCHAINED LEADER</div>
-            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Map Is Ready</div>
+            <div style="color:#fff;font-size:22px;font-weight:bold;">Your Root Mapping Report</div>
           </div>
           <p style="font-size:15px;line-height:1.7;color:#ccc;">
-            ${firstName}, your personalized Unwanted Desire Root Map is ready inside your secure dashboard.
+            ${firstName}, your Unwanted Desire Root Map is attached.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
             This report maps every behavior in your pattern to its psychological root, decodes your attachment style, reveals your relational patterns, and connects it all to your childhood environment and first exposure. It shows you what is actually driving the cycle, not just the symptom.
           </p>
           <p style="font-size:14px;line-height:1.7;color:#999;">
-            Log in with the email and PIN you created during the assessment to view your full results.
+            Read this as soon as possible. It connects dots you have never seen before. Your next steps and resources are on the final page.
           </p>
           <div style="text-align:center;margin:30px 0;">
-            <a href="${dashboardUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">VIEW MY DASHBOARD</a>
+            ${reportUrl
+              ? `<a href="${reportUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">VIEW YOUR REPORT</a>`
+              : `<div style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#DFC468,#9A7730);color:#000;font-size:14px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">PDF REPORT ATTACHED BELOW</div>`
+            }
+          </div>
+          <div style="text-align:center;margin:0 0 30px;">
+            <p style="font-size:13px;color:#888;margin-bottom:12px;">You also have an interactive dashboard with your full results:</p>
+            <a href="https://unchainedleader.io/dashboard/register" style="display:inline-block;padding:12px 28px;border:1px solid #c5a55a;color:#c5a55a;font-size:13px;font-weight:bold;border-radius:8px;text-decoration:none;letter-spacing:1px;">ACCESS YOUR DASHBOARD</a>
           </div>
           <div style="border-top:1px solid #333;padding-top:20px;margin-top:20px;text-align:center;">
             <div style="color:#c5a55a;font-size:11px;letter-spacing:2px;">#liveunchained</div>
@@ -1651,6 +1723,13 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
           </div>
         </div>
       `,
+      attachments: [
+        {
+          filename: `UDRM-Report-${firstName}.pdf`,
+          content: pdfBase64,
+          type: "application/pdf",
+        },
+      ],
     }),
   });
 

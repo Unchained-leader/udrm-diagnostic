@@ -149,7 +149,7 @@ export default function OverviewPage() {
   }, [router]);
 
   // Progressive reveal: animate sections in one-by-one
-  const TOTAL_SECTIONS = 22;
+  const TOTAL_SECTIONS = 50;
   useEffect(() => {
     if (!freshReveal || !data) return;
     // Start revealing sections one by one
@@ -162,6 +162,11 @@ export default function OverviewPage() {
     }, 800);
     return () => clearInterval(timer);
   }, [freshReveal, data]);
+
+  // Auto-incrementing reveal index — no more manual numbering
+  const revealCounter = useRef(0);
+  revealCounter.current = 0; // reset each render so indices are stable
+  const nextRevealIdx = () => revealCounter.current++;
 
   // Sticky CTA: show after Key Insight, hide at Next Steps
   useEffect(() => {
@@ -334,7 +339,7 @@ export default function OverviewPage() {
       ) : (
       <>
       {/* Cover / Hero Section */}
-      <Reveal idx={0}>
+      <Reveal idx={nextRevealIdx()}>
       <div style={{
         textAlign: "center", padding: "40px 20px 32px",
         background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)",
@@ -347,7 +352,6 @@ export default function OverviewPage() {
         <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
         <div style={{ fontSize: 16, color: "#ccc" }}>Personalized for {name}</div>
         <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
-        <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>{(activeGeneratedAt ? new Date(activeGeneratedAt) : new Date()).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}</div>
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
         <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
@@ -364,7 +368,7 @@ export default function OverviewPage() {
       <div style={{ display: "grid", gap: 16 }}>
 
         {/* Arousal Template */}
-        <Reveal idx={1}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
           {a.arousalTemplateSecondary && <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
           <div style={{ fontSize: 14, color: GOLD, fontStyle: "italic", marginTop: 8 }}>Root Narrative: &ldquo;{a.rootNarrativeStatement}&rdquo;</div>
@@ -373,21 +377,21 @@ export default function OverviewPage() {
         </Reveal>
 
         {/* Scorecard Radar */}
-        <Reveal idx={2}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Diagnostic Scorecard">
           <ScoreRadar analysis={a} />
         </ResultCard>
         </Reveal>
 
         {/* Scorecard Breakdown Bars */}
-        <Reveal idx={3}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Scorecard Breakdown">
           <ScorecardBreakdown analysis={a} />
         </ResultCard>
         </Reveal>
 
         {/* Imprinting Origin */}
-        <Reveal idx={4}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Arousal Template Origin">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8 }}>
@@ -403,17 +407,8 @@ export default function OverviewPage() {
         </ResultCard>
         </Reveal>
 
-        {/* Generational Influence */}
-        {a.generationalInfluence && (
-          <Reveal idx={5}>
-          <ResultCard title="Generational Influence" subtitle={a.generationLabel || null}>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.generationalInfluence}</p>
-          </ResultCard>
-          </Reveal>
-        )}
-
         {/* Neuropathway */}
-        <Reveal idx={6}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
           <NeuropathwayDiagram neuropathway={a.neuropathway} manages={a.neuropathwayManages} />
@@ -423,7 +418,7 @@ export default function OverviewPage() {
 
         {/* Escalation Gauge */}
         {a.escalationPresent && (
-          <Reveal idx={6}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Escalation Risk">
             <EscalationGauge severity={Number(a.escalationSeverity) || 0} />
           </ResultCard>
@@ -431,7 +426,7 @@ export default function OverviewPage() {
         )}
 
         {/* Behavior Root Map — fully expanded */}
-        <Reveal idx={7}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Behavior-Root Map">
           <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
           {(a.behaviorRootMap || []).map((item, i) => (
@@ -442,7 +437,7 @@ export default function OverviewPage() {
 
         {/* Confusing Patterns — fully expanded */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
-          <Reveal idx={8}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Confusing Patterns Decoded" gold>
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
             {a.confusingPatternsDecoded.map((item, i) => (
@@ -454,7 +449,7 @@ export default function OverviewPage() {
 
         {/* Gap-widening */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
-          <Reveal idx={8}>
+          <Reveal idx={nextRevealIdx()}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             These patterns did not form by accident. They were encoded in a system designed to stay hidden.
           </div>
@@ -462,7 +457,7 @@ export default function OverviewPage() {
         )}
 
         {/* Attachment Style */}
-        <Reveal idx={9}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Attachment Style" subtitle={a.attachmentStyle || "Unknown"}>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
           {a.godAttachment && (
@@ -476,15 +471,27 @@ export default function OverviewPage() {
 
         {/* Spiritual Integration */}
         {a.purityCultureImpact && (
-          <Reveal idx={10}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Spiritual Integration">
             <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.purityCultureImpact}</p>
           </ResultCard>
           </Reveal>
         )}
 
+        {/* Generational Context */}
+        {a.generationalLens && (
+          <Reveal idx={nextRevealIdx()}>
+          <ResultCard title="Your Generational Context" subtitle={a.generationalCohort || "Your Cohort"}>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.generationalLens}</p>
+            <div style={{ textAlign: "center", padding: "10px 16px", fontSize: 12, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+              You did not choose the generation you were born into. But you are choosing what happens next.
+            </div>
+          </ResultCard>
+          </Reveal>
+        )}
+
         {/* Relational Patterns */}
-        <Reveal idx={11}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Relational Pattern Scores">
           <RelationalBars analysis={a} />
           <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
@@ -503,7 +510,7 @@ export default function OverviewPage() {
 
         {/* Isolation Indicator */}
         {a.isolationScore > 0 && (
-          <Reveal idx={12}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Isolation Level">
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 8 }}>
               <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, height: 20, overflow: "hidden" }}>
@@ -526,7 +533,7 @@ export default function OverviewPage() {
 
         {/* Life Stress Landscape */}
         {a.lifeStressAnalysis && (
-          <Reveal idx={13}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Your Stress Landscape">
             <StressHeatmap analysis={a} />
           </ResultCard>
@@ -535,7 +542,7 @@ export default function OverviewPage() {
 
         {/* Gap-widening */}
         {a.lifeStressAnalysis && (
-          <Reveal idx={13}>
+          <Reveal idx={nextRevealIdx()}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Root-level healing does not just address behavior. It rebuilds your capacity to carry the weight of real life.
           </div>
@@ -544,7 +551,7 @@ export default function OverviewPage() {
 
         {/* Co-Coping Behaviors — fully expanded */}
         {a.coCopingBehaviors && (
-          <Reveal idx={14}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Your Brain's Other Escape Routes">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
             {Array.isArray(a.coCopingBehaviors) ? a.coCopingBehaviors.map((item, i) => (
@@ -558,7 +565,7 @@ export default function OverviewPage() {
 
         {/* Substance vs Behavior Vice Diagram */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
-          <Reveal idx={15}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Substance vs. Behavior — Same Root">
             <ViceBalanceDiagram coCopingBehaviors={a.coCopingBehaviors} />
           </ResultCard>
@@ -567,7 +574,7 @@ export default function OverviewPage() {
 
         {/* Gap-widening */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
-          <Reveal idx={15}>
+          <Reveal idx={nextRevealIdx()}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             You cannot win whack-a-mole with your nervous system. Every time you shut down one behavior without addressing the root, your brain finds another.
           </div>
@@ -576,7 +583,7 @@ export default function OverviewPage() {
 
         {/* Strategy Audit — fully expanded */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
-          <Reveal idx={16}>
+          <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Strategy Audit">
             <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>
               {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
@@ -590,7 +597,7 @@ export default function OverviewPage() {
 
         {/* Gap-widening after Strategy Audit */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
-          <Reveal idx={16}>
+          <Reveal idx={nextRevealIdx()}>
           <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Every strategy on this list was aimed at managing behavior. Not one reached the root. That is not a failure of effort. It is a failure of targeting.
           </div>
@@ -598,7 +605,7 @@ export default function OverviewPage() {
         )}
 
         {/* Full Picture Bridge — synthesizes everything into one devastating paragraph */}
-        <Reveal idx={17}>
+        <Reveal idx={nextRevealIdx()}>
         <div ref={bridgeRef} style={{
           background: "#0d0d0d", borderRadius: 12, padding: "28px 24px",
           borderTop: `3px solid ${GOLD}`, marginBottom: 0,
@@ -614,7 +621,7 @@ export default function OverviewPage() {
         </Reveal>
 
         {/* Key Insight */}
-        <Reveal idx={18}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard ref={keyInsightRef} gold style={{ borderColor: `${GOLD}66` }}>
           <div style={{ fontSize: 12, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 12 }}>Key Insight</div>
           <p style={{ fontSize: 18, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
@@ -622,7 +629,7 @@ export default function OverviewPage() {
         </Reveal>
 
         {/* Closing Statement */}
-        <Reveal idx={19}>
+        <Reveal idx={nextRevealIdx()}>
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>WHAT THIS MEANS</div>
           <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
@@ -631,7 +638,7 @@ export default function OverviewPage() {
         </Reveal>
 
         {/* Next Steps & Resources */}
-        <Reveal idx={20}>
+        <Reveal idx={nextRevealIdx()}>
         <div ref={nextStepsRef} style={{ display: "grid", gap: 0 }}>
           {/* Personalized recommendation */}
           <ResultCard title="Your Recommended Next Step">
@@ -643,7 +650,7 @@ export default function OverviewPage() {
               label="PRIORITY 1 — YOUR NEXT STEP"
               price="FREE"
               title="Watch the Art of Freedom Training"
-              body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. Your diagnostic showed you the maze. This training shows you the map out. 90 Days to Freedom is where we link arms with you and walk out together.`}
+              body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. Your diagnostic is the map of the maze. This training shows you the door out.`}
               link="https://unchained-leader.com/aof"
             />
             <div style={{ fontSize: 12, color: "#666", textAlign: "center", marginTop: 4 }}>
@@ -690,7 +697,7 @@ export default function OverviewPage() {
 
         {/* PDF Download */}
         {activeReportUrl && (
-          <Reveal idx={21}>
+          <Reveal idx={nextRevealIdx()}>
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-block", padding: "14px 40px",
