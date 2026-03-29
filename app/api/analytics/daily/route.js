@@ -159,11 +159,11 @@ export async function GET(request) {
         + `${volumeTrend}\n\n`
         + `*7-Day Forecast (at current pace):* ~${forecastWeeklyStarts} starts, ~${forecastWeeklyCompletions} completions\n\n`
         + `───────────────────\n`
-        + `Full dashboard: https://unchained-marketing-coach.vercel.app/admin/dashboard`;
+        + `Full dashboard: https://unchainedleader.io/admin/dashboard`;
     } else {
       message = `:bar_chart: *DAILY PERFORMANCE SUMMARY*\n${dateLabel}\n\nNo quiz activity in the last 3 days.\n\n`
         + `*30-Day Totals:* ${d30.starts} starts, ${d30.completions} completions, ${d30.rate}% conversion\n\n`
-        + `Dashboard: https://unchained-marketing-coach.vercel.app/admin/dashboard`;
+        + `Dashboard: https://unchainedleader.io/admin/dashboard`;
     }
 
     // Send to Slack (NO @channel tag for daily summaries)

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GOLD, CARD_BG } from "../constants";
 
 export default function ResetPinPage() {
@@ -115,7 +116,7 @@ export default function ResetPinPage() {
         )}
 
         <div style={{ textAlign: "center", marginTop: 24, fontSize: 13 }}>
-          <a href="/dashboard/login" style={{ color: "#888", textDecoration: "none" }}>Back to sign in</a>
+          <Link href="/dashboard/login" style={{ color: "#888", textDecoration: "none" }}>Back to sign in</Link>
         </div>
       </div>
     </div>

@@ -213,7 +213,7 @@ function TrendsView({ product, days }) {
   useEffect(() => {
     const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
     if (!s) return;
-    fetch(`/api/analytics?secret=${encodeURIComponent(s)}&view=trends&product=${product}&days=${days}&metric=${metric}`)
+    fetch(`${API}?secret=${encodeURIComponent(s)}&view=trends&product=${product}&days=${days}&metric=${metric}`)
       .then(r => r.json())
       .then(setTrendData)
       .catch(console.error);
