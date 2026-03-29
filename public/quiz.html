@@ -1314,6 +1314,9 @@
 
         clearState(); // Quiz is done
 
+        // Brief delay to ensure report request is dispatched before navigation
+        await new Promise(r => setTimeout(r, 500));
+
         // Redirect to dashboard — user will see live progress
         window.location.href = "/dashboard/overview";
 

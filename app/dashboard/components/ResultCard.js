@@ -1,11 +1,12 @@
 "use client";
+import { forwardRef } from "react";
 
 const GOLD = "#C9A227";
 const CARD_BG = "#111111";
 
-export default function ResultCard({ title, subtitle, children, gold, style }) {
+const ResultCard = forwardRef(function ResultCard({ title, subtitle, children, gold, style }, ref) {
   return (
-    <div style={{
+    <div ref={ref} style={{
       background: CARD_BG,
       borderRadius: 12,
       padding: "24px",
@@ -21,4 +22,6 @@ export default function ResultCard({ title, subtitle, children, gold, style }) {
       {children}
     </div>
   );
-}
+});
+
+export default ResultCard;
