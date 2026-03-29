@@ -1,4 +1,5 @@
 import redis from "../../lib/redis";
+import { normalizeEmail } from "../../lib/utils";
 
 export async function GET(request) {
   // Simple admin auth via query param (not production-grade, but useful for debugging)
@@ -14,7 +15,7 @@ export async function GET(request) {
     return Response.json({ error: "email param required" }, { status: 400 });
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = normalizeEmail(email);
 
   try {
     const [analysis, reportMeta, user, historyRaw] = await Promise.all([

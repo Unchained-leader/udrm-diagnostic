@@ -1,13 +1,10 @@
 import { getDb } from "../../lib/db";
+import { corsHeaders, optionsResponse } from "../../lib/cors";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {

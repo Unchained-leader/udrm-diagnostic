@@ -1,6 +1,5 @@
 "use client";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 export default function EscalationGauge({ severity }) {
   const s = Math.min(Math.max(severity, 0), 5);

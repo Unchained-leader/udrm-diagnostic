@@ -1,20 +1,18 @@
 import redis from "../lib/redis";
 import { ghlContactCreated } from "../lib/ghl";
+import { corsHeaders, optionsResponse } from "../lib/cors";
+import { normalizeEmail } from "../lib/utils";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
   try {
     const { action, email, pin, name, phone } = await request.json();
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     if (!normalizedEmail) {
       return Response.json(

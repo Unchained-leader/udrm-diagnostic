@@ -1,7 +1,6 @@
 "use client";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 export default function ScoreRadar({ analysis }) {
   const data = [

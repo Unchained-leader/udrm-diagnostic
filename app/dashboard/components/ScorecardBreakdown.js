@@ -1,7 +1,6 @@
 "use client";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, LabelList } from "recharts";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 export default function ScorecardBreakdown({ analysis }) {
   const a = analysis;

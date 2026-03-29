@@ -1,12 +1,6 @@
 import redis from "../../lib/redis";
-import { jwtVerify } from "jose";
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
-
-function parseRedis(val) {
-  if (!val) return null;
-  return typeof val === "string" ? JSON.parse(val) : val;
-}
+import { SECRET, jwtVerify } from "../../lib/auth";
+import { parseRedis } from "../../lib/utils";
 
 export async function GET(request) {
   try {

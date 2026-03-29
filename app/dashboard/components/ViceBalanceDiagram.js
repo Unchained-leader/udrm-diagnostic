@@ -1,6 +1,5 @@
 "use client";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 const SUBSTANCE_VICES = [
   { id: "vice_alcohol", label: "Alcohol" },

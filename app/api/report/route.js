@@ -7,6 +7,8 @@ import fs from "fs";
 import path from "path";
 import { getDb } from "../lib/db";
 import { MARKETING_BIBLE_REPORT_GUIDE } from "../lib/marketing-bible";
+import { corsHeaders, optionsResponse } from "../lib/cors";
+import { normalizeEmail, parseRedis } from "../lib/utils";
 
 export const maxDuration = 800;
 
@@ -16,11 +18,7 @@ export const maxDuration = 800;
 // not the problem. The pattern is a fingerprint to the root.
 // ═══════════════════════════════════════════════════════════════
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 const GOLD = [197, 165, 90];     // #c5a55a
 const WHITE = [255, 255, 255];
@@ -34,7 +32,7 @@ function hexToRgb(hex) {
 }
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
@@ -46,7 +44,7 @@ export async function POST(request) {
       return Response.json({ error: "Email is required." }, { status: 400, headers: CORS_HEADERS });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     // Look up user
     const user = await redis.get(`mkt:user:${normalizedEmail}`);
@@ -66,7 +64,7 @@ export async function POST(request) {
     } else {
       const stored = await redis.get(`mkt:diagnostic:${normalizedEmail}`);
       if (stored) {
-        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        const parsed = parseRedis(stored);
         messages = parsed.messages || [];
       }
     }

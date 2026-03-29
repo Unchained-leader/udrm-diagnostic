@@ -1,7 +1,6 @@
 "use client";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 const DIMENSIONS = [
   { key: "scorecardBehaviorCount", label: "Behaviors", max: 7, color: "#ef4444" },

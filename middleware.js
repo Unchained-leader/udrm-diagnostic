@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
+import { SECRET, jwtVerify } from "./app/api/lib/auth";
 
 const PUBLIC_PATHS = ["/dashboard/login", "/dashboard/register", "/dashboard/reset-pin"];
 

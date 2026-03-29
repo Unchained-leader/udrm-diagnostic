@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const GOLD = "#C9A227";
-const CARD_BG = "#111111";
+import { GOLD, CARD_BG } from "../constants";
 
 export default function ResetPinPage() {
   const [step, setStep] = useState("request"); // request | verify

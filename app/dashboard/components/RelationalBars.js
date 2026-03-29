@@ -1,7 +1,6 @@
 "use client";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 const COLORS = ["#C9A227", "#DFC468", "#9A7730", "#B8860B"];
 
 export default function RelationalBars({ analysis }) {

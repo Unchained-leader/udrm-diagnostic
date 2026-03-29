@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 export default function ExpandableCard({ title, body, borderColor }) {
   const [open, setOpen] = useState(false);

@@ -1,22 +1,21 @@
 import redis from "../lib/redis";
+import { normalizeEmail } from "../lib/utils";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+import { corsHeaders, optionsResponse } from "../lib/cors";
+
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 const MAX_RECENT_MESSAGES = 50;
 const SUMMARY_THRESHOLD = 40;
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
   try {
     const { action, email, pin, messages } = await request.json();
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     // Verify identity on every request
     if (!normalizedEmail || !pin) {

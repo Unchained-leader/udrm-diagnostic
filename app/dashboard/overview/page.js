@@ -13,8 +13,7 @@ const NeuropathwayDiagram = dynamic(() => import("../components/NeuropathwayDiag
 const ViceBalanceDiagram = dynamic(() => import("../components/ViceBalanceDiagram"), { ssr: false });
 const TrendOverlay = dynamic(() => import("../components/TrendOverlay"), { ssr: false });
 import ReportSelector from "../components/ReportSelector";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 // Fix censored words in stored analysis data
 function uncensor(text) {
