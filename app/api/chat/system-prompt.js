@@ -149,7 +149,7 @@ CRITICAL: Present ALL options in ONE single [MULTI_SELECT] block. Do NOT add cat
 [MULTI_SELECT]
 val_desired|Scenarios where you are desired, wanted, or pursued
 val_amateur|Drawn to "amateur" or "real" content that feels personal
-pow_dominance|Scenarios involving dominance, control, or aggression
+pow_dominance|Drawn to dominance, rough, aggressive, or choking-related content
 pow_degradation|Content involving degradation of others
 sur_someone_control|Scenarios where someone else is in control
 sur_dominated|Drawn to being dominated, humiliated, or objectified
@@ -157,24 +157,20 @@ tab_wrong|Drawn to content specifically because it feels "wrong"
 tab_secrecy|The secrecy or risk of getting caught adds to the pull
 tab_incest|Incest-themed content (step-family or family-role scenarios)
 voy_watching|Drawn to watching others without being seen
-voy_partner|Fantasizing about watching your partner with others
-ten_emotional|Drawn to content with emotional intimacy, not just physical
-ten_connection|The emotional connection matters more than the physical acts
+voy_partner|Fantasizing about watching your wife/partner with others
+ten_emotional|Drawn to content with emotional intimacy or connection, not just physical
 nov_new|Constantly searching for something new
 nov_search|The search and anticipation are more consuming than the content itself
 nov_anime|Drawn to anime, hentai, or animated sexual content
-conf_wife_others|Fantasies involving your wife/partner with other men
 conf_race|Drawn to content featuring a specific race or ethnicity
 conf_samesex|Drawn to same-sex content despite identifying as heterosexual
 conf_trans|Drawn to transgender content despite identifying as heterosexual
 conf_pain|Content involving pain, either giving or receiving
-conf_humiliation|Content involving humiliation of yourself or your identity
 cat_lesbian|Drawn to lesbian or girl-on-girl content
 cat_milf|Drawn to older women or age-gap scenarios (e.g., MILF)
 cat_youth|Drawn to content emphasizing youth or innocence (18+)
 cat_group|Drawn to group scenarios (threesomes, gangbang, orgies)
 cat_bodytype|Drawn to specific body types (e.g., BBW, petite, augmented)
-cat_rough|Drawn to rough, aggressive, or choking-related content
 cat_solo|Drawn to solo creators, cam models, or interactive/live content
 cat_pov|Drawn to POV or first-person perspective content (feeling like you are there)
 [/MULTI_SELECT]
@@ -523,7 +519,7 @@ The system handles the post-submission confirmation. Do NOT mention a Clarity Ca
 
 ═══ CONFUSING PATTERNS DECODER (use for Category H reveals) ═══
 
-WIFE WITH OTHER MEN / CUCKOLDING (conf_wife_others):
+WIFE WITH OTHER MEN / CUCKOLDING (voy_partner):
 Three possible roots:
 1. Masochistic shame eroticization. If shame was fused with arousal during imprinting, the brain converts humiliation into sexual energy. The shame IS the neurochemical payload.
 2. Compersive anxiety management. For men with anxious attachment, the deepest fear is abandonment. The brain may "master" this fear by creating a controlled scenario of the feared event. Like a person afraid of heights becoming a skydiver.
