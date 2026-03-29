@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import ResultCard from "../components/ResultCard";
@@ -86,6 +86,11 @@ export default function OverviewPage() {
   const [error, setError] = useState("");
   const [activeReportIndex, setActiveReportIndex] = useState(-1); // -1 = latest
   const [showTrends, setShowTrends] = useState(false);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  const [stickyDismissed, setStickyDismissed] = useState(false);
+  const keyInsightRef = useRef(null);
+  const nextStepsRef = useRef(null);
+  const bridgeRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -108,6 +113,31 @@ export default function OverviewPage() {
       })
       .catch(() => { setError("Failed to load results."); setLoading(false); });
   }, [router]);
+
+  // Sticky CTA: show after Key Insight, hide at Next Steps
+  useEffect(() => {
+    if (stickyDismissed) return;
+    const keyEl = keyInsightRef.current;
+    const nextEl = nextStepsRef.current;
+    if (!keyEl || !nextEl) return;
+
+    let keyVisible = false;
+    let nextVisible = false;
+
+    const update = () => setShowStickyCta(keyVisible && !nextVisible && !stickyDismissed);
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.target === keyEl) keyVisible = e.isIntersecting || e.boundingClientRect.top < 0;
+        if (e.target === nextEl) nextVisible = e.isIntersecting;
+      });
+      update();
+    }, { threshold: 0.1 });
+
+    observer.observe(keyEl);
+    observer.observe(nextEl);
+    return () => observer.disconnect();
+  }, [stickyDismissed, data]);
 
   async function handleLogout() {
     await fetch("/api/dashboard/logout", { method: "POST" });
@@ -287,6 +317,13 @@ export default function OverviewPage() {
           </ResultCard>
         )}
 
+        {/* Gap-widening */}
+        {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            These patterns did not form by accident. They were encoded in a system designed to stay hidden.
+          </div>
+        )}
+
         {/* Attachment Style */}
         <ResultCard title="Your Attachment Style" subtitle={a.attachmentStyle || "Unknown"}>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
@@ -316,6 +353,11 @@ export default function OverviewPage() {
           </div>
         </ResultCard>
 
+        {/* Gap-widening */}
+        <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          The relational patterns in your life are not separate from your behavior. They are the soil it grows in.
+        </div>
+
         {/* Isolation Indicator */}
         {a.isolationScore > 0 && (
           <ResultCard title="Isolation Level">
@@ -344,6 +386,13 @@ export default function OverviewPage() {
           </ResultCard>
         )}
 
+        {/* Gap-widening */}
+        {a.lifeStressAnalysis && (
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            Root-level healing does not just address behavior. It rebuilds your capacity to carry the weight of real life.
+          </div>
+        )}
+
         {/* Co-Coping Behaviors — fully expanded */}
         {a.coCopingBehaviors && (
           <ResultCard title="Your Brain's Other Escape Routes">
@@ -363,6 +412,13 @@ export default function OverviewPage() {
           </ResultCard>
         )}
 
+        {/* Gap-widening */}
+        {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            You cannot win whack-a-mole with your nervous system. Every time you shut down one behavior without addressing the root, your brain finds another.
+          </div>
+        )}
+
         {/* Strategy Audit — fully expanded */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
           <ResultCard title="Strategy Audit">
@@ -375,52 +431,95 @@ export default function OverviewPage() {
           </ResultCard>
         )}
 
+        {/* Gap-widening after Strategy Audit */}
+        {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            Every strategy on this list was aimed at managing behavior. Not one reached the root. That is not a failure of effort. It is a failure of targeting.
+          </div>
+        )}
+
+        {/* Full Picture Bridge — synthesizes everything into one devastating paragraph */}
+        <div ref={bridgeRef} style={{
+          background: "#0d0d0d", borderRadius: 12, padding: "28px 24px",
+          borderTop: `3px solid ${GOLD}`, marginBottom: 0,
+        }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: GOLD, textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>YOUR FULL PICTURE</div>
+          <p style={{ fontSize: 15, lineHeight: 1.9, color: "#bbb", margin: "0 0 20px", textAlign: "center" }}>
+            Here is what your diagnostic revealed: A root narrative of &ldquo;{a.rootNarrativeStatement || "a core wound"}&rdquo; formed in childhood, encoded into a {a.arousalTemplateType || "specific"} arousal template at age {a.imprintingAge || "unknown"}, running through the {a.neuropathway || "primary"} neuropathway, reinforced by {a.attachmentStyle || "your"} attachment, and defended against by {a.strategiesCount || "multiple"} strategies over {a.yearsFighting || "many"} years. None of those strategies failed because of you. They failed because they were aimed at a system they could not see.
+          </p>
+          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>
+            You can see the system now. Most men never get this far. But seeing the prison does not open the door.
+          </p>
+        </div>
+
         {/* Key Insight */}
-        <ResultCard gold style={{ borderColor: `${GOLD}66` }}>
+        <ResultCard ref={keyInsightRef} gold style={{ borderColor: `${GOLD}66` }}>
           <div style={{ fontSize: 12, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 12 }}>Key Insight</div>
-          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
+          <p style={{ fontSize: 18, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
         </ResultCard>
 
         {/* Closing Statement */}
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
-          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: 0, textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>WHAT THIS MEANS</div>
+          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
+          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>The path is laid out. The question is whether you will take the first step.</p>
         </ResultCard>
 
         {/* Next Steps & Resources */}
-        <ResultCard title="Your Next Step and Additional Resources">
-          <ResourceCard
-            priority={1}
-            label="PRIORITY 1 — YOUR NEXT STEP"
-            price="FREE"
-            title="Watch the Art of Freedom Training"
-            body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. This is the single most important next step you can take right now.`}
-            link="https://unchained-leader.com/aof"
-          />
-          <ResourceCard
-            priority={2}
-            label="OPTION 2"
-            price="$27"
-            title="Book a 30-Minute Clarity Call"
-            body="Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts."
-            link="https://unchained-leader.com/clarity-call"
-          />
-          <ResourceCard
-            priority={3}
-            label="OPTION 3"
-            price="FREE"
-            title="7-Day Devotional: 7 Lies of the Divided Leader"
-            body="A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you."
-            link="https://unchained-leader.com/7-lies"
-          />
-          <ResourceCard
-            priority={4}
-            label="OPTION 4"
-            price="$27"
-            title="The Unchained Leader Black Book"
-            body="The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and extensive research."
-            link="https://unchained-leader.com/black-book"
-          />
-        </ResultCard>
+        <div ref={nextStepsRef} style={{ display: "grid", gap: 0 }}>
+          {/* Personalized recommendation */}
+          <ResultCard title="Your Recommended Next Step">
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>
+              {name}, based on your {a.arousalTemplateType || "primary"} pattern, {a.neuropathway || "identified"} neuropathway, and {a.attachmentStyle || "your"} attachment style, this is the recommended next step for your specific diagnostic:
+            </p>
+            <ResourceCard
+              priority={1}
+              label="PRIORITY 1 — YOUR NEXT STEP"
+              price="FREE"
+              title="Watch the Art of Freedom Training"
+              body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. Your diagnostic is the map of the maze. This training shows you the door out.`}
+              link="https://unchained-leader.com/aof"
+            />
+            <div style={{ fontSize: 12, color: "#666", textAlign: "center", marginTop: 4 }}>
+              Trusted by over 10,000 men across 33 countries. LegitScript-certified.
+            </div>
+          </ResultCard>
+
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "8px 0" }}>
+            <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
+            <div style={{ fontSize: 11, letterSpacing: 2, color: "#555", whiteSpace: "nowrap" }}>ADDITIONAL RESOURCES</div>
+            <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
+          </div>
+
+          {/* Secondary options — more compact */}
+          <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
+            <ResourceCard
+              priority={2}
+              label="OPTION 2"
+              price="$27"
+              title="Book a 30-Minute Clarity Call"
+              body="Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts."
+              link="https://unchained-leader.com/clarity-call"
+            />
+            <ResourceCard
+              priority={3}
+              label="OPTION 3"
+              price="FREE"
+              title="7-Day Devotional: 7 Lies of the Divided Leader"
+              body="A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you."
+              link="https://unchained-leader.com/7-lies"
+            />
+            <ResourceCard
+              priority={4}
+              label="OPTION 4"
+              price="$27"
+              title="The Unchained Leader Black Book"
+              body="The complete Unchained Leader framework in your hands. Covers the neuroscience of unwanted behavior, the root narrative system, the shame loop, the strategy autopsy, and the path to Root Narrative Restructuring. Written by Mason Cain from 17 years of personal experience and extensive research."
+              link="https://unchained-leader.com/black-book"
+            />
+          </div>
+        </div>
 
         {/* PDF Download */}
         {activeReportUrl && (
@@ -442,6 +541,28 @@ export default function OverviewPage() {
         <div style={{ color: GOLD, fontSize: 11, letterSpacing: 2 }}>#LIVEUNCHAINED</div>
         <div style={{ color: "#444", fontSize: 11, marginTop: 8 }}>Your results are private and confidential.</div>
       </div>
+
+      {/* Sticky CTA bar — appears after Key Insight, hides at Next Steps */}
+      {showStickyCta && !stickyDismissed && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1000,
+          background: "#111", borderTop: `2px solid ${GOLD}`,
+          boxShadow: "0 -4px 20px rgba(0,0,0,0.6)",
+          padding: "12px 20px",
+          display: "flex", justifyContent: "center", alignItems: "center", gap: 16,
+        }}>
+          <span style={{ fontSize: 14, color: "#ccc" }}>Ready to take the next step?</span>
+          <a href="https://unchained-leader.com/aof" target="_blank" rel="noopener noreferrer" style={{
+            padding: "10px 24px", background: "linear-gradient(135deg, #DFC468, #9A7730)",
+            color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6,
+            textDecoration: "none", letterSpacing: 1,
+          }}>WATCH THE FREE TRAINING</a>
+          <button onClick={() => setStickyDismissed(true)} style={{
+            background: "none", border: "none", color: "#555", fontSize: 18,
+            cursor: "pointer", padding: "0 4px", lineHeight: 1,
+          }}>&times;</button>
+        </div>
+      )}
     </div>
   );
 }
