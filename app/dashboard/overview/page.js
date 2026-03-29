@@ -232,6 +232,7 @@ export default function OverviewPage() {
       { step: "analyzing", label: "Analyzing your responses", detail: "Your conversation is being read at the root level. Every answer you gave is being mapped." },
       { step: "complete", label: "Building your root map", detail: "Your personalized diagnostic sections are being assembled now." },
       { step: "pdf_ready", label: "Generating your PDF report", detail: "A downloadable copy of your full report is being created." },
+      { step: "emailed", label: "Sending your report", detail: "Your report is being delivered to your inbox now." },
     ];
     const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
     return (
