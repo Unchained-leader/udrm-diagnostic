@@ -75,6 +75,9 @@ export async function POST(request) {
       return Response.json({ error: "No diagnostic data found." }, { status: 400, headers: CORS_HEADERS });
     }
 
+    // Set processing status so dashboard can show progress
+    await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
+
     // Analyze with Claude
     console.log("Starting Opus analysis...");
     const analysisStart = Date.now();
@@ -143,6 +146,9 @@ export async function POST(request) {
     history.push(historyEntry);
     await redis.set(`mkt:history:${normalizedEmail}`, history);
     console.log("Dashboard data stored successfully.");
+
+    // Update status — results are now available in dashboard
+    await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
 
     // ═══════════════════════════════════════
     // GENERATE PDF + EMAIL (SECONDARY)
@@ -277,6 +283,7 @@ export async function POST(request) {
       );
       reportUrl = blob.url;
       console.log("PDF uploaded to Blob:", reportUrl);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (e) {
       console.error("Blob upload failed (continuing without URL):", e.message);
     }
@@ -284,6 +291,7 @@ export async function POST(request) {
     // Send via Resend (with download link if available)
     try {
       await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (emailErr) {
       console.error("Email delivery error:", emailErr.message);
     }

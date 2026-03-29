@@ -34,6 +34,17 @@ export async function GET(request) {
     ]);
 
     if (!analysis) {
+      // Check if report is currently being generated
+      const status = await redis.get(`mkt:status:${email}`);
+      const statusData = parseRedis(status);
+      if (statusData && statusData.step === "analyzing") {
+        return Response.json({
+          success: true,
+          processing: true,
+          status: statusData,
+          name: parseRedis(user)?.name || payload.name,
+        });
+      }
       return Response.json({ error: "No results found. Your report may still be processing." }, { status: 404 });
     }
 

@@ -593,6 +593,13 @@
             <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
             <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
             <input type="tel" id="inputPhone" placeholder="Phone number (optional text delivery)" autocomplete="tel" />
+            <div style="margin-top:8px; padding-top:12px; border-top:1px solid #2a2a2a;">
+              <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to access your dashboard</p>
+              <div style="display:flex; gap:8px;">
+                <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
+                <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
+              </div>
+            </div>
             <div class="form-error" id="formError"></div>
             <button class="btn-gold" id="btnSubmitContact">Build My Report</button>
           </div>
@@ -1245,48 +1252,38 @@
       const name = document.getElementById("inputName").value.trim();
       const email = document.getElementById("inputEmail").value.trim();
       const phone = document.getElementById("inputPhone").value.trim();
+      const pin = document.getElementById("inputPin").value.trim();
+      const pinConfirm = document.getElementById("inputPinConfirm").value.trim();
 
       formError.textContent = "";
 
       if (!name) { formError.textContent = "Please enter your first name."; return; }
       if (!email) { formError.textContent = "Please enter your email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { formError.textContent = "Please enter a 4-digit PIN."; return; }
+      if (pin !== pinConfirm) { formError.textContent = "PINs do not match."; return; }
 
       btnSubmitContact.disabled = true;
-      btnSubmitContact.textContent = "Saving...";
+      btnSubmitContact.textContent = "Building...";
 
       try {
-        // Register
-        const res = await fetch(AUTH_URL, {
+        // Register + create dashboard account + set auth cookie
+        const QUIZ_REGISTER_URL = BASE_URL + "/api/dashboard/quiz-register";
+        const res = await fetch(QUIZ_REGISTER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "register", email, name, phone }),
+          credentials: "include",
+          body: JSON.stringify({ email, name, phone, pin }),
         });
 
         const data = await res.json();
         if (!res.ok) {
-          if (res.status === 409) {
-            // Already registered — try login
-            const loginRes = await fetch(AUTH_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "login", email }),
-            });
-            const loginData = await loginRes.json();
-            if (!loginRes.ok) {
-              formError.textContent = loginData.error || "That email is already registered.";
-              btnSubmitContact.disabled = false;
-              btnSubmitContact.textContent = "Build My Report";
-              return;
-            }
-          } else {
-            formError.textContent = data.error || "Something went wrong.";
-            btnSubmitContact.disabled = false;
-            btnSubmitContact.textContent = "Build My Report";
-            return;
-          }
+          formError.textContent = data.error || "Something went wrong.";
+          btnSubmitContact.disabled = false;
+          btnSubmitContact.textContent = "Build My Report";
+          return;
         }
 
-        // Success
+        // Success — auth cookie is now set
         currentUser = { email: email.toLowerCase(), name };
         try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
 
@@ -1297,7 +1294,7 @@
           fbq("track", "Lead");
         }
 
-        // Save diagnostic data, then generate report
+        // Save diagnostic data
         try {
           await saveDiagnosticData();
         } catch(e) {
@@ -1307,7 +1304,7 @@
         // Small delay for Redis propagation
         await new Promise(r => setTimeout(r, 1000));
 
-        // Generate report (fire and forget)
+        // Generate report (fire and forget — dashboard will poll for results)
         generateAndSendReport();
 
         // Meta pixel: Report Generated
@@ -1315,11 +1312,10 @@
           fbq("trackCustom", "ReportGenerated");
         }
 
-        // Update confirmation text
-        confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built now.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results may take up to 5 minutes to process.<br><strong style=\"color:#c5a55a;\">2.</strong> Look for an email from <strong>Unchained Support</strong> at " + email + ".<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see it.</span>";
-
-        showScreen(screenConfirm);
         clearState(); // Quiz is done
+
+        // Redirect to dashboard — user will see live progress
+        window.location.href = "/dashboard/overview";
 
       } catch(e) {
         formError.textContent = "Connection error. Please try again.";
@@ -1344,9 +1340,11 @@
         fbq("trackCustom", "ReportGenerated");
       }
 
+      clearState();
+
+      // Show confirmation screen for auto-report users (they may not have dashboard PIN set)
       confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built now.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results may take up to 5 minutes to process.<br><strong style=\"color:#c5a55a;\">2.</strong> Look for an email from <strong>Unchained Support</strong> at " + currentUser.email + ".<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see it.</span>";
       showScreen(screenConfirm);
-      clearState();
     }
 
     // =====================================================================
@@ -1578,6 +1576,12 @@
 
     // Contact form submit
     btnSubmitContact.addEventListener("click", handleContactSubmit);
+
+    // PIN input: digits only, max 4
+    ["inputPin", "inputPinConfirm"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", () => { el.value = el.value.replace(/\D/g, "").slice(0, 4); });
+    });
 
     // =====================================================================
     // INIT
