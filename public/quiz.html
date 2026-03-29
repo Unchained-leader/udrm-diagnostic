@@ -579,41 +579,45 @@
             <div class="section-label" style="margin-bottom:12px;">Your Preview Finding</div>
             <div class="reveal-text" id="revealText"></div>
           </div>
-          <button class="btn-gold btn-continue" id="btnAfterReveal" style="margin-top:28px;">Get My Full Report</button>
+          <button class="btn-gold btn-continue" id="btnAfterReveal" style="margin-top:28px;">Open My Full Root Map</button>
         </div>
 
         <!-- SCREEN: Contact Capture -->
         <div class="screen" id="screenContact">
           <img src="/images/unchained-logo.png" alt="Unchained Leader" class="landing-logo" style="margin-bottom:16px;" />
-          <h2 class="section-title" style="text-align:center;">Where should we send your report?</h2>
+          <h2 class="section-title" style="text-align:center;">Your Root Map is being built live</h2>
           <p class="section-intro" style="text-align:center; color:#999; font-size:13px;">
-            Unchained Leader exists because of trust. Your information is 100% confidential. We never share it. Ever.
+            Create a secure login to open your personal dashboard. You can watch the build process and start reading your results in real time.
+          </p>
+          <p class="section-intro" style="text-align:center; color:#555; font-size:11px; margin-top:4px;">
+            100% confidential. We never share your information. Ever.
           </p>
           <div class="contact-form" id="contactForm">
             <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
             <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
             <input type="tel" id="inputPhone" placeholder="Phone number (optional text delivery)" autocomplete="tel" />
             <div style="margin-top:8px; padding-top:12px; border-top:1px solid #2a2a2a;">
-              <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to access your dashboard</p>
+              <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to secure your portal</p>
               <div style="display:flex; gap:8px;">
                 <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
                 <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:6px; font-size:18px;" />
               </div>
             </div>
             <div class="form-error" id="formError"></div>
-            <button class="btn-gold" id="btnSubmitContact">Build My Report</button>
+            <button class="btn-gold" id="btnSubmitContact">Open My Dashboard</button>
           </div>
         </div>
 
-        <!-- SCREEN: Confirmation -->
+        <!-- SCREEN: Confirmation (fallback for auto-report users without dashboard PIN) -->
         <div class="screen" id="screenConfirm">
           <div class="confirm-icon">&#10003;</div>
-          <h2 class="confirm-title">Locked In</h2>
+          <h2 class="confirm-title">Your Root Map Is Building</h2>
           <p class="confirm-text" id="confirmText">
-            Your personalized Unwanted Desire Root Map is being built now.<br><br><span style="text-align:left;display:block;max-width:360px;margin:0 auto;"><strong style="color:#c5a55a;">1.</strong> Results may take up to 5 minutes to process.<br><strong style="color:#c5a55a;">2.</strong> Look for an email from <strong>Unchained Support</strong>.<br><strong style="color:#c5a55a;">3.</strong> Check your spam folder if you don't see it.</span>
+            Your personalized Unwanted Desire Root Map is being built live inside your secure portal.<br><br><span style="text-align:left;display:block;max-width:360px;margin:0 auto;"><strong style="color:#c5a55a;">1.</strong> Results are typically ready in 2-3 minutes.<br><strong style="color:#c5a55a;">2.</strong> A copy will also be sent to your email from <strong>Unchained Support</strong>.<br><strong style="color:#c5a55a;">3.</strong> Check your spam folder if you don't see the email.</span>
           </p>
+          <a href="/dashboard/login" style="display:inline-block; margin-top:20px; padding:12px 28px; background:linear-gradient(135deg, #DFC468, #9A7730); color:#000; font-size:13px; font-weight:700; border-radius:8px; text-decoration:none; letter-spacing:1px;">OPEN MY DASHBOARD</a>
           <p class="confirm-text" style="margin-top:16px; color:#666; font-size:12px;">
-            You can log back in anytime using your email.
+            Log in with your email and PIN to view your results.
           </p>
         </div>
 
@@ -1263,7 +1267,7 @@
       if (pin !== pinConfirm) { formError.textContent = "PINs do not match."; return; }
 
       btnSubmitContact.disabled = true;
-      btnSubmitContact.textContent = "Building...";
+      btnSubmitContact.textContent = "Opening...";
 
       try {
         // Register + create dashboard account + set auth cookie
@@ -1279,7 +1283,7 @@
         if (!res.ok) {
           formError.textContent = data.error || "Something went wrong.";
           btnSubmitContact.disabled = false;
-          btnSubmitContact.textContent = "Build My Report";
+          btnSubmitContact.textContent = "Open My Dashboard";
           return;
         }
 
@@ -1323,7 +1327,7 @@
       } catch(e) {
         formError.textContent = "Connection error. Please try again.";
         btnSubmitContact.disabled = false;
-        btnSubmitContact.textContent = "Build My Report";
+        btnSubmitContact.textContent = "Open My Dashboard";
       }
     }
 
@@ -1346,7 +1350,7 @@
       clearState();
 
       // Show confirmation screen for auto-report users (they may not have dashboard PIN set)
-      confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built now.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results may take up to 5 minutes to process.<br><strong style=\"color:#c5a55a;\">2.</strong> Look for an email from <strong>Unchained Support</strong> at " + currentUser.email + ".<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see it.</span>";
+      confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built live inside your secure portal.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results are typically ready in 2-3 minutes.<br><strong style=\"color:#c5a55a;\">2.</strong> A copy will also be sent to <strong>" + currentUser.email + "</strong> from <strong>Unchained Support</strong>.<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see the email.</span>";
       showScreen(screenConfirm);
     }
 

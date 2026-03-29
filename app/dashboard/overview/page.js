@@ -229,9 +229,9 @@ export default function OverviewPage() {
     const statusMsg = processingStatus?.message || "Analyzing your responses...";
     const statusStep = processingStatus?.step || "analyzing";
     const progressMessages = [
-      { step: "analyzing", label: "Analyzing your responses", detail: "Our AI is reading through your entire diagnostic conversation..." },
-      { step: "complete", label: "Building your root map", detail: "Your personalized results are being prepared..." },
-      { step: "pdf_ready", label: "Generating your PDF report", detail: "Almost done..." },
+      { step: "analyzing", label: "Analyzing your responses", detail: "Your conversation is being read at the root level. Every answer you gave is being mapped." },
+      { step: "complete", label: "Building your root map", detail: "Your personalized diagnostic sections are being assembled now." },
+      { step: "pdf_ready", label: "Generating your PDF report", detail: "A downloadable copy of your full report is being created." },
     ];
     const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
     return (
@@ -239,9 +239,10 @@ export default function OverviewPage() {
         <div style={{ textAlign: "center", maxWidth: 440, padding: 40 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 40, width: "auto", marginBottom: 24 }} />
-          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 24 }}>BUILDING YOUR ROOT MAP</div>
+          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 8 }}>YOUR SECURE PORTAL</div>
+          <div style={{ color: "#ccc", fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Building Your Root Map Live</div>
 
-          {/* Pulsing animation */}
+          {/* Spinner */}
           <div style={{ marginBottom: 32 }}>
             <div style={{
               width: 60, height: 60, borderRadius: "50%", margin: "0 auto 20px",
@@ -274,7 +275,7 @@ export default function OverviewPage() {
             })}
           </div>
 
-          <div style={{ color: "#555", fontSize: 12, marginTop: 32 }}>This typically takes 2–3 minutes. Do not close this page.</div>
+          <div style={{ color: "#555", fontSize: 12, marginTop: 32 }}>Your results will appear on this page. This typically takes 2–3 minutes.</div>
 
           <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
