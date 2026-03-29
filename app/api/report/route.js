@@ -7,6 +7,8 @@ import fs from "fs";
 import path from "path";
 import { getDb } from "../lib/db";
 import { MARKETING_BIBLE_REPORT_GUIDE } from "../lib/marketing-bible";
+import { corsHeaders, optionsResponse } from "../lib/cors";
+import { normalizeEmail, parseRedis } from "../lib/utils";
 
 export const maxDuration = 800;
 
@@ -16,11 +18,7 @@ export const maxDuration = 800;
 // not the problem. The pattern is a fingerprint to the root.
 // ═══════════════════════════════════════════════════════════════
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 const GOLD = [197, 165, 90];     // #c5a55a
 const WHITE = [255, 255, 255];
@@ -34,7 +32,7 @@ function hexToRgb(hex) {
 }
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
@@ -46,7 +44,7 @@ export async function POST(request) {
       return Response.json({ error: "Email is required." }, { status: 400, headers: CORS_HEADERS });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     // Look up user
     const user = await redis.get(`mkt:user:${normalizedEmail}`);
@@ -66,7 +64,7 @@ export async function POST(request) {
     } else {
       const stored = await redis.get(`mkt:diagnostic:${normalizedEmail}`);
       if (stored) {
-        const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+        const parsed = parseRedis(stored);
         messages = parsed.messages || [];
       }
     }
@@ -79,10 +77,7 @@ export async function POST(request) {
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
 
     // Analyze with Claude
-    console.log("Starting Opus analysis...");
-    const analysisStart = Date.now();
     const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange });
-    console.log(`Opus analysis completed in ${((Date.now() - analysisStart) / 1000).toFixed(1)}s`);
 
     // Sanitize all string values: strip em dashes + internal code identifiers
     function cleanStr(s) {
@@ -128,7 +123,6 @@ export async function POST(request) {
     // STORE DASHBOARD DATA FIRST (PRIORITY)
     // Dashboard works even if PDF generation fails
     // ═══════════════════════════════════════
-    console.log("Storing dashboard data to Redis...");
     const reportMeta = {
       generatedAt: new Date().toISOString(),
       arousalTemplateType: analysis.arousalTemplateType,
@@ -145,7 +139,6 @@ export async function POST(request) {
     const history = Array.isArray(existingHistory) ? existingHistory : [];
     history.push(historyEntry);
     await redis.set(`mkt:history:${normalizedEmail}`, history);
-    console.log("Dashboard data stored successfully.");
 
     // Update status — results are now available in dashboard
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
@@ -158,11 +151,9 @@ export async function POST(request) {
 
     try {
     // Generate PDF
-    console.log("Starting PDF generation...");
     let pdfResult;
     try {
       pdfResult = await generatePDF(analysis, firstName, { gender });
-      console.log("PDF generation completed, pages:", pdfResult?.pageContentLog?.length || "unknown");
     } catch (pdfErr) {
       console.error("PDF GENERATION CRASHED:", pdfErr.message);
       console.error("PDF crash stack:", pdfErr.stack);
@@ -224,8 +215,6 @@ export async function POST(request) {
     if (qcIssues.length > 0) {
       console.warn(`PDF QC WARNINGS (${qcIssues.length}):`, qcIssues.join(" | "));
       console.warn("Page content log:", JSON.stringify(contentLog));
-    } else {
-      console.log(`PDF QC PASSED: ${pageCount} pages, ${sizeKB}KB, all sections present, no blank pages`);
     }
 
     // If any QC issues found, regenerate with tighter spacing to fix layout problems
@@ -257,10 +246,8 @@ export async function POST(request) {
       if (!pdfStr2.includes("AROUSAL TEMPLATE") && !pdfStr2.includes("Arousal Template")) qcIssues2.push("Missing template");
 
       if (qcIssues2.length < qcIssues.length) {
-        console.log(`Tighter layout fixed: ${qcIssues.length} issues -> ${qcIssues2.length} (${pageCount2} pages)`);
         pdfBuffer = pdfResult2.buffer;
       } else if (qcIssues2.length === 0) {
-        console.log(`Tighter layout passed QC: ${pageCount2} pages`);
         pdfBuffer = pdfResult2.buffer;
       } else {
         console.warn(`Tighter layout still has ${qcIssues2.length} issues. Using best available.`);
@@ -282,7 +269,6 @@ export async function POST(request) {
         { access: "public", contentType: "application/pdf" }
       );
       reportUrl = blob.url;
-      console.log("PDF uploaded to Blob:", reportUrl);
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
     } catch (e) {
       console.error("Blob upload failed (continuing without URL):", e.message);
@@ -307,7 +293,6 @@ export async function POST(request) {
           updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
           await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
         }
-        console.log("Redis updated with PDF URL.");
       } catch (redisUpdateErr) {
         console.error("Redis URL update error (non-fatal):", redisUpdateErr.message);
       }
@@ -611,7 +596,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       const logoPath = path.join(process.cwd(), "public", "images", "unchained-logo.png");
       logoBuffer = fs.readFileSync(logoPath);
     } catch (e) {
-      console.log("Logo not found, continuing without letterhead:", e.message);
+      // Logo not found, continuing without letterhead
     }
 
     // CRITICAL: Catch ALL page creation events (including auto-pagination).
@@ -746,7 +731,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         const badgeX = W / 2 - badgeW / 2;
         doc.image(badgePath, badgeX, afterCredText, { width: badgeW });
       }
-    } catch (e) { console.log("LegitScript badge not found:", e.message); }
+    } catch (e) { /* LegitScript badge not found */ }
 
     // Disclaimer — position from bottom, ensuring it fits on cover page
     const disclaimer = "DISCLAIMER: This report is not intended for clinical use. It is not a diagnosis, a treatment plan, or a substitute for professional counseling or therapy. It is a personalized educational resource designed to help increase understanding of unwanted behaviors and increase hope that freedom is possible. If you are in crisis or experiencing thoughts of self-harm, please contact the 988 Suicide & Crisis Lifeline immediately.";
@@ -1622,7 +1607,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
 
 async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
   if (!process.env.RESEND_API_KEY) {
-    console.log("RESEND_API_KEY not set — skipping email delivery");
+    console.warn("RESEND_API_KEY not set — skipping email delivery");
     return;
   }
 
@@ -1684,6 +1669,5 @@ async function sendReportEmail(email, firstName, pdfBase64, reportUrl) {
     console.error("Resend email failed:", resp.status, errBody);
   } else {
     const result = await resp.json().catch(() => ({}));
-    console.log("Resend email sent:", result.id || "ok");
   }
 }

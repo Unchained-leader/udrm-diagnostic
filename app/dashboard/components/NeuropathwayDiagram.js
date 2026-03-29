@@ -1,6 +1,5 @@
 "use client";
-
-const GOLD = "#C9A227";
+import { GOLD } from "../constants";
 
 const PATHWAY_DATA = {
   "Arousal": { color: "#ef4444", icon: "⚡", desc: "Seeks stimulation to override emotional pain" },

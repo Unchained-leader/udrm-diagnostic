@@ -1,9 +1,10 @@
 import redis from "../lib/redis.js";
+import { normalizeEmail, parseRedis } from "../lib/utils";
 
 export async function POST(request) {
   try {
     const { action, email, code, newPin } = await request.json();
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
       return Response.json({ error: "Valid email is required." }, { status: 400 });
@@ -81,7 +82,7 @@ export async function POST(request) {
         return Response.json({ error: "Account not found." }, { status: 404 });
       }
 
-      const userData = typeof user === "string" ? JSON.parse(user) : user;
+      const userData = parseRedis(user);
       userData.pin = newPin;
       await redis.set(`mkt:user:${normalizedEmail}`, JSON.stringify(userData));
 

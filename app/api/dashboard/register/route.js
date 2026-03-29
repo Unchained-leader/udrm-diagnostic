@@ -1,13 +1,12 @@
 import redis from "../../lib/redis";
-import { SignJWT } from "jose";
+import { createDashboardToken, setTokenCookie } from "../../lib/auth";
 import bcrypt from "bcryptjs";
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
+import { normalizeEmail, parseRedis } from "../../lib/utils";
 
 export async function POST(request) {
   try {
     const { email, pin, reset } = await request.json();
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     if (!normalizedEmail) {
       return Response.json({ error: "Email is required." }, { status: 400 });
@@ -21,7 +20,7 @@ export async function POST(request) {
       return Response.json({ error: "No account found. Complete the assessment first." }, { status: 404 });
     }
 
-    const userData = typeof user === "string" ? JSON.parse(user) : user;
+    const userData = parseRedis(user);
 
     if (!userData.diagnosticComplete) {
       return Response.json({ error: "Complete the assessment to unlock your dashboard." }, { status: 403 });
@@ -35,13 +34,10 @@ export async function POST(request) {
     userData.dashboardPin = hashedPin;
     await redis.set(`mkt:user:${normalizedEmail}`, userData);
 
-    const token = await new SignJWT({ email: normalizedEmail, name: userData.name })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("7d")
-      .sign(SECRET);
+    const token = await createDashboardToken(normalizedEmail, userData.name);
 
     const response = Response.json({ success: true, name: userData.name });
-    response.headers.set("Set-Cookie", `dashboard_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+    setTokenCookie(response, token);
     return response;
   } catch (error) {
     console.error("Dashboard register error:", error);

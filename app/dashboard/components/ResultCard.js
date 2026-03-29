@@ -1,8 +1,6 @@
 "use client";
 import { forwardRef } from "react";
-
-const GOLD = "#C9A227";
-const CARD_BG = "#111111";
+import { GOLD, CARD_BG } from "../constants";
 
 const ResultCard = forwardRef(function ResultCard({ title, subtitle, children, gold, style }, ref) {
   return (

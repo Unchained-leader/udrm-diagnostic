@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt } from "./system-prompt";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { corsHeaders, optionsResponse } from "../lib/cors";
 
 // Load knowledge base at startup (cached in memory)
 let knowledgeBase = "";
@@ -15,6 +16,8 @@ try {
 }
 
 const client = new Anthropic();
+
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 // Crisis detection keywords
 const CRISIS_KEYWORDS = [
@@ -84,14 +87,7 @@ async function sendCrisisAlert(message, userId) {
 
 // Handle CORS preflight
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
@@ -102,7 +98,7 @@ export async function POST(request) {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Messages array required" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
       });
     }
 
@@ -198,7 +194,7 @@ export async function POST(request) {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
-        "Access-Control-Allow-Origin": "*",
+        ...CORS_HEADERS,
       },
     });
   } catch (error) {
@@ -220,7 +216,7 @@ export async function POST(request) {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
       }
     );
   }

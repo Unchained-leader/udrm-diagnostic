@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
+import { getJwtSecret, jwtVerify } from "./app/api/lib/auth";
 
 const PUBLIC_PATHS = ["/dashboard/login", "/dashboard/register", "/dashboard/reset-pin"];
 
@@ -20,7 +18,7 @@ export async function middleware(request) {
   const urlToken = request.nextUrl.searchParams.get("token");
   if (urlToken) {
     try {
-      await jwtVerify(urlToken, SECRET);
+      await jwtVerify(urlToken, getJwtSecret());
       const cleanUrl = request.nextUrl.clone();
       cleanUrl.searchParams.delete("token");
       const response = NextResponse.redirect(cleanUrl);
@@ -43,7 +41,7 @@ export async function middleware(request) {
   }
 
   try {
-    await jwtVerify(token, SECRET);
+    await jwtVerify(token, getJwtSecret());
     return NextResponse.next();
   } catch {
     const response = NextResponse.redirect(new URL("/dashboard/login", request.url));

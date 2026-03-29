@@ -1,13 +1,11 @@
 import { getDb } from "../lib/db";
+import { corsHeaders, optionsResponse } from "../lib/cors";
+import { parseRedis } from "../lib/utils";
 
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, GET, OPTIONS");
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, GET, OPTIONS");
 }
 
 // POST: Record an analytics event
@@ -258,7 +256,7 @@ export async function GET(request) {
       `;
 
       const history = checks.map(c => {
-        const d = typeof c.event_data === "string" ? JSON.parse(c.event_data) : c.event_data;
+        const d = parseRedis(c.event_data);
         return {
           timestamp: c.created_at,
           status: d.status,

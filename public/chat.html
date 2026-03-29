@@ -1261,9 +1261,8 @@
         // Must await diagnostic save so report endpoint can authenticate and find data
         try {
           await saveDiagnosticData();
-          console.log("Diagnostic data saved. Triggering report generation...");
         } catch(e) {
-          console.log("Diagnostic save error (continuing anyway):", e.message);
+          console.error("Diagnostic save error (continuing anyway):", e.message);
         }
 
         // Small delay to ensure Redis write is propagated
@@ -1504,7 +1503,7 @@
           }
         }
       } catch(e) {
-        console.log("Could not load history:", e.message);
+        console.error("Could not load history:", e.message);
       }
 
       // No history found — show welcome
@@ -1525,7 +1524,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "save", email: currentUser.email, pin: currentUser.pin, messages }),
           });
-        } catch(e) { console.log("Could not save history:", e.message); }
+        } catch(e) { console.error("Could not save history:", e.message); }
       }, SAVE_DEBOUNCE_MS);
     }
 
@@ -1545,28 +1544,6 @@
         }
       }
       if (lastProgress > 0) updateProgress(lastProgress);
-    }
-
-    // ========== START BUTTON (replaces "type yes") ==========
-    function addStartButton() {
-      const btnDiv = document.createElement("div");
-      btnDiv.id = "start-button-container";
-      btnDiv.style.cssText = "padding: 8px 0; text-align: center;";
-      const btn = document.createElement("button");
-      btn.textContent = "Yes, I'm Ready";
-      btn.className = "quiz-continue-btn";
-      btn.style.cssText = "max-width: 320px; margin: 0 auto; display: block;";
-      btn.addEventListener("click", () => {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-        btnDiv.remove();
-        addMessage("user", "Yes");
-        messages.push({ role: "user", content: "Yes" });
-        sendToAI();
-      });
-      messagesEl.appendChild(btnDiv);
-      btnDiv.appendChild(btn);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
     // ========== WELCOME BACK LINK ==========
@@ -1605,7 +1582,7 @@
       };
       recognition.onend = () => cleanupRecording();
       recognition.onerror = (event) => {
-        console.log("Speech error:", event.error);
+        console.error("Speech error:", event.error);
         cleanupRecording();
         if (event.error === "not-allowed") alert("Microphone access was denied.");
       };
@@ -1887,7 +1864,7 @@
             completedAt: new Date().toISOString(),
           }),
         });
-      } catch(e) { console.log("Could not save diagnostic data:", e.message); }
+      } catch(e) { console.error("Could not save diagnostic data:", e.message); }
     }
 
     // ========== GENERATE AND SEND REPORT ==========
@@ -1905,12 +1882,10 @@
             diagnosticData: messages,
           }),
         });
-        if (res.ok) {
-          console.log("Report generated and sent successfully");
-        } else {
-          console.log("Report generation failed:", await res.text());
+        if (!res.ok) {
+          console.error("Report generation failed:", await res.text());
         }
-      } catch(e) { console.log("Could not generate report:", e.message); }
+      } catch(e) { console.error("Could not generate report:", e.message); }
     }
 
     // ========== BOOKING CTA ==========

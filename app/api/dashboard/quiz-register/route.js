@@ -1,24 +1,20 @@
 import redis from "../../lib/redis";
-import { SignJWT } from "jose";
+import { createDashboardToken, setTokenCookie } from "../../lib/auth";
 import bcrypt from "bcryptjs";
 import { ghlContactCreated } from "../../lib/ghl";
+import { corsHeaders, optionsResponse } from "../../lib/cors";
+import { normalizeEmail, parseRedis } from "../../lib/utils";
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "unchained-dashboard-secret-key-change-me");
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers: CORS_HEADERS });
+  return optionsResponse("POST, OPTIONS");
 }
 
 export async function POST(request) {
   try {
     const { email, name, phone, pin } = await request.json();
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
     if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
@@ -37,7 +33,7 @@ export async function POST(request) {
 
     if (existing) {
       // User exists — update with PIN if not already set, mark diagnostic complete
-      const userData = typeof existing === "string" ? JSON.parse(existing) : existing;
+      const userData = parseRedis(existing);
       userData.diagnosticComplete = true;
       userData.diagnosticCompletedAt = new Date().toISOString();
       if (!userData.dashboardPin) {
@@ -45,13 +41,10 @@ export async function POST(request) {
       }
       await redis.set(userKey, userData);
 
-      const token = await new SignJWT({ email: normalizedEmail, name: userData.name || trimmedName })
-        .setProtectedHeader({ alg: "HS256" })
-        .setExpirationTime("7d")
-        .sign(SECRET);
+      const token = await createDashboardToken(normalizedEmail, userData.name || trimmedName);
 
       const response = Response.json({ success: true, name: userData.name || trimmedName, token }, { headers: CORS_HEADERS });
-      response.headers.set("Set-Cookie", `dashboard_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+      setTokenCookie(response, token);
       return response;
     }
 
@@ -73,13 +66,10 @@ export async function POST(request) {
       phone: phone || "",
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
-    const token = await new SignJWT({ email: normalizedEmail, name: trimmedName })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("7d")
-      .sign(SECRET);
+    const token = await createDashboardToken(normalizedEmail, trimmedName);
 
     const response = Response.json({ success: true, name: trimmedName, token }, { headers: CORS_HEADERS });
-    response.headers.set("Set-Cookie", `dashboard_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+    setTokenCookie(response, token);
     return response;
   } catch (error) {
     console.error("Quiz register error:", error);
