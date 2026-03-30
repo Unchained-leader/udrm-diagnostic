@@ -641,6 +641,14 @@ function LocationsView({ product }) {
       };
       const countries = topoFeature(worldTopo, worldTopo.objects.countries);
 
+      // Fetch US state boundaries
+      let usStates = { type: "FeatureCollection", features: [] };
+      try {
+        const statesRes = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+        const statesTopo = await statesRes.json();
+        usStates = topoFeature(statesTopo, statesTopo.objects.states);
+      } catch (e) { console.warn("Could not load US states:", e); }
+
       // Major world cities for labels
       const majorCities = [
         { name: "New York", lat: 40.71, lng: -74.01 }, { name: "Los Angeles", lat: 34.05, lng: -118.24 },
@@ -680,11 +688,21 @@ function LocationsView({ product }) {
         .width(width)
         .height(height)
         // Country polygons with borders
-        .polygonsData(countries.features)
-        .polygonCapColor(() => "rgba(15,15,15,0.95)")
+        .polygonsData([...countries.features, ...usStates.features])
+        .polygonCapColor((d) => {
+          // US states get slightly different shade so state lines are visible
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? "rgba(20,20,20,0.7)" : "rgba(15,15,15,0.95)";
+        })
         .polygonSideColor(() => "rgba(30,30,30,0.6)")
-        .polygonStrokeColor(() => "rgba(197,165,90,0.35)")
-        .polygonAltitude(0.005)
+        .polygonStrokeColor((d) => {
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? "rgba(197,165,90,0.25)" : "rgba(197,165,90,0.35)";
+        })
+        .polygonAltitude((d) => {
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? 0.006 : 0.005;
+        })
         // City labels
         .labelsData(allLabels)
         .labelLat("lat")
