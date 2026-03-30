@@ -640,7 +640,16 @@ export default function OverviewPage() {
         <Reveal idx={nextRevealIdx()}>
         <ResultCard ref={keyInsightRef} gold style={{ borderColor: `${GOLD}66` }}>
           <div style={{ fontSize: 12, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 12 }}>Key Insight</div>
-          <p style={{ fontSize: 22, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
+          {(a.keyInsight || "").split(/(?<=\.)\s+/).reduce((acc, sentence, i, arr) => {
+            const chunkSize = 3;
+            const ci = Math.floor(i / chunkSize);
+            if (!acc[ci]) acc[ci] = [];
+            acc[ci].push(sentence);
+            if (i === arr.length - 1) return acc.map((chunk, j) => (
+              <p key={j} style={{ fontSize: 17, lineHeight: 1.8, color: "#ddd", margin: 0, marginBottom: j < acc.length - 1 ? 14 : 0 }}>{chunk.join(" ")}</p>
+            ));
+            return acc;
+          }, [])}
         </ResultCard>
         </Reveal>
 
