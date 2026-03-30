@@ -550,8 +550,10 @@ function LocationsView({ product }) {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [selectedPoint, setSelectedPoint] = useState(null);
+  const [showCities, setShowCities] = useState(true);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
+  const allLabelsRef = useRef([]);
 
   const fetchLocations = useCallback(() => {
     const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
@@ -699,6 +701,7 @@ function LocationsView({ product }) {
         const tooClose = allLabels.some(ml => Math.abs(ml.lat - sl.lat) < 1 && Math.abs(ml.lng - sl.lng) < 1);
         if (!tooClose) allLabels.push(sl);
       });
+      allLabelsRef.current = allLabels;
 
       const globe = window.Globe()
         .backgroundColor("#000000")
@@ -725,14 +728,25 @@ function LocationsView({ product }) {
           const isUSState = usStates.features.includes(d);
           return isUSState ? 0.006 : 0.005;
         })
-        // City labels
+        // City labels — size scales down as you zoom in
         .labelsData(allLabels)
         .labelLat("lat")
         .labelLng("lng")
         .labelText("name")
-        .labelSize(0.6)
-        .labelDotRadius(0.15)
-        .labelColor(() => "rgba(197,165,90,0.6)")
+        .labelSize(() => {
+          if (!globeInstanceRef.current) return 0.3;
+          const pov = globeInstanceRef.current.pointOfView();
+          const alt = pov ? pov.altitude : 2.5;
+          // Closer = smaller labels: ranges from 0.08 (zoomed in) to 0.5 (zoomed out)
+          return Math.max(0.08, Math.min(0.5, alt * 0.2));
+        })
+        .labelDotRadius(() => {
+          if (!globeInstanceRef.current) return 0.1;
+          const pov = globeInstanceRef.current.pointOfView();
+          const alt = pov ? pov.altitude : 2.5;
+          return Math.max(0.02, Math.min(0.12, alt * 0.05));
+        })
+        .labelColor(() => "rgba(197,165,90,0.55)")
         .labelResolution(2)
         .labelAltitude(0.007)
         // Data points
@@ -766,6 +780,11 @@ function LocationsView({ product }) {
       globe.controls().autoRotateSpeed = 0.5;
       globe.controls().enableZoom = true;
 
+      // Re-render labels on zoom so size updates dynamically
+      globe.controls().addEventListener("change", () => {
+        globe.labelsData(globe.labelsData());
+      });
+
       // Pause rotation on hover for easier navigation
       container.addEventListener("mouseenter", () => { globe.controls().autoRotate = false; });
       container.addEventListener("mouseleave", () => { globe.controls().autoRotate = true; });
@@ -789,6 +808,13 @@ function LocationsView({ product }) {
       }
     };
   }, [locData]);
+
+  // Toggle city labels on/off
+  useEffect(() => {
+    if (globeInstanceRef.current) {
+      globeInstanceRef.current.labelsData(showCities ? allLabelsRef.current : []);
+    }
+  }, [showCities]);
 
   // Handle resize
   useEffect(() => {
@@ -851,6 +877,15 @@ function LocationsView({ product }) {
               style={{ ...pillStyle(true), opacity: (!customStart || !customEnd) ? 0.5 : 1 }}>Apply</button>
           </div>
         )}
+        {/* City labels toggle */}
+        <button onClick={() => setShowCities(!showCities)} style={{
+          ...pillStyle(showCities),
+          marginLeft: "auto",
+          display: "flex", alignItems: "center", gap: 5, fontSize: 11,
+        }}>
+          <span style={{ fontSize: 14 }}>{showCities ? "🏙️" : "🔵"}</span>
+          {showCities ? "Cities On" : "Cities Off"}
+        </button>
       </div>
 
       {/* Summary stats bar */}
