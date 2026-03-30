@@ -134,6 +134,7 @@ export default function OverviewPage() {
             wasPolling = true;
             setProcessing(true);
             setProcessingStatus(d.processingStatus || { step: "analyzing", message: "Analyzing your responses..." });
+            setData(d); // populate data so old reports are accessible if needed
             setLoading(false);
             pollTimer = setTimeout(fetchResults, 4000);
             return;
@@ -225,6 +226,14 @@ export default function OverviewPage() {
           <div style={{ color: "#ef4444", fontSize: 15 }}>{error}</div>
           <button onClick={() => router.push("/dashboard/login")} style={{ marginTop: 20, padding: "10px 24px", background: "none", border: `1px solid ${GOLD}`, color: GOLD, borderRadius: 8, cursor: "pointer", fontSize: 13 }}>Back to Login</button>
         </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return processing ? null : (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+        <div style={{ color: "#555", fontSize: 14 }}>Loading...</div>
       </div>
     );
   }
