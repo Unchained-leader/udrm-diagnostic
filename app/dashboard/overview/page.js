@@ -41,9 +41,9 @@ function ContentBlock({ title, body, borderColor }) {
       background: "#1a1a1a", borderRadius: 10, padding: "16px 18px",
       border: `1px solid ${borderColor || "#2a2a2a"}`, marginBottom: 10,
     }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{uncensor(title)}</div>
+      <div style={{ fontSize: 19, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{uncensor(title)}</div>
       {paragraphs.map((p, i) => (
-        <p key={i} style={{ margin: "0 0 8px", fontSize: 14, lineHeight: 1.7, color: "#999" }}>{p}</p>
+        <p key={i} style={{ margin: "0 0 8px", fontSize: 17, lineHeight: 1.7, color: "#999" }}>{p}</p>
       ))}
     </div>
   );
@@ -66,8 +66,8 @@ function ResourceCard({ priority, label, price, title, body, link }) {
           color: isFree ? "#22c55e" : GOLD,
         }}>{price}</div>
       </div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{title}</div>
-      <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>{body}</p>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{title}</div>
+      <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>{body}</p>
       <a href={link} target="_blank" rel="noopener noreferrer" style={{
         display: "block", textAlign: "center", padding: "12px",
         background: isPrimary ? "linear-gradient(135deg, #DFC468, #9A7730)" : "none",
@@ -262,7 +262,7 @@ export default function OverviewPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 40, width: "auto", marginBottom: 24 }} />
           <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 8 }}>YOUR SECURE PORTAL</div>
-          <div style={{ color: "#ccc", fontSize: 20, fontWeight: 700, marginBottom: 24 }}>Building Your Root Map Live</div>
+          <div style={{ color: "#ccc", fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Building Your Root Map Live</div>
 
           {/* Spinner */}
           <div style={{ marginBottom: 32 }}>
@@ -273,7 +273,7 @@ export default function OverviewPage() {
               animation: "spin 1.2s linear infinite",
             }} />
             <div style={{ color: "#ccc", fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{currentProgress.label}</div>
-            <div style={{ color: "#777", fontSize: 14, lineHeight: 1.6 }}>{currentProgress.detail}</div>
+            <div style={{ color: "#777", fontSize: 17, lineHeight: 1.6 }}>{currentProgress.detail}</div>
           </div>
 
           {/* Progress steps */}
@@ -347,7 +347,7 @@ export default function OverviewPage() {
       {showTrends && reports.length > 1 ? (
         <div style={{ display: "grid", gap: 16 }}>
           <ResultCard title="Progress Over Time" gold>
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 16 }}>
+            <div style={{ fontSize: 17, color: "#888", marginBottom: 16 }}>
               {reports.length} assessments from {new Date(reports[0]?.generatedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })} to {new Date(reports[reports.length - 1]?.generatedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
             </div>
             <TrendOverlay reports={reports} />
@@ -367,8 +367,8 @@ export default function OverviewPage() {
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "#fff", lineHeight: 1.3 }}>UNWANTED DESIRE</h1>
         <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 20px", color: "#fff", lineHeight: 1.3 }}>ROOT MAPPING</h1>
         <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
-        <div style={{ fontSize: 16, color: "#ccc" }}>Personalized for {name}</div>
-        <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+        <div style={{ fontSize: 19, color: "#ccc" }}>Personalized for {name}</div>
+        <div style={{ fontSize: 17, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
         <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
@@ -387,8 +387,8 @@ export default function OverviewPage() {
         {/* Arousal Template */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
-          {a.arousalTemplateSecondary && <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
-          <p style={{ fontSize: 14, color: "#999", lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>As you read the report below, you will start to understand what this means, why it is so important, and how this new clarity will lead you to freedom.</p>
+          {a.arousalTemplateSecondary && <div style={{ fontSize: 17, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
+          <p style={{ fontSize: 17, color: "#999", lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>As you read the report below, you will start to understand what this means, why it is so important, and how this new clarity will lead you to freedom.</p>
         </ResultCard>
         </Reveal>
 
@@ -412,23 +412,23 @@ export default function OverviewPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8 }}>
               <div style={{ fontSize: 11, color: "#666", letterSpacing: 1, marginBottom: 4 }}>FIRST EXPOSURE</div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Age {a.imprintingAge || "?"}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "#fff" }}>Age {a.imprintingAge || "?"}</div>
             </div>
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8 }}>
               <div style={{ fontSize: 11, color: "#666", letterSpacing: 1, marginBottom: 4 }}>CONTEXT</div>
-              <div style={{ fontSize: 14, color: "#ccc" }}>{a.imprintingContext || "Unknown"}</div>
+              <div style={{ fontSize: 17, color: "#ccc" }}>{a.imprintingContext || "Unknown"}</div>
             </div>
           </div>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.imprintingFusion}</p>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.imprintingFusion}</p>
         </ResultCard>
         </Reveal>
 
         {/* Neuropathway */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Addiction Neuropathway" subtitle={a.neuropathway || "Unknown"}>
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
+          <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>Manages: {a.neuropathwayManages || "Unknown"}</div>
           <NeuropathwayDiagram neuropathway={a.neuropathway} manages={a.neuropathwayManages} />
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "12px 0 0" }}>{a.neuropathwayExplanation}</p>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "12px 0 0" }}>{a.neuropathwayExplanation}</p>
         </ResultCard>
         </Reveal>
 
@@ -444,7 +444,7 @@ export default function OverviewPage() {
         {/* Behavior Root Map — fully expanded */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Behavior-Root Map">
-          <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
+          <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>Each behavior traced to its psychological root</div>
           {(a.behaviorRootMap || []).map((item, i) => (
             <ContentBlock key={i} title={item.behavior} body={item.root} borderColor={GOLD} />
           ))}
@@ -455,7 +455,7 @@ export default function OverviewPage() {
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Confusing Patterns Decoded" gold>
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
+            <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>Patterns you may have never told anyone about</div>
             {a.confusingPatternsDecoded.map((item, i) => (
               <ContentBlock key={i} title={item.pattern} body={item.explanation} borderColor={GOLD} />
             ))}
@@ -466,7 +466,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             These patterns did not form by accident. They were encoded in a system designed to stay hidden.
           </div>
           </Reveal>
@@ -475,11 +475,11 @@ export default function OverviewPage() {
         {/* Attachment Style */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Attachment Style" subtitle={a.attachmentStyle || "Unknown"}>
-          <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
           {a.godAttachment && (
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8, borderLeft: `3px solid ${GOLD}` }}>
               <div style={{ fontSize: 11, color: GOLD, letterSpacing: 1, marginBottom: 6 }}>HOW THIS SHOWS UP WITH GOD</div>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.godAttachment}</p>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.godAttachment}</p>
             </div>
           )}
         </ResultCard>
@@ -489,7 +489,7 @@ export default function OverviewPage() {
         {a.purityCultureImpact && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Spiritual Integration">
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.purityCultureImpact}</p>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.purityCultureImpact}</p>
           </ResultCard>
           </Reveal>
         )}
@@ -498,8 +498,8 @@ export default function OverviewPage() {
         {a.generationalLens && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Your Generational Context" subtitle={a.generationalCohort || "Your Cohort"}>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.generationalLens}</p>
-            <div style={{ textAlign: "center", padding: "10px 16px", fontSize: 12, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.generationalLens}</p>
+            <div style={{ textAlign: "center", padding: "10px 16px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
               You did not choose the generation you were born into. But you are choosing what happens next.
             </div>
           </ResultCard>
@@ -511,15 +511,15 @@ export default function OverviewPage() {
         <ResultCard title="Relational Pattern Scores">
           <RelationalBars analysis={a} />
           <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-            {a.codependencyExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 13, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Codependency:</strong> {a.codependencyExplanation}</div>}
-            {a.enmeshmentExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 13, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Enmeshment:</strong> {a.enmeshmentExplanation}</div>}
-            {a.relationalVoidExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 13, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Relational Void:</strong> {a.relationalVoidExplanation}</div>}
-            {a.leadershipBurdenExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 13, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Leadership Burden:</strong> {a.leadershipBurdenExplanation}</div>}
+            {a.codependencyExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 17, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Codependency:</strong> {a.codependencyExplanation}</div>}
+            {a.enmeshmentExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 17, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Enmeshment:</strong> {a.enmeshmentExplanation}</div>}
+            {a.relationalVoidExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 17, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Relational Void:</strong> {a.relationalVoidExplanation}</div>}
+            {a.leadershipBurdenExplanation && <div style={{ padding: "10px 14px", background: "#1a1a1a", borderRadius: 8, fontSize: 17, lineHeight: 1.6, color: "#999" }}><strong style={{ color: "#ccc" }}>Leadership Burden:</strong> {a.leadershipBurdenExplanation}</div>}
           </div>
         </ResultCard>
 
         {/* Gap-widening */}
-        <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+        <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
           The relational patterns in your life are not separate from your behavior. They are the soil it grows in.
         </div>
         </Reveal>
@@ -538,9 +538,9 @@ export default function OverviewPage() {
                   transition: "width 0.5s ease",
                 }} />
               </div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", minWidth: 40, textAlign: "right" }}>{a.isolationScore}/5</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", minWidth: 40, textAlign: "right" }}>{a.isolationScore}/5</div>
             </div>
-            <div style={{ fontSize: 13, color: "#888" }}>
+            <div style={{ fontSize: 17, color: "#888" }}>
               {a.isolationLevel ? `Level: ${a.isolationLevel}` : `${Number(a.isolationScore) >= 4 ? "High isolation — the cycle thrives in secrecy" : Number(a.isolationScore) >= 2 ? "Moderate isolation detected" : "Low isolation"}`}
             </div>
           </ResultCard>
@@ -559,7 +559,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.lifeStressAnalysis && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Root-level healing does not just address behavior. It rebuilds your capacity to carry the weight of real life.
           </div>
           </Reveal>
@@ -569,11 +569,11 @@ export default function OverviewPage() {
         {a.coCopingBehaviors && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Your Brain's Other Escape Routes">
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
+            <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>Other ways your brain attempts to solve the same root problems</div>
             {Array.isArray(a.coCopingBehaviors) ? a.coCopingBehaviors.map((item, i) => (
               <ContentBlock key={i} title={item.behavior} body={item.connection} borderColor={GOLD} />
             )) : (
-              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: 0 }}>{String(a.coCopingBehaviors)}</p>
             )}
           </ResultCard>
           </Reveal>
@@ -591,7 +591,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             You cannot win whack-a-mole with your nervous system. Every time you shut down one behavior without addressing the root, your brain finds another.
           </div>
           </Reveal>
@@ -601,7 +601,7 @@ export default function OverviewPage() {
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Strategy Audit">
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>
+            <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>
               {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
             </div>
             {a.strategyBreakdowns.map((s, i) => (
@@ -614,7 +614,7 @@ export default function OverviewPage() {
         {/* Gap-widening after Strategy Audit */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 13, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Every strategy on this list was aimed at managing behavior. Not one reached the root. That is not a failure of effort. It is a failure of targeting.
           </div>
           </Reveal>
@@ -627,10 +627,10 @@ export default function OverviewPage() {
           borderTop: `3px solid ${GOLD}`, marginBottom: 0,
         }}>
           <div style={{ fontSize: 11, letterSpacing: 3, color: GOLD, textTransform: "uppercase", marginBottom: 16, textAlign: "center" }}>YOUR FULL PICTURE</div>
-          <p style={{ fontSize: 15, lineHeight: 1.9, color: "#bbb", margin: "0 0 20px", textAlign: "center" }}>
+          <p style={{ fontSize: 17, lineHeight: 1.8, color: "#bbb", margin: "0 0 20px", textAlign: "center" }}>
             Here is what your diagnostic revealed: A root narrative of &ldquo;{a.rootNarrativeStatement || "a core wound"}&rdquo; formed in childhood, encoded into a {a.arousalTemplateType || "specific"} arousal template at age {a.imprintingAge || "unknown"}, running through the {a.neuropathway || "primary"} neuropathway, reinforced by {a.attachmentStyle || "your"} attachment, and defended against by {a.strategiesCount || "multiple"} strategies over {a.yearsFighting || "many"} years. None of those strategies failed because of you. They failed because they were aimed at a system they could not see.
           </p>
-          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>
+          <p style={{ fontSize: 19, lineHeight: 1.8, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>
             You can see the system now. Most men never get this far. But seeing the prison does not open the door.
           </p>
         </div>
@@ -640,7 +640,7 @@ export default function OverviewPage() {
         <Reveal idx={nextRevealIdx()}>
         <ResultCard ref={keyInsightRef} gold style={{ borderColor: `${GOLD}66` }}>
           <div style={{ fontSize: 12, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 12 }}>Key Insight</div>
-          <p style={{ fontSize: 18, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
+          <p style={{ fontSize: 22, lineHeight: 1.8, color: "#ddd", margin: 0 }}>{a.keyInsight}</p>
         </ResultCard>
         </Reveal>
 
@@ -648,8 +648,8 @@ export default function OverviewPage() {
         <Reveal idx={nextRevealIdx()}>
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>WHAT THIS MEANS</div>
-          <p style={{ fontSize: 16, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>The path is laid out. The question is whether you will take the first step.</p>
+          <p style={{ fontSize: 19, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
+          <p style={{ fontSize: 17, lineHeight: 1.7, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>The path is laid out. The question is whether you will take the first step.</p>
         </ResultCard>
         </Reveal>
 
@@ -658,8 +658,8 @@ export default function OverviewPage() {
         <ResultCard style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "28px 24px 0", textAlign: "center" }}>
             <div style={{ fontSize: 11, letterSpacing: 3, color: GOLD, textTransform: "uppercase", marginBottom: 8 }}>Romans 12:2</div>
-            <h3 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 6px", letterSpacing: 1 }}>Do Not Conform. Transform.</h3>
-            <p style={{ fontSize: 13, color: "#777", margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.6 }}>
+            <h3 style={{ fontSize: 26, fontWeight: 700, color: "#fff", margin: "0 0 6px", letterSpacing: 1 }}>Do Not Conform. Transform.</h3>
+            <p style={{ fontSize: 17, color: "#777", margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.6 }}>
               &ldquo;Do not conform to the pattern of this world, but be transformed by the renewing of your mind.&rdquo;
             </p>
           </div>
@@ -694,8 +694,8 @@ export default function OverviewPage() {
                     <span style={{ fontSize: 10, letterSpacing: 1.5, color: step.active ? GOLD : "#555", textTransform: "uppercase" }}>Phase {step.phase}</span>
                     {step.active && <span style={{ fontSize: 9, letterSpacing: 1, color: "#000", background: GOLD, padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>YOU ARE HERE</span>}
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: step.active ? "#fff" : "#666", marginBottom: 6 }}>{step.title}</div>
-                  <p style={{ fontSize: 13, lineHeight: 1.6, color: step.active ? "#999" : "#444", margin: 0 }}>{step.desc}</p>
+                  <div style={{ fontSize: 19, fontWeight: 600, color: step.active ? "#fff" : "#666", marginBottom: 6 }}>{step.title}</div>
+                  <p style={{ fontSize: 17, lineHeight: 1.6, color: step.active ? "#999" : "#444", margin: 0 }}>{step.desc}</p>
                   {step.active && (
                     <div style={{ marginTop: 10 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#777", marginBottom: 4 }}>
@@ -729,7 +729,7 @@ export default function OverviewPage() {
         <div ref={nextStepsRef} style={{ display: "grid", gap: 0 }}>
           {/* Personalized recommendation */}
           <ResultCard title="Your Recommended Next Step">
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>
+            <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>
               {name}, based on your {a.arousalTemplateType || "primary"} pattern, {a.neuropathway || "identified"} neuropathway, and {a.attachmentStyle || "your"} attachment style, this is the recommended next step for your specific diagnostic:
             </p>
             <ResourceCard
@@ -814,7 +814,7 @@ export default function OverviewPage() {
           padding: "12px 20px",
           display: "flex", justifyContent: "center", alignItems: "center", gap: 16,
         }}>
-          <span style={{ fontSize: 14, color: "#ccc" }}>Ready to take the next step?</span>
+          <span style={{ fontSize: 17, color: "#ccc" }}>Ready to take the next step?</span>
           <a href="https://unchained-leader.com/aof" target="_blank" rel="noopener noreferrer" style={{
             padding: "10px 24px", background: "linear-gradient(135deg, #DFC468, #9A7730)",
             color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6,
