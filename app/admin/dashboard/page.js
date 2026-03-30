@@ -591,7 +591,7 @@ function LocationsView({ product }) {
 
       const container = globeContainerRef.current;
       const width = container.clientWidth;
-      const height = Math.min(width, 600);
+      const height = Math.max(600, Math.min(width * 0.65, 800));
 
       const points = (locData.locations || []).map(loc => ({
         lat: parseFloat(loc.geo_lat),
@@ -726,6 +726,10 @@ function LocationsView({ product }) {
       globe.controls().autoRotateSpeed = 0.5;
       globe.controls().enableZoom = true;
 
+      // Pause rotation on hover for easier navigation
+      container.addEventListener("mouseenter", () => { globe.controls().autoRotate = false; });
+      container.addEventListener("mouseleave", () => { globe.controls().autoRotate = true; });
+
       globeInstanceRef.current = globe;
     };
 
@@ -752,7 +756,7 @@ function LocationsView({ product }) {
       if (globeInstanceRef.current && globeContainerRef.current) {
         const w = globeContainerRef.current.clientWidth;
         globeInstanceRef.current.width(w);
-        globeInstanceRef.current.height(Math.min(w, 600));
+        globeInstanceRef.current.height(Math.max(600, Math.min(w * 0.65, 800)));
       }
     };
     window.addEventListener("resize", handleResize);
@@ -825,12 +829,11 @@ function LocationsView({ product }) {
         </div>
       </div>
 
-      {/* Globe + side panel layout */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-        {/* Globe container */}
-        <div style={{ flex: "1 1 60%", minWidth: 320 }}>
+      {/* Globe full-width */}
+      <div>
+        <div style={{ width: "100%" }}>
           <div ref={globeContainerRef}
-            style={{ width: "100%", background: "#0a0a0a", borderRadius: 12, border: "1px solid #222", overflow: "hidden", minHeight: 400 }}>
+            style={{ width: "100%", background: "#000", borderRadius: 12, border: "1px solid #222", overflow: "hidden", minHeight: 600 }}>
             {loading && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "#555" }}>
                 Loading globe...
@@ -853,40 +856,38 @@ function LocationsView({ product }) {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Top locations list */}
-        <div style={{ flex: "1 1 35%", minWidth: 260 }}>
-          <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500, margin: "0 0 8px" }}>Top Locations</h3>
-          <div style={{ maxHeight: 520, overflowY: "auto" }}>
-            {topLocations.length > 0 ? (
-              <table style={{ ...S.table, fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    <th style={{ ...S.th, fontSize: 9 }}>#</th>
-                    <th style={{ ...S.th, fontSize: 9 }}>Location</th>
-                    <th style={{ ...S.th, fontSize: 9, textAlign: "right" }}>Count</th>
+      {/* Top locations list — full width below globe */}
+      <div style={{ marginTop: 16 }}>
+        <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500, margin: "0 0 8px" }}>Top Locations</h3>
+        {topLocations.length > 0 ? (
+          <table style={{ ...S.table, fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th style={{ ...S.th, fontSize: 9 }}>#</th>
+                <th style={{ ...S.th, fontSize: 9 }}>Location</th>
+                <th style={{ ...S.th, fontSize: 9, textAlign: "right" }}>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topLocations.map((loc, i) => {
+                const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).join(", ");
+                return (
+                  <tr key={i}>
+                    <td style={{ ...S.td, color: "#555", fontSize: 11, width: 24 }}>{i + 1}</td>
+                    <td style={{ ...S.td, color: "#ccc", fontSize: 11 }}>{label || "Unknown"}</td>
+                    <td style={{ ...S.td, color: "#C5A55A", fontWeight: 600, textAlign: "right", fontSize: 12 }}>{loc.count}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {topLocations.map((loc, i) => {
-                    const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).join(", ");
-                    return (
-                      <tr key={i}>
-                        <td style={{ ...S.td, color: "#555", fontSize: 11, width: 24 }}>{i + 1}</td>
-                        <td style={{ ...S.td, color: "#ccc", fontSize: 11 }}>{label || "Unknown"}</td>
-                        <td style={{ ...S.td, color: "#C5A55A", fontWeight: 600, textAlign: "right", fontSize: 12 }}>{loc.count}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            ) : (
-              <div style={{ color: "#555", fontSize: 12, padding: 16, textAlign: "center" }}>
-                {loading ? "Loading..." : "No location data in this period."}
-              </div>
-            )}
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ color: "#555", fontSize: 12, padding: 16, textAlign: "center" }}>
+            {loading ? "Loading..." : "No location data in this period."}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
