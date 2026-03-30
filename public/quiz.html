@@ -663,28 +663,30 @@
             100% confidential. We never share your information. Ever.
           </p>
           <div class="contact-form" id="contactForm">
-            <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
-            <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
-            <input type="tel" id="inputPhone" placeholder="Phone number (optional text delivery)" autocomplete="tel" />
-            <div style="margin-top:8px; padding-top:12px; border-top:1px solid #2a2a2a;">
-              <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to secure your portal</p>
-              <div style="display:flex; gap:8px;">
-                <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
-                <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
+            <!-- REGISTER FORM -->
+            <div id="registerSection">
+              <input type="text" id="inputName" placeholder="Your first name" autocomplete="given-name" />
+              <input type="email" id="inputEmail" placeholder="Your email address" autocomplete="email" />
+              <input type="tel" id="inputPhone" placeholder="Phone number (optional text delivery)" autocomplete="tel" />
+              <div style="margin-top:8px; padding-top:12px; border-top:1px solid #2a2a2a;">
+                <p style="color:#999; font-size:12px; margin:0 0 8px; text-align:center;">Create a 4-digit PIN to secure your portal</p>
+                <div style="display:flex; gap:8px;">
+                  <input type="password" inputmode="numeric" maxlength="4" id="inputPin" placeholder="4-digit PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
+                  <input type="password" inputmode="numeric" maxlength="4" id="inputPinConfirm" placeholder="Confirm PIN" autocomplete="new-password" style="flex:1; text-align:center; letter-spacing:4px; font-size:18px;" />
+                </div>
               </div>
-            </div>
-            <div class="form-error" id="formError"></div>
-            <button class="btn-gold" id="btnSubmitContact">Open My Dashboard</button>
-            <div id="existingAccountToggle">
+              <div class="form-error" id="formError"></div>
+              <button class="btn-gold" id="btnSubmitContact">Open My Dashboard</button>
               <a href="#" id="showLoginForm" style="display:block; text-align:center; margin-top:14px; color:#999; font-size:12px; text-decoration:none; letter-spacing:0.5px;">Already have a UDRM account? <span style="color:#C9A227; text-decoration:underline;">Sign in</span></a>
             </div>
-            <div id="loginFormInline" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid #2a2a2a;">
-              <p style="color:#999; font-size:12px; text-align:center; margin:0 0 10px;">Sign in to add this assessment to your existing dashboard.</p>
+            <!-- LOGIN FORM -->
+            <div id="loginSection" style="display:none;">
+              <p style="color:#999; font-size:13px; text-align:center; margin:0 0 14px;">Sign in to add this assessment to your existing dashboard.</p>
               <input type="email" id="loginEmail" placeholder="Your email address" autocomplete="email" />
               <input type="password" inputmode="numeric" maxlength="4" id="loginPin" placeholder="4-digit PIN" autocomplete="current-password" style="text-align:center; letter-spacing:4px; font-size:18px;" />
               <div class="form-error" id="loginError"></div>
               <button class="btn-gold" id="btnLoginSubmit">Sign In & Generate Report</button>
-              <a href="#" id="showRegisterForm" style="display:block; text-align:center; margin-top:10px; color:#999; font-size:12px; text-decoration:none;">← Back to create account</a>
+              <a href="#" id="showRegisterForm" style="display:block; text-align:center; margin-top:10px; color:#999; font-size:12px; text-decoration:none;">← Create a new account instead</a>
             </div>
           </div>
         </div>
@@ -1473,21 +1475,14 @@
     // Toggle between register and login forms
     document.getElementById("showLoginForm").addEventListener("click", (e) => {
       e.preventDefault();
-      document.getElementById("contactForm").querySelector("input[type=text]").parentElement.style.display = "none"; // hide name
-      document.querySelectorAll("#contactForm > input").forEach(el => el.style.display = "none");
-      document.querySelector("#contactForm > div").style.display = "none"; // hide PIN section
-      document.getElementById("btnSubmitContact").style.display = "none";
-      document.getElementById("existingAccountToggle").style.display = "none";
-      document.getElementById("loginFormInline").style.display = "block";
+      document.getElementById("registerSection").style.display = "none";
+      document.getElementById("loginSection").style.display = "block";
     });
 
     document.getElementById("showRegisterForm").addEventListener("click", (e) => {
       e.preventDefault();
-      document.querySelectorAll("#contactForm > input").forEach(el => el.style.display = "");
-      document.querySelector("#contactForm > div").style.display = "";
-      document.getElementById("btnSubmitContact").style.display = "";
-      document.getElementById("existingAccountToggle").style.display = "";
-      document.getElementById("loginFormInline").style.display = "none";
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("registerSection").style.display = "block";
     });
 
     // Handle login + report generation for existing accounts
