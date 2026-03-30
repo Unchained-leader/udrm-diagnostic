@@ -238,8 +238,11 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
       <div style={{ ...tileStyle, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
         onClick={() => setTab("locations")}>
         <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
-        <div style={{ height: 400 }}>
+        <div style={{ height: 400, position: "relative" }}>
           <MiniGlobe product={product} height={400} />
+          <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
+            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: "rgba(197,165,90,0.5)", textTransform: "uppercase", fontFamily: "Montserrat, sans-serif" }}>#UnchainTheWorld</span>
+          </div>
         </div>
         <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
       </div>
