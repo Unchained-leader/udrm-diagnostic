@@ -62,6 +62,7 @@ export default function Dashboard() {
     return (
       <div style={S.loginWrap}>
         <div style={S.loginBox}>
+          <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 40, marginBottom: 12 }} />
           <h1 style={S.loginTitle}>UNCHAINED ANALYTICS</h1>
           <input type="password" placeholder="Admin Password" value={password}
             onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} style={S.loginInput} />
@@ -87,7 +88,10 @@ export default function Dashboard() {
   return (
     <div style={S.wrap}>
       <div style={S.header}>
-        <h1 style={S.title}>UNCHAINED ANALYTICS</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 32 }} />
+          <h1 style={S.title}>UNCHAINED ANALYTICS</h1>
+        </div>
         <div style={S.controls}>
           <select value={product} onChange={e => setProduct(e.target.value)} style={S.select}>
             <option value="udrm">UDRM Quiz</option>
