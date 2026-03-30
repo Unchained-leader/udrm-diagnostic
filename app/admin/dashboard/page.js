@@ -580,7 +580,7 @@ function LocationsView({ product }) {
   useEffect(() => {
     if (!locData || !globeContainerRef.current) return;
 
-    const initGlobe = () => {
+    const initGlobe = async () => {
       if (!window.Globe) return;
 
       // Clear any existing globe
@@ -604,21 +604,76 @@ function LocationsView({ product }) {
         color: "#C5A55A",
       }));
 
+      // Fetch country borders GeoJSON
+      const geoRes = await fetch("https://unpkg.com/world-atlas@2/countries-110m.json");
+      const worldTopo = await geoRes.json();
+      const topojson = await import("https://unpkg.com/topojson-client@3?module");
+      const countries = topojson.feature(worldTopo, worldTopo.objects.countries);
+
+      // Major world cities for labels
+      const majorCities = [
+        { name: "New York", lat: 40.71, lng: -74.01 }, { name: "Los Angeles", lat: 34.05, lng: -118.24 },
+        { name: "Chicago", lat: 41.88, lng: -87.63 }, { name: "Houston", lat: 29.76, lng: -95.37 },
+        { name: "Dallas", lat: 32.78, lng: -96.80 }, { name: "Atlanta", lat: 33.75, lng: -84.39 },
+        { name: "Nashville", lat: 36.16, lng: -86.78 }, { name: "Miami", lat: 25.76, lng: -80.19 },
+        { name: "Denver", lat: 39.74, lng: -104.99 }, { name: "Phoenix", lat: 33.45, lng: -112.07 },
+        { name: "Seattle", lat: 47.61, lng: -122.33 }, { name: "San Francisco", lat: 37.77, lng: -122.42 },
+        { name: "London", lat: 51.51, lng: -0.13 }, { name: "Paris", lat: 48.86, lng: 2.35 },
+        { name: "Tokyo", lat: 35.68, lng: 139.69 }, { name: "Sydney", lat: -33.87, lng: 151.21 },
+        { name: "São Paulo", lat: -23.55, lng: -46.63 }, { name: "Toronto", lat: 43.65, lng: -79.38 },
+        { name: "Berlin", lat: 52.52, lng: 13.41 }, { name: "Lagos", lat: 6.52, lng: 3.38 },
+        { name: "Dubai", lat: 25.20, lng: 55.27 }, { name: "Singapore", lat: 1.35, lng: 103.82 },
+        { name: "Mexico City", lat: 19.43, lng: -99.13 }, { name: "Mumbai", lat: 19.08, lng: 72.88 },
+      ];
+
+      // Add submission cities as labels too
+      const submissionLabels = points.filter(p => p.count >= 1).map(p => ({
+        name: p.city !== "Unknown" ? p.city : "",
+        lat: p.lat, lng: p.lng
+      })).filter(p => p.name);
+
+      // Merge: major cities + submission cities, deduplicate by proximity
+      const allLabels = [...majorCities];
+      submissionLabels.forEach(sl => {
+        const tooClose = allLabels.some(ml => Math.abs(ml.lat - sl.lat) < 1 && Math.abs(ml.lng - sl.lng) < 1);
+        if (!tooClose) allLabels.push(sl);
+      });
+
       const globe = window.Globe()
-        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
-        .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
-        .backgroundColor("#0a0a0a")
+        .backgroundColor("#000000")
+        .showGlobe(true)
+        .showAtmosphere(true)
+        .atmosphereColor("rgba(100,100,100,0.3)")
+        .atmosphereAltitude(0.12)
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
         .width(width)
         .height(height)
+        // Country polygons with borders
+        .polygonsData(countries.features)
+        .polygonCapColor(() => "rgba(15,15,15,0.95)")
+        .polygonSideColor(() => "rgba(30,30,30,0.6)")
+        .polygonStrokeColor(() => "rgba(197,165,90,0.35)")
+        .polygonAltitude(0.005)
+        // City labels
+        .labelsData(allLabels)
+        .labelLat("lat")
+        .labelLng("lng")
+        .labelText("name")
+        .labelSize(0.6)
+        .labelDotRadius(0.15)
+        .labelColor(() => "rgba(197,165,90,0.6)")
+        .labelResolution(2)
+        .labelAltitude(0.007)
+        // Data points
         .pointsData(points)
         .pointLat("lat")
         .pointLng("lng")
         .pointColor("color")
-        .pointAltitude(d => d.size * 0.04)
-        .pointRadius(d => d.size * 0.35)
+        .pointAltitude(d => d.size * 0.05)
+        .pointRadius(d => d.size * 0.4)
         .pointLabel(d => {
           const parts = [d.city, d.region, d.country].filter(Boolean).join(", ");
-          return `<div style="background:rgba(0,0,0,0.85);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
+          return `<div style="background:rgba(0,0,0,0.9);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
             <div style="font-weight:600;margin-bottom:2px;">${parts}</div>
             <div style="color:#ccc;font-size:11px;">${d.count} submission${d.count !== 1 ? "s" : ""}</div>
           </div>`;
@@ -633,8 +688,6 @@ function LocationsView({ product }) {
             lng: d.lng,
           });
         })
-        .atmosphereColor("#C5A55A")
-        .atmosphereAltitude(0.15)
         (container);
 
       // Auto-rotate
