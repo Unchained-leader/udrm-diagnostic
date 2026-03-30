@@ -436,7 +436,7 @@ export default function OverviewPage() {
         {a.escalationPresent && (
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Escalation Risk">
-            <EscalationGauge severity={Number(a.escalationSeverity) || 0} />
+            <EscalationGauge severity={Number(a.escalationSeverity) || 0} years={a.yearsFighting || a.patternYears || "many"} />
           </ResultCard>
           </Reveal>
         )}
