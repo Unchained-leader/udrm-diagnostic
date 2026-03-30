@@ -122,10 +122,18 @@ export default function OverviewPage() {
             }
             setError(d.error);
           } else if (d.processing) {
-            // Report is being generated — show processing screen and poll
+            // Report is being generated (no existing reports) — show processing screen and poll
             wasPolling = true;
             setProcessing(true);
             setProcessingStatus(d.status || { step: "analyzing", message: "Analyzing your responses..." });
+            setLoading(false);
+            pollTimer = setTimeout(fetchResults, 4000);
+            return;
+          } else if (d.newReportProcessing) {
+            // Existing user with old reports, but a NEW report is building — show building screen and poll
+            wasPolling = true;
+            setProcessing(true);
+            setProcessingStatus(d.processingStatus || { step: "analyzing", message: "Analyzing your responses..." });
             setLoading(false);
             pollTimer = setTimeout(fetchResults, 4000);
             return;

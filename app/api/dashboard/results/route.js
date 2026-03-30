@@ -27,10 +27,14 @@ export async function GET(request) {
       redis.get(`mkt:history:${email}`),
     ]);
 
+    // Check if a new report is currently being generated
+    const status = await redis.get(`mkt:status:${email}`);
+    const statusData = parseRedis(status);
+    const isActivelyProcessing = statusData &&
+      (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready") &&
+      statusData.startedAt && (Date.now() - new Date(statusData.startedAt).getTime() < 5 * 60 * 1000); // within last 5 min
+
     if (!analysis) {
-      // Check if report is currently being generated
-      const status = await redis.get(`mkt:status:${email}`);
-      const statusData = parseRedis(status);
       if (statusData && (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready" || statusData.step === "emailed")) {
         return Response.json({
           success: true,
@@ -78,14 +82,22 @@ export async function GET(request) {
       }];
     }
 
-    return Response.json({
+    const responseData = {
       success: true,
       name: userData?.name || payload.name,
       analysis: analysisData,
       reportUrl: reportData?.reportUrl || null,
       generatedAt: reportData?.generatedAt || null,
       reports,
-    });
+    };
+
+    // If a new report is actively being built, flag it so the dashboard shows the building animation
+    if (isActivelyProcessing) {
+      responseData.newReportProcessing = true;
+      responseData.processingStatus = statusData;
+    }
+
+    return Response.json(responseData);
   } catch (error) {
     console.error("Dashboard results error:", error);
     return Response.json({ error: "Something went wrong." }, { status: 500 });
