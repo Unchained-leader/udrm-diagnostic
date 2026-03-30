@@ -386,7 +386,7 @@ export default function OverviewPage() {
 
         {/* Arousal Template */}
         <Reveal idx={nextRevealIdx()}>
-        <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
+        <ResultCard title="Your Arousal Template Archetype" subtitle={a.arousalTemplateType || "Unknown"} gold>
           {a.arousalTemplateSecondary && <div style={{ fontSize: 17, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
           <p style={{ fontSize: 17, color: "#999", lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>As you read the report below, you will start to understand what this means, why it is so important, and how this new clarity will lead you to freedom.</p>
         </ResultCard>
