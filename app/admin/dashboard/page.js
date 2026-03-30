@@ -168,140 +168,207 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
     fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
     fontWeight: 600, marginBottom: 10,
   };
-  const TileWrap = ({ label, tabId, children, style }) => {
+  const TileWrap = ({ label, tabId, children, style, span2 }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ ...tileStyle, ...(hovered ? tileHover : {}), ...style }}
+      <div style={{ ...tileStyle, ...(hovered ? tileHover : {}), ...style, ...(span2 ? { gridColumn: "span 2" } : {}) }}
         onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         onClick={() => setTab(tabId)}>
         <div style={tileTitle}>{label}</div>
-        {children}
+        <div style={{ pointerEvents: "none" }}>{children}</div>
         <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
       </div>
     );
   };
 
+  // Build funnel bar chart inline
+  const funnelOrder = ["quiz_start","section_1_complete","section_2_complete","section_3_complete","section_4_complete","section_5_complete","section_6_complete","section_7_complete","reveal_shown","contact_capture_shown","contact_capture_complete","report_generated","report_emailed"];
+  const funnelLabels = ["Start","S1","S2","S3","S4","S5","S6","S7","Reveal","Form","Done","Report","Email"];
+  const fMap = {};
+  (data?.funnel || []).forEach(f => { fMap[f.event_type] = parseInt(f.unique_sessions) || 0; });
+  const fMaxVal = Math.max(...funnelOrder.map(k => fMap[k] || 0), 1);
+
+  // Dropoff data
+  const sections = data?.sections || [];
+  const dropSorted = [...sections].sort((a, b) => a.event_type.localeCompare(b.event_type));
+  const dropItems = dropSorted.map((s, i) => {
+    const users = parseInt(s.users);
+    const prev = i > 0 ? parseInt(dropSorted[i - 1].users) : users;
+    const dropPct = prev > 0 ? (100 - (users / prev) * 100).toFixed(1) : "0";
+    return { label: s.event_type.replace("section_", "S").replace("_complete", ""), users, dropPct };
+  });
+
+  // Devices
+  const deviceItems = Object.entries(data?.devices || {}).filter(([_, v]) => v > 0).map(([k, v]) => ({ label: k, value: v }));
+  const browserItems = Object.entries(data?.browsers || {}).filter(([_, v]) => v > 0).map(([k, v]) => ({ label: k, value: v }));
+
+  // Research
+  const diagnostics = data?.diagnostics || [];
+  const attachments = data?.attachments || [];
+
+  // Cohort
+  const thisWeek = data?.thisWeek || {};
+  const lastWeek = data?.lastWeek || {};
+  const cohortMetrics = ["quiz_start", "contact_capture_complete", "report_generated"];
+  const cohortLabels = ["Quiz Starts", "Completions", "Reports"];
+
   return (
     <div>
       {/* Globe — full width at top */}
-      <div style={{ ...tileStyle, cursor: "default", marginBottom: 16, padding: 0, overflow: "hidden" }}
+      <div style={{ ...tileStyle, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
         onClick={() => setTab("locations")}>
         <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
         <div style={{ height: 400 }}>
           <MiniGlobe product={product} height={400} />
         </div>
-        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555", cursor: "pointer" }}>Click to expand →</div>
+        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
       </div>
 
-      {/* Tile grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+      {/* Tile grid — 2 columns */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
 
-        {/* Funnel tile */}
-        <TileWrap label="Funnel" tabId="funnel">
-          {data ? (
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              {[
-                { label: "Starts", val: data.funnel?.quiz_started || 0, color: "#C5A55A" },
-                { label: "Completed", val: data.funnel?.quiz_completed || 0, color: "#4CAF50" },
-                { label: "Reports", val: data.funnel?.report_generated || 0, color: "#2196F3" },
-                { label: "Emailed", val: data.funnel?.report_emailed || 0, color: "#9C27B0" },
-              ].map(f => (
-                <div key={f.label} style={{ textAlign: "center", flex: 1, minWidth: 70 }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: f.color }}>{f.val}</div>
-                  <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase" }}>{f.label}</div>
+        {/* Funnel — full chart */}
+        <TileWrap label="Conversion Funnel" tabId="funnel" span2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {funnelOrder.map((key, i) => {
+              const val = fMap[key] || 0;
+              return (
+                <div key={key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 40, fontSize: 10, color: "#888", textAlign: "right", flexShrink: 0 }}>{funnelLabels[i]}</div>
+                  <div style={{ flex: 1, height: 16, background: "#1a1a1a", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${(val / fMaxVal) * 100}%`, background: "linear-gradient(90deg, #C5A55A, #9A7730)", borderRadius: 4 }} />
+                  </div>
+                  <div style={{ width: 30, fontSize: 11, color: "#C5A55A", fontWeight: 600, textAlign: "right" }}>{val}</div>
                 </div>
-              ))}
-            </div>
-          ) : <div style={{ color: "#555", fontSize: 12 }}>Loading...</div>}
-        </TileWrap>
-
-        {/* Trends tile */}
-        <TileWrap label="Trends" tabId="trends">
-          <div style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>
-            {summary ? (
-              <>
-                <span style={{ color: "#C5A55A", fontWeight: 600, fontSize: 18 }}>{summary.completions || 0}</span>
-                <span> completions in the last {days} days</span>
-                <br />
-                <span style={{ color: parseFloat(summary.conversionRate) > 50 ? "#4CAF50" : "#FF9800", fontWeight: 600, fontSize: 18 }}>
-                  {summary.conversionRate || 0}%
-                </span>
-                <span> conversion rate</span>
-              </>
-            ) : "Loading..."}
+              );
+            })}
           </div>
         </TileWrap>
 
-        {/* Research tile */}
-        <TileWrap label="Research" tabId="research">
-          {data?.clinical ? (
-            <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.5 }}>
-              <div>Top template: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.top_template || "—"}</span></div>
-              <div>Top attachment: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.top_attachment || "—"}</span></div>
-              <div>Avg childhood wound: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.avg_childhood_wound || "—"}</span></div>
-            </div>
-          ) : <div style={{ color: "#555", fontSize: 12 }}>Loading...</div>}
+        {/* Trends — line chart */}
+        <TileWrap label="Performance Trends" tabId="trends" span2>
+          <MiniTrendsChart product={product} days={days} />
         </TileWrap>
 
-        {/* Drop-off tile */}
-        <TileWrap label="Drop-off" tabId="dropoff">
-          {data?.dropoff?.length > 0 ? (
-            <div style={{ fontSize: 12, color: "#aaa" }}>
-              {data.dropoff.slice(0, 3).map((d, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span>{d.section || d.step || `Step ${i + 1}`}</span>
-                  <span style={{ color: "#f44336", fontWeight: 600 }}>{d.drop_count || d.drops || 0} drops</span>
-                </div>
-              ))}
-              {data.dropoff.length > 3 && <div style={{ color: "#555", fontSize: 10 }}>+{data.dropoff.length - 3} more</div>}
-            </div>
-          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No drop-off data" : "Loading..."}</div>}
+        {/* Research — bar charts */}
+        <TileWrap label="Arousal Templates" tabId="research">
+          {diagnostics.length > 0 ? (
+            <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "?", value: parseInt(d.count) }))} color="#c5a55a" />
+          ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Devices tile */}
-        <TileWrap label="Devices" tabId="devices">
-          {data?.devices ? (
-            <div style={{ fontSize: 12, color: "#aaa" }}>
-              {Object.entries(data.devices).slice(0, 4).map(([device, count]) => (
-                <div key={device} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span>{device}</span>
-                  <span style={{ color: "#C5A55A", fontWeight: 600 }}>{count}</span>
+        <TileWrap label="Attachment Styles" tabId="research">
+          {attachments.length > 0 ? (
+            <BarChart items={attachments.map(a => ({ label: a.attachment_style || "?", value: parseInt(a.count) }))} color="#2196F3" />
+          ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
+        </TileWrap>
+
+        {/* Drop-off — retention table */}
+        <TileWrap label="Section Retention" tabId="dropoff">
+          {dropItems.length > 0 ? (
+            <div style={{ fontSize: 11 }}>
+              {dropItems.map((item, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3, alignItems: "center" }}>
+                  <span style={{ color: "#aaa" }}>{item.label}</span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span style={{ color: "#ccc", fontWeight: 600 }}>{item.users}</span>
+                    {i > 0 && <span style={{ color: parseFloat(item.dropPct) > 20 ? "#f44336" : "#4CAF50", fontSize: 10 }}>-{item.dropPct}%</span>}
+                  </div>
                 </div>
               ))}
             </div>
-          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No device data" : "Loading..."}</div>}
+          ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Cohort tile */}
-        <TileWrap label="Cohort" tabId="cohort">
-          {data?.cohort?.length > 0 ? (
-            <div style={{ fontSize: 12, color: "#aaa" }}>
-              {data.cohort.slice(0, 3).map((c, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span>{c.cohort || c.label || `Cohort ${i + 1}`}</span>
-                  <span style={{ color: "#C5A55A", fontWeight: 600 }}>{c.count || 0}</span>
-                </div>
-              ))}
+        {/* Devices — bar charts */}
+        <TileWrap label="Devices & Browsers" tabId="devices">
+          {deviceItems.length > 0 ? (
+            <div>
+              <BarChart items={deviceItems} color="#9C27B0" />
+              {browserItems.length > 0 && <div style={{ marginTop: 8 }}><BarChart items={browserItems} color="#00BCD4" /></div>}
             </div>
-          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No cohort data" : "Loading..."}</div>}
+          ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Submissions tile */}
-        <TileWrap label="Submissions" tabId="submissions">
-          <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.6 }}>
-            <span style={{ color: "#C5A55A", fontWeight: 600, fontSize: 18 }}>{summary?.completions || 0}</span>
-            <span> total reports generated</span>
-            <br />
-            <span style={{ fontSize: 11, color: "#555" }}>View full submission table with geo data →</span>
-          </div>
+        {/* Cohort — week over week */}
+        <TileWrap label="This Week vs Last Week" tabId="cohort">
+          <table style={{ ...S.table, fontSize: 11 }}>
+            <thead><tr><th style={{ ...S.th, fontSize: 9 }}>Metric</th><th style={{ ...S.th, fontSize: 9 }}>This Wk</th><th style={{ ...S.th, fontSize: 9 }}>Last Wk</th><th style={{ ...S.th, fontSize: 9 }}>Δ</th></tr></thead>
+            <tbody>{cohortMetrics.map((m, i) => {
+              const tw = thisWeek[m] || 0;
+              const lw = lastWeek[m] || 0;
+              const chg = lw > 0 ? (((tw - lw) / lw) * 100).toFixed(0) : tw > 0 ? "+100" : "0";
+              const chgC = parseInt(chg) > 0 ? "#4CAF50" : parseInt(chg) < 0 ? "#f44336" : "#888";
+              return (
+                <tr key={m}>
+                  <td style={{ ...S.td, fontSize: 11 }}>{cohortLabels[i]}</td>
+                  <td style={{ ...S.td, fontWeight: 600, fontSize: 11 }}>{tw}</td>
+                  <td style={{ ...S.td, fontSize: 11 }}>{lw}</td>
+                  <td style={{ ...S.td, color: chgC, fontWeight: 600, fontSize: 11 }}>{parseInt(chg) > 0 ? "+" : ""}{chg}%</td>
+                </tr>
+              );
+            })}</tbody>
+          </table>
         </TileWrap>
 
-        {/* Health tile */}
+        {/* System Health */}
         <TileWrap label="System Health" tabId="health">
           <HealthMiniTile />
         </TileWrap>
 
       </div>
+    </div>
+  );
+}
+
+// Mini trends chart for dashboard tile
+function MiniTrendsChart({ product, days }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  const [trendData, setTrendData] = useState(null);
+
+  useEffect(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    fetch(`/api/analytics?secret=${encodeURIComponent(s)}&view=trends&product=${product}&days=${days}&metric=quiz_start`)
+      .then(r => r.json()).then(setTrendData).catch(() => {});
+  }, [product, days]);
+
+  useEffect(() => {
+    if (!trendData || !canvasRef.current) return;
+    const render = () => {
+      if (!window.Chart || !canvasRef.current) return;
+      if (chartRef.current) chartRef.current.destroy();
+      const { multiCurrent } = trendData;
+      const metrics = ["quiz_start", "contact_capture_complete", "report_generated"];
+      const labels = { quiz_start: "Starts", contact_capture_complete: "Completions", report_generated: "Reports" };
+      const colors = { quiz_start: "#c5a55a", contact_capture_complete: "#4CAF50", report_generated: "#2196F3" };
+      const allDates = new Set();
+      for (const m of metrics) (multiCurrent[m] || []).forEach(d => allDates.add(d.date.split("T")[0]));
+      const dateLabels = [...allDates].sort();
+      const shortLabels = dateLabels.map(d => { const dt = new Date(d + "T12:00:00"); return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }); });
+      const datasets = metrics.map(m => {
+        const map = {}; (multiCurrent[m] || []).forEach(d => { map[d.date.split("T")[0]] = parseInt(d.count); });
+        return { label: labels[m], data: dateLabels.map(d => map[d] || 0), borderColor: colors[m], borderWidth: 2, tension: 0.3, fill: false, pointRadius: 2 };
+      });
+      chartRef.current = new window.Chart(canvasRef.current, {
+        type: "line", data: { labels: shortLabels, datasets },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: "#aaa", font: { size: 10 } }, position: "bottom" } },
+          scales: { x: { grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#888", font: { size: 9 }, maxTicksLimit: 8 } }, y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#888", stepSize: 1, font: { size: 9 } } } } }
+      });
+    };
+    if (!window.Chart) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js";
+      script.onload = () => setTimeout(render, 100);
+      document.head.appendChild(script);
+    } else render();
+  }, [trendData]);
+
+  return (
+    <div style={{ height: 220, background: "#0d0d0d", borderRadius: 8, padding: 8 }}>
+      <canvas ref={canvasRef} />
+      {!trendData && <div style={{ color: "#555", fontSize: 12, textAlign: "center", paddingTop: 80 }}>Loading trends...</div>}
     </div>
   );
 }
