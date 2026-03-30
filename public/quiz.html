@@ -642,8 +642,12 @@
         <!-- SCREEN: Reveal (preview finding) -->
         <div class="screen" id="screenReveal">
           <div id="revealContent">
-            <div class="section-label" style="margin-bottom:12px;">Your Preview Finding</div>
-            <div class="reveal-text" id="revealText"></div>
+            <div class="section-label" style="margin-bottom:4px;">Diagnostic Complete</div>
+            <div style="text-align:center; margin-bottom:16px;">
+              <span style="font-size:11px; color:#555; letter-spacing:1px; text-transform:uppercase;">Your Root Map is ready to build</span>
+            </div>
+            <div id="revealStats" style="display:none; margin-bottom:20px;"></div>
+            <div class="reveal-text" id="revealText" style="font-size:15px; line-height:1.7; color:#ccc;"></div>
           </div>
           <button class="btn-gold btn-continue" id="btnAfterReveal" style="margin-top:28px;">Open My Full Root Map</button>
         </div>
@@ -1299,8 +1303,17 @@
         updateProgress(100);
         trackEvent("reveal_shown", { progress: 100 });
 
+        // Parse [STAT] tags into visual indicators
+        const stats = [];
+        const statRegex = /\[STAT:(\w+)\](.*?)\[\/STAT\]/g;
+        let statMatch;
+        while ((statMatch = statRegex.exec(fullResponse)) !== null) {
+          stats.push({ key: statMatch[1], value: statMatch[2].trim() });
+        }
+
         // Clean display text
         const cleanText = fullResponse
+          .replace(/\[STAT:\w+\].*?\[\/STAT\]/g, "")
           .replace(/\[PROGRESS:\d+\]/g, "")
           .replace(/\[CONTACT_CAPTURE\]/g, "")
           .replace(/\[CRISIS_DETECTED\]/g, "")
@@ -1316,7 +1329,41 @@
         saveState();
 
         if (cleanText.length > 50) {
-          revealText.textContent = cleanText;
+          // Render stat cards if present
+          const statsContainer = document.getElementById("revealStats");
+          if (stats.length > 0) {
+            const labelMap = {
+              pattern_name: "Pattern Identified",
+              root_depth: "Root Depth",
+              childhood_wound: "Childhood Wound Score",
+              confusing_patterns: "Confusing Patterns"
+            };
+            const iconMap = {
+              pattern_name: "🔍",
+              root_depth: "🧠",
+              childhood_wound: "⚡",
+              confusing_patterns: "🔐"
+            };
+            statsContainer.style.display = "grid";
+            statsContainer.style.gridTemplateColumns = "1fr 1fr";
+            statsContainer.style.gap = "10px";
+            statsContainer.innerHTML = stats.map(s => {
+              const label = labelMap[s.key] || s.key.replace(/_/g, " ");
+              const icon = iconMap[s.key] || "📊";
+              const isHigh = /high|deep|[3-9]\+?\s*detected/i.test(s.value);
+              const accentColor = isHigh ? "#fc5454" : "#C5A55A";
+              return '<div style="background:#111; border:1px solid #222; border-radius:10px; padding:12px 14px; text-align:center;">' +
+                '<div style="font-size:18px; margin-bottom:4px;">' + icon + '</div>' +
+                '<div style="font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">' + label + '</div>' +
+                '<div style="font-size:14px; font-weight:600; color:' + accentColor + ';">' + s.value + '</div>' +
+              '</div>';
+            }).join("");
+          }
+
+          // Render text as HTML paragraphs
+          const paragraphs = cleanText.split(/\n\n+/).filter(p => p.trim());
+          revealText.innerHTML = paragraphs.map(p => '<p style="margin:0 0 14px; color:#ccc; font-size:15px; line-height:1.7;">' + p.trim() + '</p>').join("");
+
           showScreen(screenReveal);
           setupRevealScrollGate();
         } else {
@@ -1553,6 +1600,7 @@
           const lastContent = lastAssistant.content;
           const hasContactCapture = lastContent.includes("[CONTACT_CAPTURE]");
           const cleanText = lastContent
+            .replace(/\[STAT:\w+\].*?\[\/STAT\]/g, "")
             .replace(/\[PROGRESS:\d+\]/g, "").replace(/\[CONTACT_CAPTURE\]/g, "")
             .replace(/\[CRISIS_DETECTED\]/g, "").replace(/\[BOOKING_CTA\]/g, "")
             .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
@@ -1560,7 +1608,30 @@
             .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "").trim();
 
           if (hasContactCapture && cleanText.length > 50) {
-            revealText.textContent = cleanText;
+            // Parse stats for restored state
+            const rStats = [];
+            const rStatRegex = /\[STAT:(\w+)\](.*?)\[\/STAT\]/g;
+            let rMatch;
+            while ((rMatch = rStatRegex.exec(lastContent)) !== null) {
+              rStats.push({ key: rMatch[1], value: rMatch[2].trim() });
+            }
+            const rStatsContainer = document.getElementById("revealStats");
+            if (rStats.length > 0) {
+              const rLabelMap = { pattern_name: "Pattern Identified", root_depth: "Root Depth", childhood_wound: "Childhood Wound Score", confusing_patterns: "Confusing Patterns" };
+              const rIconMap = { pattern_name: "🔍", root_depth: "🧠", childhood_wound: "⚡", confusing_patterns: "🔐" };
+              rStatsContainer.style.display = "grid";
+              rStatsContainer.style.gridTemplateColumns = "1fr 1fr";
+              rStatsContainer.style.gap = "10px";
+              rStatsContainer.innerHTML = rStats.map(s => {
+                const label = rLabelMap[s.key] || s.key.replace(/_/g, " ");
+                const icon = rIconMap[s.key] || "📊";
+                const isHigh = /high|deep|[3-9]\+?\s*detected/i.test(s.value);
+                const accentColor = isHigh ? "#fc5454" : "#C5A55A";
+                return '<div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px 14px;text-align:center;"><div style="font-size:18px;margin-bottom:4px;">' + icon + '</div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">' + label + '</div><div style="font-size:14px;font-weight:600;color:' + accentColor + ';">' + s.value + '</div></div>';
+              }).join("");
+            }
+            const rParagraphs = cleanText.split(/\n\n+/).filter(p => p.trim());
+            revealText.innerHTML = rParagraphs.map(p => '<p style="margin:0 0 14px;color:#ccc;font-size:15px;line-height:1.7;">' + p.trim() + '</p>').join("");
             showScreen(screenReveal);
           setupRevealScrollGate();
             return true;
