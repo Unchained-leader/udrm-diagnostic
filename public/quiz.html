@@ -727,17 +727,26 @@
     // Embed mode: ?embed=true hides header, removes padding for iframe use
     const isEmbed = new URLSearchParams(window.location.search).get('embed') === 'true';
     if (isEmbed) {
-      document.body.style.background = '#000';
+      document.documentElement.style.background = '#0a0a0a';
+      document.body.style.background = '#0a0a0a';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.overflow = 'hidden';
       const header = document.querySelector('.site-header');
-      if (header) header.style.display = 'none';
+      if (header) { header.style.display = 'none'; header.remove(); }
       const page = document.querySelector('.quiz-page');
-      if (page) page.style.padding = '0';
+      if (page) {
+        page.style.padding = '0';
+        page.style.minHeight = '100vh';
+        page.style.background = '#0a0a0a';
+      }
       const card = document.querySelector('.quiz-card');
       if (card) {
         card.style.borderRadius = '0';
         card.style.border = 'none';
         card.style.boxShadow = 'none';
         card.style.maxWidth = '100%';
+        card.style.background = '#0a0a0a';
       }
     }
 
