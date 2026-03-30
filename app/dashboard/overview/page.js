@@ -388,8 +388,7 @@ export default function OverviewPage() {
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Arousal Template" subtitle={a.arousalTemplateType || "Unknown"} gold>
           {a.arousalTemplateSecondary && <div style={{ fontSize: 14, color: "#888", marginBottom: 8 }}>Secondary: {a.arousalTemplateSecondary}</div>}
-          <div style={{ fontSize: 14, color: GOLD, fontStyle: "italic", marginTop: 8 }}>Root Narrative: &ldquo;{a.rootNarrativeStatement}&rdquo;</div>
-          {a.whatBrainCounterfeits && <div style={{ fontSize: 13, color: "#888", marginTop: 8 }}>What your brain counterfeits: {a.whatBrainCounterfeits}</div>}
+          <p style={{ fontSize: 14, color: "#999", lineHeight: 1.7, marginTop: 10, marginBottom: 0 }}>As you read the report below, you will start to understand what this means, why it is so important, and how this new clarity will lead you to freedom.</p>
         </ResultCard>
         </Reveal>
 
