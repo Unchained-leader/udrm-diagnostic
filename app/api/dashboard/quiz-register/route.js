@@ -17,6 +17,17 @@ export async function POST(request) {
     const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
+    // Extract geo data from Vercel headers
+    const hdrs = request.headers;
+    const geo = {
+      ip: (hdrs.get("x-forwarded-for") || "").split(",")[0].trim() || null,
+      city: hdrs.get("x-vercel-ip-city") || null,
+      region: hdrs.get("x-vercel-ip-country-region") || null,
+      country: hdrs.get("x-vercel-ip-country") || null,
+      lat: hdrs.get("x-vercel-ip-latitude") || null,
+      lon: hdrs.get("x-vercel-ip-longitude") || null,
+    };
+
     if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return Response.json({ error: "Valid email is required." }, { status: 400, headers: CORS_HEADERS });
     }
@@ -39,6 +50,8 @@ export async function POST(request) {
       if (!userData.dashboardPin) {
         userData.dashboardPin = hashedPin;
       }
+      // Update geo data on each registration/completion
+      userData.geo = geo;
       await redis.set(userKey, userData);
 
       const token = await createDashboardToken(normalizedEmail, userData.name || trimmedName);
@@ -59,6 +72,7 @@ export async function POST(request) {
       diagnosticComplete: true,
       diagnosticCompletedAt: new Date().toISOString(),
       dashboardPin: hashedPin,
+      geo,
     };
     await redis.set(userKey, userData);
 

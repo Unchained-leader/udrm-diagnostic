@@ -40,6 +40,17 @@ export async function POST(request) {
     const body = await request.json();
     const { email, name, diagnosticData, gender, ageRange } = body;
 
+    // Extract geo data from Vercel headers
+    const headers = request.headers;
+    const geo = {
+      ip: (headers.get("x-forwarded-for") || "").split(",")[0].trim() || null,
+      city: headers.get("x-vercel-ip-city") || null,
+      region: headers.get("x-vercel-ip-country-region") || null,
+      country: headers.get("x-vercel-ip-country") || null,
+      lat: headers.get("x-vercel-ip-latitude") ? parseFloat(headers.get("x-vercel-ip-latitude")) : null,
+      lon: headers.get("x-vercel-ip-longitude") ? parseFloat(headers.get("x-vercel-ip-longitude")) : null,
+    };
+
     if (!email) {
       return Response.json({ error: "Email is required." }, { status: 400, headers: CORS_HEADERS });
     }
@@ -328,21 +339,23 @@ export async function POST(request) {
     // Record analytics: report generated + completed diagnostic
     try {
       const sql = getDb();
-      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
-        VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })})`;
-      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data)
-        VALUES (${normalizedEmail}, 'udrm', 'report_emailed', ${JSON.stringify({ email: normalizedEmail })})`;
+      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
+        VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })}, ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon})`;
+      await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
+        VALUES (${normalizedEmail}, 'udrm', 'report_emailed', ${JSON.stringify({ email: normalizedEmail })}, ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon})`;
       await sql`INSERT INTO completed_diagnostics (
         session_id, email, product, name, arousal_template_type, neuropathway, attachment_style,
         codependency_score, enmeshment_score, relational_void_score, leadership_burden_score,
-        escalation_present, strategies_count, years_fighting, report_url, report_generated_at
+        escalation_present, strategies_count, years_fighting, report_url, report_generated_at,
+        ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon
       ) VALUES (
         ${normalizedEmail}, ${normalizedEmail}, 'udrm', ${userName},
         ${analysis.arousalTemplateType || null}, ${analysis.neuropathway || null}, ${analysis.attachmentStyle || null},
         ${parseInt(analysis.codependencyScore) || 0}, ${parseInt(analysis.enmeshmentScore) || 0},
         ${parseInt(analysis.relationalVoidScore) || 0}, ${parseInt(analysis.leadershipBurdenScore) || 0},
         ${analysis.escalationPresent || false}, ${parseInt(analysis.strategiesCount) || 0},
-        ${analysis.yearsFighting || null}, ${reportUrl}, NOW()
+        ${analysis.yearsFighting || null}, ${reportUrl}, NOW(),
+        ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon}
       )`;
     } catch(e) { console.error("Analytics write error (non-fatal):", e.message); }
 

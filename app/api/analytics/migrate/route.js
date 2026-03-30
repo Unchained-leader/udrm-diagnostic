@@ -70,6 +70,22 @@ export async function POST(request) {
       )
     `;
 
+    // Add geo columns to completed_diagnostics (idempotent)
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)`;
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS geo_city VARCHAR(100)`;
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS geo_region VARCHAR(100)`;
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS geo_country VARCHAR(10)`;
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS geo_lon DOUBLE PRECISION`;
+
+    // Add geo columns to analytics_events (idempotent)
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)`;
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_city VARCHAR(100)`;
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_region VARCHAR(100)`;
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_country VARCHAR(10)`;
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
+    await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lon DOUBLE PRECISION`;
+
     // Indexes for common queries
     await sql`CREATE INDEX IF NOT EXISTS idx_events_product ON analytics_events(product)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_events_type ON analytics_events(event_type)`;

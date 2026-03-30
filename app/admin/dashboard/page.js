@@ -78,6 +78,7 @@ export default function Dashboard() {
     { id: "dropoff", label: "Drop-off" },
     { id: "devices", label: "Devices" },
     { id: "cohort", label: "Cohort" },
+    { id: "submissions", label: "Submissions" },
     { id: "health", label: "System Health" },
     { id: "export", label: "Export" },
   ];
@@ -130,6 +131,7 @@ export default function Dashboard() {
         {tab === "dropoff" && data && <DropoffView data={data} />}
         {tab === "devices" && data && <DevicesView data={data} />}
         {tab === "cohort" && data && <CohortView data={data} />}
+        {tab === "submissions" && <SubmissionsView product={product} days={days} />}
         {tab === "health" && <HealthView />}
         {tab === "export" && <ExportView product={product} days={days} />}
       </div>
@@ -441,6 +443,99 @@ function CohortView({ data }) {
           );
         })}</tbody>
       </table>
+    </div>
+  );
+}
+
+// ═══ SUBMISSIONS (Geo / Location) ═══
+function SubmissionsView({ product, days }) {
+  const [subData, setSubData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    setLoading(true);
+    fetch(`${API}?secret=${encodeURIComponent(s)}&view=submissions&product=${product}&days=${days}&limit=50`)
+      .then(r => r.json())
+      .then(d => { setSubData(d); setLoading(false); })
+      .catch(e => { console.error(e); setLoading(false); });
+  }, [product, days]);
+
+  if (loading) return <div style={{ color: "#666", padding: 20 }}>Loading submissions...</div>;
+  if (!subData) return <Empty msg="No submission data available." />;
+
+  const { submissions, total, locationBreakdown } = subData;
+
+  const formatLocation = (row) => {
+    const parts = [row.geo_city, row.geo_region, row.geo_country].filter(Boolean);
+    return parts.length > 0 ? parts.join(", ") : "Unknown";
+  };
+
+  return (
+    <div>
+      <h2 style={S.sectionTitle}>Recent Submissions ({total} total)</h2>
+
+      {locationBreakdown && locationBreakdown.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500 }}>Top Locations</h3>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {locationBreakdown.map((loc, i) => {
+              const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).join(", ");
+              return (
+                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 6, padding: "6px 12px", fontSize: 12, color: "#ccc" }}>
+                  {label || "Unknown"} <span style={{ color: "#c5a55a", fontWeight: 600, marginLeft: 4 }}>{loc.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {submissions && submissions.length > 0 ? (
+        <div style={{ overflowX: "auto" }}>
+          <table style={S.table}>
+            <thead>
+              <tr>
+                <th style={S.th}>Date</th>
+                <th style={S.th}>Name</th>
+                <th style={S.th}>Email</th>
+                <th style={S.th}>Location</th>
+                <th style={S.th}>IP</th>
+                <th style={S.th}>Type</th>
+                <th style={S.th}>Attachment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((row, i) => (
+                <tr key={row.id || i}>
+                  <td style={{ ...S.td, whiteSpace: "nowrap", fontSize: 11 }}>
+                    {new Date(row.created_at).toLocaleDateString()}{" "}
+                    <span style={{ color: "#555" }}>{new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  </td>
+                  <td style={{ ...S.td, fontWeight: 500 }}>{row.name || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 11, color: "#999" }}>{row.email || row.session_id}</td>
+                  <td style={S.td}>
+                    <span style={{ color: formatLocation(row) !== "Unknown" ? "#c5a55a" : "#555" }}>
+                      {formatLocation(row)}
+                    </span>
+                    {row.geo_lat && row.geo_lon && (
+                      <span style={{ fontSize: 10, color: "#444", marginLeft: 4 }}>
+                        ({Number(row.geo_lat).toFixed(1)}, {Number(row.geo_lon).toFixed(1)})
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ ...S.td, fontSize: 11, color: "#666", fontFamily: "monospace" }}>{row.ip_address || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 11 }}>{row.arousal_template_type || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 11 }}>{row.attachment_style || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <Empty msg="No submissions in this time period." />
+      )}
     </div>
   );
 }

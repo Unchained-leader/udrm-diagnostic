@@ -18,12 +18,21 @@ export async function POST(request) {
       return Response.json({ error: "sessionId and eventType required" }, { status: 400, headers: CORS_HEADERS });
     }
 
+    // Extract geo data from Vercel headers
+    const hdrs = request.headers;
+    const geoIp = (hdrs.get("x-forwarded-for") || "").split(",")[0].trim() || null;
+    const geoCity = hdrs.get("x-vercel-ip-city") || null;
+    const geoRegion = hdrs.get("x-vercel-ip-country-region") || null;
+    const geoCountry = hdrs.get("x-vercel-ip-country") || null;
+    const geoLat = hdrs.get("x-vercel-ip-latitude") ? parseFloat(hdrs.get("x-vercel-ip-latitude")) : null;
+    const geoLon = hdrs.get("x-vercel-ip-longitude") ? parseFloat(hdrs.get("x-vercel-ip-longitude")) : null;
+
     const sql = getDb();
 
     // Record the event
     await sql`
-      INSERT INTO analytics_events (session_id, product, event_type, event_data)
-      VALUES (${sessionId}, ${product || "udrm"}, ${eventType}, ${JSON.stringify(eventData || {})})
+      INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
+      VALUES (${sessionId}, ${product || "udrm"}, ${eventType}, ${JSON.stringify(eventData || {})}, ${geoIp}, ${geoCity}, ${geoRegion}, ${geoCountry}, ${geoLat}, ${geoLon})
     `;
 
     // If this includes quiz response data, also save to quiz_responses
@@ -270,6 +279,42 @@ export async function GET(request) {
       const uptimePct = total > 0 ? ((healthy / total) * 100).toFixed(1) : "100.0";
 
       return Response.json({ history, uptimePct, totalChecks: total }, { headers: CORS_HEADERS });
+
+    } else if (view === "submissions") {
+      // Recent submissions with geo data (admin only)
+      const limit = parseInt(searchParams.get("limit")) || 25;
+      const submissions = await sql`
+        SELECT
+          id, session_id, email, name, arousal_template_type, attachment_style, neuropathway,
+          ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon,
+          report_url, created_at
+        FROM completed_diagnostics
+        WHERE product = ${product} AND created_at >= ${since}
+        ORDER BY created_at DESC
+        LIMIT ${limit}
+      `;
+
+      const totalSubmissions = await sql`
+        SELECT COUNT(*) as total FROM completed_diagnostics
+        WHERE product = ${product} AND created_at >= ${since}
+      `;
+
+      // Location breakdown
+      const locationBreakdown = await sql`
+        SELECT geo_country, geo_region, geo_city, COUNT(*) as count
+        FROM completed_diagnostics
+        WHERE product = ${product} AND created_at >= ${since}
+          AND geo_country IS NOT NULL
+        GROUP BY geo_country, geo_region, geo_city
+        ORDER BY count DESC
+        LIMIT 20
+      `;
+
+      return Response.json({
+        submissions,
+        total: totalSubmissions[0]?.total || 0,
+        locationBreakdown,
+      }, { headers: CORS_HEADERS });
 
     } else if (view === "trends") {
       // Daily event counts for current period + previous period (for overlay comparison)
