@@ -316,6 +316,104 @@ export async function GET(request) {
         locationBreakdown,
       }, { headers: CORS_HEADERS });
 
+    } else if (view === "locations") {
+      // Aggregated location data for globe visualization
+      const startDate = searchParams.get("startDate");
+      const endDate = searchParams.get("endDate");
+      let dateSince = since;
+      let dateUntil = null;
+      if (startDate && endDate) {
+        dateSince = new Date(startDate).toISOString();
+        dateUntil = new Date(endDate + "T23:59:59").toISOString();
+      }
+
+      const locationQuery = dateUntil
+        ? sql`
+          SELECT
+            geo_lat, geo_lon, geo_city, geo_region, geo_country,
+            COUNT(*) as count
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND created_at <= ${dateUntil}
+            AND geo_lat IS NOT NULL
+            AND geo_lon IS NOT NULL
+          GROUP BY geo_lat, geo_lon, geo_city, geo_region, geo_country
+          ORDER BY count DESC
+        `
+        : sql`
+          SELECT
+            geo_lat, geo_lon, geo_city, geo_region, geo_country,
+            COUNT(*) as count
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND geo_lat IS NOT NULL
+            AND geo_lon IS NOT NULL
+          GROUP BY geo_lat, geo_lon, geo_city, geo_region, geo_country
+          ORDER BY count DESC
+        `;
+
+      const locations = await locationQuery;
+
+      // Summary stats
+      const summaryQuery = dateUntil
+        ? sql`
+          SELECT
+            COUNT(*) as total_submissions,
+            COUNT(DISTINCT geo_country) as unique_countries,
+            COUNT(DISTINCT geo_city) as unique_cities
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND created_at <= ${dateUntil}
+            AND geo_lat IS NOT NULL
+        `
+        : sql`
+          SELECT
+            COUNT(*) as total_submissions,
+            COUNT(DISTINCT geo_country) as unique_countries,
+            COUNT(DISTINCT geo_city) as unique_cities
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND geo_lat IS NOT NULL
+        `;
+
+      const locationSummary = await summaryQuery;
+
+      // Top locations ranked list
+      const topQuery = dateUntil
+        ? sql`
+          SELECT geo_city, geo_region, geo_country, COUNT(*) as count
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND created_at <= ${dateUntil}
+            AND geo_country IS NOT NULL
+          GROUP BY geo_city, geo_region, geo_country
+          ORDER BY count DESC
+          LIMIT 50
+        `
+        : sql`
+          SELECT geo_city, geo_region, geo_country, COUNT(*) as count
+          FROM completed_diagnostics
+          WHERE product = ${product}
+            AND created_at >= ${dateSince}
+            AND geo_country IS NOT NULL
+          GROUP BY geo_city, geo_region, geo_country
+          ORDER BY count DESC
+          LIMIT 50
+        `;
+
+      const topLocations = await topQuery;
+
+      return Response.json({
+        locations,
+        summary: locationSummary[0] || { total_submissions: 0, unique_countries: 0, unique_cities: 0 },
+        topLocations,
+      }, { headers: CORS_HEADERS });
+
     } else if (view === "trends") {
       // Daily event counts for current period + previous period (for overlay comparison)
       const metric = searchParams.get("metric") || "quiz_start";

@@ -79,6 +79,7 @@ export default function Dashboard() {
     { id: "devices", label: "Devices" },
     { id: "cohort", label: "Cohort" },
     { id: "submissions", label: "Submissions" },
+    { id: "locations", label: "Locations" },
     { id: "health", label: "System Health" },
     { id: "export", label: "Export" },
   ];
@@ -132,6 +133,7 @@ export default function Dashboard() {
         {tab === "devices" && data && <DevicesView data={data} />}
         {tab === "cohort" && data && <CohortView data={data} />}
         {tab === "submissions" && <SubmissionsView product={product} days={days} />}
+        {tab === "locations" && <LocationsView product={product} />}
         {tab === "health" && <HealthView />}
         {tab === "export" && <ExportView product={product} days={days} />}
       </div>
@@ -536,6 +538,272 @@ function SubmissionsView({ product, days }) {
       ) : (
         <Empty msg="No submissions in this time period." />
       )}
+    </div>
+  );
+}
+
+// ═══ LOCATIONS (3D Globe) ═══
+function LocationsView({ product }) {
+  const [locData, setLocData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState("30");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const globeContainerRef = useRef(null);
+  const globeInstanceRef = useRef(null);
+
+  const fetchLocations = useCallback(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    setLoading(true);
+    setSelectedPoint(null);
+    let url = `${API}?secret=${encodeURIComponent(s)}&view=locations&product=${product}`;
+    if (timeFilter === "custom" && customStart && customEnd) {
+      url += `&startDate=${customStart}&endDate=${customEnd}`;
+    } else if (timeFilter === "all") {
+      url += `&days=36500`;
+    } else {
+      url += `&days=${timeFilter}`;
+    }
+    fetch(url)
+      .then(r => r.json())
+      .then(d => { setLocData(d); setLoading(false); })
+      .catch(e => { console.error(e); setLoading(false); });
+  }, [product, timeFilter, customStart, customEnd]);
+
+  useEffect(() => {
+    if (timeFilter !== "custom") fetchLocations();
+  }, [fetchLocations, timeFilter]);
+
+  // Load globe.gl and render
+  useEffect(() => {
+    if (!locData || !globeContainerRef.current) return;
+
+    const initGlobe = () => {
+      if (!window.Globe) return;
+
+      // Clear any existing globe
+      if (globeInstanceRef.current) {
+        globeContainerRef.current.innerHTML = "";
+        globeInstanceRef.current = null;
+      }
+
+      const container = globeContainerRef.current;
+      const width = container.clientWidth;
+      const height = Math.min(width, 600);
+
+      const points = (locData.locations || []).map(loc => ({
+        lat: parseFloat(loc.geo_lat),
+        lng: parseFloat(loc.geo_lon),
+        size: Math.max(0.3, Math.min(2.5, Math.sqrt(parseInt(loc.count)) * 0.5)),
+        count: parseInt(loc.count),
+        city: loc.geo_city || "Unknown",
+        region: loc.geo_region || "",
+        country: loc.geo_country || "Unknown",
+        color: "#C5A55A",
+      }));
+
+      const globe = window.Globe()
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-night.jpg")
+        .bumpImageUrl("//unpkg.com/three-globe/example/img/earth-topology.png")
+        .backgroundColor("#0a0a0a")
+        .width(width)
+        .height(height)
+        .pointsData(points)
+        .pointLat("lat")
+        .pointLng("lng")
+        .pointColor("color")
+        .pointAltitude(d => d.size * 0.04)
+        .pointRadius(d => d.size * 0.35)
+        .pointLabel(d => {
+          const parts = [d.city, d.region, d.country].filter(Boolean).join(", ");
+          return `<div style="background:rgba(0,0,0,0.85);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
+            <div style="font-weight:600;margin-bottom:2px;">${parts}</div>
+            <div style="color:#ccc;font-size:11px;">${d.count} submission${d.count !== 1 ? "s" : ""}</div>
+          </div>`;
+        })
+        .onPointClick(d => {
+          setSelectedPoint({
+            city: d.city,
+            region: d.region,
+            country: d.country,
+            count: d.count,
+            lat: d.lat,
+            lng: d.lng,
+          });
+        })
+        .atmosphereColor("#C5A55A")
+        .atmosphereAltitude(0.15)
+        (container);
+
+      // Auto-rotate
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.5;
+      globe.controls().enableZoom = true;
+
+      globeInstanceRef.current = globe;
+    };
+
+    if (!window.Globe) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/globe.gl";
+      script.onload = () => setTimeout(initGlobe, 100);
+      document.head.appendChild(script);
+    } else {
+      initGlobe();
+    }
+
+    return () => {
+      if (globeInstanceRef.current) {
+        globeContainerRef.current && (globeContainerRef.current.innerHTML = "");
+        globeInstanceRef.current = null;
+      }
+    };
+  }, [locData]);
+
+  // Handle resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (globeInstanceRef.current && globeContainerRef.current) {
+        const w = globeContainerRef.current.clientWidth;
+        globeInstanceRef.current.width(w);
+        globeInstanceRef.current.height(Math.min(w, 600));
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const filterPresets = [
+    { label: "7 Days", value: "7" },
+    { label: "30 Days", value: "30" },
+    { label: "60 Days", value: "60" },
+    { label: "90 Days", value: "90" },
+    { label: "All Time", value: "all" },
+    { label: "Custom", value: "custom" },
+  ];
+
+  const pillStyle = (active) => ({
+    background: active ? "linear-gradient(135deg, #DFC468, #9A7730)" : "#1a1a1a",
+    color: active ? "#000" : "#888",
+    border: active ? "none" : "1px solid #333",
+    borderRadius: 20,
+    padding: "6px 16px",
+    fontSize: 12,
+    fontWeight: active ? 700 : 500,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap",
+    transition: "all 0.2s",
+  });
+
+  const summary = locData?.summary || {};
+  const topLocations = locData?.topLocations || [];
+
+  return (
+    <div>
+      <h2 style={S.sectionTitle}>Global Submission Map</h2>
+
+      {/* Time filter pills */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        {filterPresets.map(p => (
+          <button key={p.value} onClick={() => setTimeFilter(p.value)} style={pillStyle(timeFilter === p.value)}>
+            {p.label}
+          </button>
+        ))}
+        {timeFilter === "custom" && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: 4 }}>
+            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
+              style={{ background: "#1a1a1a", color: "#ccc", border: "1px solid #333", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit" }} />
+            <span style={{ color: "#555", fontSize: 12 }}>to</span>
+            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
+              style={{ background: "#1a1a1a", color: "#ccc", border: "1px solid #333", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit" }} />
+            <button onClick={fetchLocations} disabled={!customStart || !customEnd}
+              style={{ ...pillStyle(true), opacity: (!customStart || !customEnd) ? 0.5 : 1 }}>Apply</button>
+          </div>
+        )}
+      </div>
+
+      {/* Summary stats bar */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+        <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 8, padding: "12px 16px", textAlign: "center" }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#C5A55A" }}>{summary.total_submissions || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>Total Submissions</div>
+        </div>
+        <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 8, padding: "12px 16px", textAlign: "center" }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#4CAF50" }}>{summary.unique_countries || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>Countries</div>
+        </div>
+        <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 8, padding: "12px 16px", textAlign: "center" }}>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "#2196F3" }}>{summary.unique_cities || 0}</div>
+          <div style={{ fontSize: 10, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>Cities</div>
+        </div>
+      </div>
+
+      {/* Globe + side panel layout */}
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {/* Globe container */}
+        <div style={{ flex: "1 1 60%", minWidth: 320 }}>
+          <div ref={globeContainerRef}
+            style={{ width: "100%", background: "#0a0a0a", borderRadius: 12, border: "1px solid #222", overflow: "hidden", minHeight: 400 }}>
+            {loading && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "#555" }}>
+                Loading globe...
+              </div>
+            )}
+          </div>
+          <p style={{ color: "#555", fontSize: 11, marginTop: 6 }}>
+            Drag to rotate, scroll to zoom, click points for details. Gold points sized by submission count.
+          </p>
+          {/* Selected point detail */}
+          {selectedPoint && (
+            <div style={{ background: "#141414", border: "1px solid #C5A55A", borderRadius: 8, padding: "12px 16px", marginTop: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#C5A55A" }}>
+                {[selectedPoint.city, selectedPoint.region, selectedPoint.country].filter(Boolean).join(", ")}
+              </div>
+              <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>
+                {selectedPoint.count} submission{selectedPoint.count !== 1 ? "s" : ""} &middot;
+                Coords: {selectedPoint.lat.toFixed(2)}, {selectedPoint.lng.toFixed(2)}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Top locations list */}
+        <div style={{ flex: "1 1 35%", minWidth: 260 }}>
+          <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500, margin: "0 0 8px" }}>Top Locations</h3>
+          <div style={{ maxHeight: 520, overflowY: "auto" }}>
+            {topLocations.length > 0 ? (
+              <table style={{ ...S.table, fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...S.th, fontSize: 9 }}>#</th>
+                    <th style={{ ...S.th, fontSize: 9 }}>Location</th>
+                    <th style={{ ...S.th, fontSize: 9, textAlign: "right" }}>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topLocations.map((loc, i) => {
+                    const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).join(", ");
+                    return (
+                      <tr key={i}>
+                        <td style={{ ...S.td, color: "#555", fontSize: 11, width: 24 }}>{i + 1}</td>
+                        <td style={{ ...S.td, color: "#ccc", fontSize: 11 }}>{label || "Unknown"}</td>
+                        <td style={{ ...S.td, color: "#C5A55A", fontWeight: 600, textAlign: "right", fontSize: 12 }}>{loc.count}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ color: "#555", fontSize: 12, padding: 16, textAlign: "center" }}>
+                {loading ? "Loading..." : "No location data in this period."}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
