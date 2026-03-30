@@ -29,13 +29,33 @@ export default function Dashboard() {
     if (!s) return;
     setLoading(true);
     try {
-      const [sumRes, viewRes] = await Promise.all([
-        fetch(`${API}?secret=${encodeURIComponent(s)}&view=summary&product=${product}&days=${days}`),
-        fetch(`${API}?secret=${encodeURIComponent(s)}&view=${tab}&product=${product}&days=${days}`),
-      ]);
-      if (sumRes.status === 401) { setAuthed(false); return; }
-      setSummary(await sumRes.json());
-      setData(await viewRes.json());
+      const base = `${API}?secret=${encodeURIComponent(s)}&product=${product}&days=${days}`;
+      if (tab === "dashboard") {
+        // Dashboard home needs data from multiple views
+        const [sumRes, funnelRes, researchRes, dropoffRes, devicesRes, cohortRes] = await Promise.all([
+          fetch(`${base}&view=summary`),
+          fetch(`${base}&view=funnel`),
+          fetch(`${base}&view=research`),
+          fetch(`${base}&view=dropoff`),
+          fetch(`${base}&view=devices`),
+          fetch(`${base}&view=cohort`),
+        ]);
+        if (sumRes.status === 401) { setAuthed(false); return; }
+        setSummary(await sumRes.json());
+        const [funnel, research, dropoff, devices, cohort] = await Promise.all([
+          funnelRes.json(), researchRes.json(), dropoffRes.json(), devicesRes.json(), cohortRes.json(),
+        ]);
+        // Merge all into one data object
+        setData({ ...funnel, ...research, ...dropoff, ...devices, ...cohort });
+      } else {
+        const [sumRes, viewRes] = await Promise.all([
+          fetch(`${base}&view=summary`),
+          fetch(`${base}&view=${tab}`),
+        ]);
+        if (sumRes.status === 401) { setAuthed(false); return; }
+        setSummary(await sumRes.json());
+        setData(await viewRes.json());
+      }
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
     setLoading(false);
