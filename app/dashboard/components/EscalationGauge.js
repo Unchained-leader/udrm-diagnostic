@@ -145,6 +145,12 @@ export default function EscalationGauge({ severity, years }) {
           ? `Over ${years || "many"} years, some escalation is present. The brain is beginning to seek more intensity. The dotted line shows where this trajectory leads without root-level intervention.`
           : `Over ${years || "many"} years, minimal escalation has been detected. Addressing root causes now prevents the trajectory shift shown in the projected line.`}
       </p>
+
+      <div style={{ marginTop: 16, padding: "16px 20px", background: "#111", borderLeft: `3px solid ${GOLD}`, borderRadius: "0 8px 8px 0" }}>
+        <p style={{ fontSize: 17, color: "#999", lineHeight: 1.8, margin: 0 }}>
+          If you have ever had an infected wound, you know it gets worse over time without intervention. When root issues are present, time works against you as escalation continues along a default trajectory. This is how you end up in places you said you would never be. That trajectory does not end when you want it to bad enough. It ends when you take action and address the root problems, like treating the infected wound.
+        </p>
+      </div>
     </div>
   );
 }
