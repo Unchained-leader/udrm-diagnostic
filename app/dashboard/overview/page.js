@@ -654,6 +654,77 @@ export default function OverviewPage() {
         </ResultCard>
         </Reveal>
 
+        {/* Transformation Roadmap */}
+        <Reveal idx={nextRevealIdx()}>
+        <ResultCard style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "28px 24px 0", textAlign: "center" }}>
+            <div style={{ fontSize: 11, letterSpacing: 3, color: GOLD, textTransform: "uppercase", marginBottom: 8 }}>Romans 12:2</div>
+            <h3 style={{ fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 6px", letterSpacing: 1 }}>Do Not Conform. Transform.</h3>
+            <p style={{ fontSize: 13, color: "#777", margin: "0 0 24px", fontStyle: "italic", lineHeight: 1.6 }}>
+              &ldquo;Do not conform to the pattern of this world, but be transformed by the renewing of your mind.&rdquo;
+            </p>
+          </div>
+
+          {/* Roadmap */}
+          <div style={{ padding: "0 24px 28px", position: "relative" }}>
+            {/* Vertical line */}
+            <div style={{ position: "absolute", left: 47, top: 0, bottom: 28, width: 2, background: "linear-gradient(to bottom, " + GOLD + ", #333 37%, #222 100%)" }} />
+
+            {[
+              { phase: 1, title: "Understanding", desc: "Your diagnostic revealed the system of root narratives driving your pattern.", progress: 37, active: true, complete: false },
+              { phase: 2, title: "Identifying Your Unique Roots", desc: "Map every root narrative encoded across your story — the ones you cannot see on your own.", progress: 0, active: false, complete: false },
+              { phase: 3, title: "Solving Your Unique Roots", desc: "Restructure each root narrative at the neurological and spiritual level through guided RNR.", progress: 0, active: false, complete: false },
+              { phase: 4, title: "Living Without Controlling Urges", desc: "Experience life where the desire itself is gone — not managed, not white-knuckled. Gone.", progress: 0, active: false, complete: false },
+            ].map((step, i) => (
+              <div key={i} style={{ display: "flex", gap: 16, marginBottom: i < 3 ? 24 : 0, position: "relative", zIndex: 1 }}>
+                {/* Circle marker */}
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                  background: step.active ? GOLD : "#1a1a1a",
+                  border: step.active ? "none" : "2px solid #333",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, fontWeight: 700,
+                  color: step.active ? "#000" : "#555",
+                  marginTop: 2,
+                }}>
+                  {step.phase}
+                </div>
+                {/* Content */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontSize: 10, letterSpacing: 1.5, color: step.active ? GOLD : "#555", textTransform: "uppercase" }}>Phase {step.phase}</span>
+                    {step.active && <span style={{ fontSize: 9, letterSpacing: 1, color: "#000", background: GOLD, padding: "2px 8px", borderRadius: 3, fontWeight: 700 }}>YOU ARE HERE</span>}
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: step.active ? "#fff" : "#666", marginBottom: 6 }}>{step.title}</div>
+                  <p style={{ fontSize: 13, lineHeight: 1.6, color: step.active ? "#999" : "#444", margin: 0 }}>{step.desc}</p>
+                  {step.active && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#777", marginBottom: 4 }}>
+                        <span>Progress</span>
+                        <span style={{ color: GOLD }}>{step.progress}% complete</span>
+                      </div>
+                      <div style={{ height: 4, background: "#1a1a1a", borderRadius: 2 }}>
+                        <div style={{ height: "100%", width: step.progress + "%", background: `linear-gradient(90deg, ${GOLD}, ${GOLD}88)`, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Divider line between Phase 1 and Phase 2-4 */}
+            <div style={{ margin: "0 0 0 44px", padding: "16px 0 0", position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}44, transparent)` }} />
+              </div>
+              <div style={{ fontSize: 11, color: "#888", lineHeight: 1.6, marginTop: 8, paddingLeft: 0 }}>
+                <span style={{ color: GOLD }}>Phase 1</span> is what this report gave you — understanding. <span style={{ color: GOLD }}>Phases 2–4</span> are what your recommended next steps below are designed to take you through.
+              </div>
+            </div>
+          </div>
+        </ResultCard>
+        </Reveal>
+
         {/* Next Steps & Resources */}
         <Reveal idx={nextRevealIdx()}>
         <div ref={nextStepsRef} style={{ display: "grid", gap: 0 }}>
