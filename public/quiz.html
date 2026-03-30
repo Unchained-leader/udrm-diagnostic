@@ -1338,24 +1338,18 @@
               childhood_wound: "Childhood Wound Score",
               confusing_patterns: "Confusing Patterns"
             };
-            const iconMap = {
-              pattern_name: "🔍",
-              root_depth: "🧠",
-              childhood_wound: "⚡",
-              confusing_patterns: "🔐"
-            };
             statsContainer.style.display = "grid";
             statsContainer.style.gridTemplateColumns = "1fr 1fr";
             statsContainer.style.gap = "10px";
             statsContainer.innerHTML = stats.map(s => {
               const label = labelMap[s.key] || s.key.replace(/_/g, " ");
-              const icon = iconMap[s.key] || "📊";
               const isHigh = /high|deep|[3-9]\+?\s*detected/i.test(s.value);
               const accentColor = isHigh ? "#fc5454" : "#C5A55A";
-              return '<div style="background:#111; border:1px solid #222; border-radius:10px; padding:12px 14px; text-align:center;">' +
-                '<div style="font-size:18px; margin-bottom:4px;">' + icon + '</div>' +
-                '<div style="font-size:10px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">' + label + '</div>' +
-                '<div style="font-size:14px; font-weight:600; color:' + accentColor + ';">' + s.value + '</div>' +
+              const barWidth = isHigh ? "85" : (/moderate|medium/i.test(s.value) ? "55" : "35");
+              return '<div style="background:#0d0d0d; border:1px solid #1a1a1a; border-radius:4px; padding:14px 16px; text-align:left;">' +
+                '<div style="font-size:9px; color:#555; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">' + label + '</div>' +
+                '<div style="font-size:14px; font-weight:600; color:' + accentColor + '; margin-bottom:8px;">' + s.value + '</div>' +
+                '<div style="height:2px; background:#1a1a1a; border-radius:1px;"><div style="height:100%; width:' + barWidth + '%; background:' + accentColor + '; border-radius:1px;"></div></div>' +
               '</div>';
             }).join("");
           }
@@ -1618,16 +1612,15 @@
             const rStatsContainer = document.getElementById("revealStats");
             if (rStats.length > 0) {
               const rLabelMap = { pattern_name: "Pattern Identified", root_depth: "Root Depth", childhood_wound: "Childhood Wound Score", confusing_patterns: "Confusing Patterns" };
-              const rIconMap = { pattern_name: "🔍", root_depth: "🧠", childhood_wound: "⚡", confusing_patterns: "🔐" };
               rStatsContainer.style.display = "grid";
               rStatsContainer.style.gridTemplateColumns = "1fr 1fr";
               rStatsContainer.style.gap = "10px";
               rStatsContainer.innerHTML = rStats.map(s => {
                 const label = rLabelMap[s.key] || s.key.replace(/_/g, " ");
-                const icon = rIconMap[s.key] || "📊";
                 const isHigh = /high|deep|[3-9]\+?\s*detected/i.test(s.value);
                 const accentColor = isHigh ? "#fc5454" : "#C5A55A";
-                return '<div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px 14px;text-align:center;"><div style="font-size:18px;margin-bottom:4px;">' + icon + '</div><div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">' + label + '</div><div style="font-size:14px;font-weight:600;color:' + accentColor + ';">' + s.value + '</div></div>';
+                const barWidth = isHigh ? "85" : (/moderate|medium/i.test(s.value) ? "55" : "35");
+                return '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:4px;padding:14px 16px;text-align:left;"><div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">' + label + '</div><div style="font-size:14px;font-weight:600;color:' + accentColor + ';margin-bottom:8px;">' + s.value + '</div><div style="height:2px;background:#1a1a1a;border-radius:1px;"><div style="height:100%;width:' + barWidth + '%;background:' + accentColor + ';border-radius:1px;"></div></div></div>';
               }).join("");
             }
             const rParagraphs = cleanText.split(/\n\n+/).filter(p => p.trim());
