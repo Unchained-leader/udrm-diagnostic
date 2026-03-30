@@ -370,7 +370,7 @@ export default function OverviewPage() {
         <div style={{ fontSize: 19, color: "#ccc" }}>Personalized for {name}</div>
         <div style={{ fontSize: 17, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
-        <div style={{ fontSize: 10, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -466,7 +466,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.confusingPatternsDecoded && a.confusingPatternsDecoded.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             These patterns did not form by accident. They were encoded in a system designed to stay hidden.
           </div>
           </Reveal>
@@ -499,7 +499,7 @@ export default function OverviewPage() {
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Your Generational Context" subtitle={a.generationalCohort || "Your Cohort"}>
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.generationalLens}</p>
-            <div style={{ textAlign: "center", padding: "10px 16px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+            <div style={{ textAlign: "center", padding: "10px 16px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
               You did not choose the generation you were born into. But you are choosing what happens next.
             </div>
           </ResultCard>
@@ -519,7 +519,7 @@ export default function OverviewPage() {
         </ResultCard>
 
         {/* Gap-widening */}
-        <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+        <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
           The relational patterns in your life are not separate from your behavior. They are the soil it grows in.
         </div>
         </Reveal>
@@ -559,7 +559,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.lifeStressAnalysis && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Root-level healing does not just address behavior. It rebuilds your capacity to carry the weight of real life.
           </div>
           </Reveal>
@@ -591,7 +591,7 @@ export default function OverviewPage() {
         {/* Gap-widening */}
         {a.coCopingBehaviors && Array.isArray(a.coCopingBehaviors) && a.coCopingBehaviors.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             You cannot win whack-a-mole with your nervous system. Every time you shut down one behavior without addressing the root, your brain finds another.
           </div>
           </Reveal>
@@ -614,7 +614,7 @@ export default function OverviewPage() {
         {/* Gap-widening after Strategy Audit */}
         {a.strategyBreakdowns && a.strategyBreakdowns.length > 0 && (
           <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 15, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
+          <div style={{ textAlign: "center", padding: "12px 20px", fontSize: 17, fontStyle: "italic", color: `${GOLD}99`, lineHeight: 1.7 }}>
             Every strategy on this list was aimed at managing behavior. Not one reached the root. That is not a failure of effort. It is a failure of targeting.
           </div>
           </Reveal>
@@ -716,7 +716,7 @@ export default function OverviewPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}44, transparent)` }} />
               </div>
-              <div style={{ fontSize: 11, color: "#888", lineHeight: 1.6, marginTop: 8, paddingLeft: 0 }}>
+              <div style={{ fontSize: 15, color: "#888", lineHeight: 1.6, marginTop: 8, paddingLeft: 0 }}>
                 <span style={{ color: GOLD }}>Phase 1</span> is what this report gave you: understanding. <span style={{ color: GOLD }}>Phases 2, 3, and 4</span> are what your recommended next steps below are designed to take you through.
               </div>
             </div>
@@ -740,7 +740,7 @@ export default function OverviewPage() {
               body={`${name}, your diagnostic revealed ${a.arousalTemplateType || "your primary pattern"} as your primary pattern with ${a.neuropathway || "a specific neuropathway"} as the driving mechanism. The Art of Freedom Training walks you through the exact process used to address unwanted behaviors at the root level, not the behavioral level where everything you have tried has been aimed. After the training, you can apply to speak with one of our certified support coaches about our 90 Days to Freedom core program. Your diagnostic is the map of the maze. This training shows you the door out.`}
               link="https://unchained-leader.com/aof"
             />
-            <div style={{ fontSize: 12, color: "#666", textAlign: "center", marginTop: 4 }}>
+            <div style={{ fontSize: 14, color: "#666", textAlign: "center", marginTop: 4 }}>
               Trusted by over 10,000 men across 33 countries. LegitScript-certified.
             </div>
           </ResultCard>

@@ -28,7 +28,7 @@ export default function ScorecardBreakdown({ analysis }) {
 
   return (
     <div>
-      <div style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>Raw scores across all diagnostic dimensions</div>
+      <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>Raw scores across all diagnostic dimensions</div>
       <ResponsiveContainer width="100%" height={320}>
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 50, top: 5, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" horizontal={false} />

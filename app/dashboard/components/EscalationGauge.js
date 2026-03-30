@@ -11,8 +11,8 @@ export default function EscalationGauge({ severity }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 13, color: "#888" }}>Escalation Severity</span>
-        <span style={{ fontSize: 15, fontWeight: 700, color }}>{label} ({s}/5)</span>
+        <span style={{ fontSize: 17, color: "#888" }}>Escalation Severity</span>
+        <span style={{ fontSize: 19, fontWeight: 700, color }}>{label} ({s}/5)</span>
       </div>
 
       {/* Gauge track */}
@@ -31,7 +31,7 @@ export default function EscalationGauge({ severity }) {
         <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
       </div>
 
-      <p style={{ fontSize: 13, color: "#888", marginTop: 12 }}>
+      <p style={{ fontSize: 17, color: "#888", marginTop: 12 }}>
         {s >= 4
           ? "Your pattern has escalated significantly. The brain requires increasing intensity to achieve the same dopamine response. This is neurological tolerance, not moral failure."
           : s >= 2

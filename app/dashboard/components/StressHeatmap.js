@@ -21,7 +21,7 @@ function StabilityMeter({ value, label }) {
   return (
     <div style={{ background: bg, borderRadius: 10, padding: "14px 16px", border: `1px solid ${color}33` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={{ fontSize: 14, color: "#ccc" }}>{label}</span>
+        <span style={{ fontSize: 17, color: "#ccc" }}>{label}</span>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color }}>{statusText}</span>
       </div>
       <div style={{ height: 6, background: "#1a1a1a", borderRadius: 3, overflow: "hidden" }}>
@@ -77,8 +77,8 @@ export default function StressHeatmap({ analysis }) {
       {/* Overall stability gauge */}
       <div style={{ marginBottom: 20, padding: "16px", background: "#111", borderRadius: 10, border: "1px solid #1f1f1f" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span style={{ fontSize: 13, color: "#888" }}>Overall Life Stability</span>
-          <span style={{ fontSize: 16, fontWeight: 700, color: stabilityPct >= 60 ? "#22c55e" : stabilityPct >= 40 ? "#f59e0b" : "#ef4444" }}>{stabilityPct}%</span>
+          <span style={{ fontSize: 17, color: "#888" }}>Overall Life Stability</span>
+          <span style={{ fontSize: 19, fontWeight: 700, color: stabilityPct >= 60 ? "#22c55e" : stabilityPct >= 40 ? "#f59e0b" : "#ef4444" }}>{stabilityPct}%</span>
         </div>
         <div style={{ height: 10, background: "#1a1a1a", borderRadius: 5, overflow: "hidden" }}>
           <div style={{
@@ -104,7 +104,7 @@ export default function StressHeatmap({ analysis }) {
       </div>
 
       {/* AI analysis text */}
-      <p style={{ fontSize: 14, lineHeight: 1.7, color: "#999", marginBottom: 20 }}>{stressText}</p>
+      <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", marginBottom: 20 }}>{stressText}</p>
 
       {/* Insight section */}
       <div style={{
@@ -113,11 +113,11 @@ export default function StressHeatmap({ analysis }) {
       }}>
         <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, marginBottom: 12, textTransform: "uppercase" }}>What This Means</div>
 
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
           Most people unknowingly try to stabilize their unwanted desires and behaviors by stabilizing these categories in life. But it actually works the opposite way.
         </p>
 
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
           When you address your root issues, you stabilize behavior, and behavior brings stability to these areas.
         </p>
 
@@ -126,12 +126,12 @@ export default function StressHeatmap({ analysis }) {
           border: `1px solid ${GOLD}44`, margin: "16px 0",
         }}>
           <div style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginBottom: 6, letterSpacing: 1 }}>THE #1 TREND</div>
-          <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ddd", margin: 0 }}>
+          <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ddd", margin: 0 }}>
             In the 10,000+ clients we have worked with, the #1 trend is increased income, fulfillment, and relationship health as a direct result of healing root issues.
           </p>
         </div>
 
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "12px 0 0" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "12px 0 0" }}>
           Every single person who takes the first steps towards freedom does so from a place of being unstable in multiple areas of life. The leap of faith in unstable times is a rite of passage.
         </p>
       </div>

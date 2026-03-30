@@ -29,7 +29,7 @@ export default function NeuropathwayDiagram({ neuropathway, manages }) {
           border: `1px solid ${mg.color}44`, textAlign: "center", minWidth: 90,
         }}>
           <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, marginBottom: 4 }}>TRIGGER</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: mg.color }}>{manages || "Pain"}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: mg.color }}>{manages || "Pain"}</div>
         </div>
 
         <div style={{ color: "#444", fontSize: 18 }}>→</div>
@@ -40,7 +40,7 @@ export default function NeuropathwayDiagram({ neuropathway, manages }) {
           border: `1px solid ${pw.color}44`, textAlign: "center", minWidth: 90,
         }}>
           <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, marginBottom: 4 }}>PATHWAY</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: pw.color }}>{neuropathway || "Unknown"}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: pw.color }}>{neuropathway || "Unknown"}</div>
         </div>
 
         <div style={{ color: "#444", fontSize: 18 }}>→</div>
@@ -51,11 +51,11 @@ export default function NeuropathwayDiagram({ neuropathway, manages }) {
           border: `1px solid ${GOLD}44`, textAlign: "center", minWidth: 90,
         }}>
           <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, marginBottom: 4 }}>BEHAVIOR</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>The Cycle</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: GOLD }}>The Cycle</div>
         </div>
       </div>
 
-      <p style={{ fontSize: 12, color: "#666", textAlign: "center", margin: "12px 0 0", fontStyle: "italic" }}>{pw.desc}</p>
+      <p style={{ fontSize: 17, color: "#666", textAlign: "center", margin: "12px 0 0", fontStyle: "italic" }}>{pw.desc}</p>
     </div>
   );
 }
