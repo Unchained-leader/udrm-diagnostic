@@ -2,11 +2,11 @@
 import { GOLD } from "../constants";
 
 const AREAS = [
-  { key: "romantic", label: "Romantic Relationship" },
-  { key: "health", label: "Physical Health" },
-  { key: "financial", label: "Financial Situation" },
-  { key: "work", label: "Work Fulfillment" },
-  { key: "god", label: "Relationship with God" },
+  { key: "romantic", aliases: ["romantic", "relationship", "marriage", "wife", "partner", "spouse"], label: "Romantic Relationship" },
+  { key: "health", aliases: ["health", "physical", "body", "fitness", "energy"], label: "Physical Health" },
+  { key: "financial", aliases: ["financial", "finances", "money", "income", "debt"], label: "Financial Situation" },
+  { key: "work", aliases: ["work", "career", "job", "vocation", "purpose", "calling", "fulfillment"], label: "Work Fulfillment" },
+  { key: "god", aliases: ["god", "spiritual", "faith", "prayer", "church", "divine"], label: "Relationship with God" },
 ];
 
 function StabilityMeter({ value, label }) {
@@ -46,18 +46,20 @@ export default function StressHeatmap({ analysis }) {
   const textLower = (stressText || "").toLowerCase();
 
   const areaData = AREAS.map(area => {
-    const mentioned = textLower.includes(area.key);
-    const lackWords = ["lack", "strain", "stress", "struggling", "pressure", "unstable", "deficit", "empty", "disconnected", "distant"];
-    const abundanceWords = ["abundance", "stable", "strong", "healthy", "thriving", "solid", "gift", "grounded", "secure"];
+    const aliases = area.aliases || [area.key];
+    const matchedAlias = aliases.find(a => textLower.includes(a));
+    const mentioned = !!matchedAlias;
+    const lackWords = ["lack", "strain", "stress", "struggling", "pressure", "unstable", "deficit", "empty", "disconnected", "distant", "dissatisf", "declining", "strained", "draining", "meaningless", "stagnant", "concerns"];
+    const abundanceWords = ["abundance", "stable", "strong", "healthy", "thriving", "solid", "gift", "grounded", "secure", "fulfilling", "consistent", "growing", "close", "sufficient"];
     const hasLack = mentioned && lackWords.some(w => textLower.includes(w));
     const hasAbundance = mentioned && abundanceWords.some(w => textLower.includes(w));
-    // If both detected, use context proximity or default to the stronger signal
+    // If both detected, use context proximity to the matched alias
     let value = 0;
     if (hasLack && !hasAbundance) value = -1;
     else if (hasAbundance && !hasLack) value = 1;
     else if (hasLack && hasAbundance) {
-      // Check which word is closer to the area key in the text
-      const keyIdx = textLower.indexOf(area.key);
+      // Check which word is closer to the matched alias in the text
+      const keyIdx = textLower.indexOf(matchedAlias);
       const lackIdx = Math.min(...lackWords.map(w => { const i = textLower.indexOf(w); return i === -1 ? 9999 : Math.abs(i - keyIdx); }));
       const abundIdx = Math.min(...abundanceWords.map(w => { const i = textLower.indexOf(w); return i === -1 ? 9999 : Math.abs(i - keyIdx); }));
       value = lackIdx < abundIdx ? -1 : 1;
