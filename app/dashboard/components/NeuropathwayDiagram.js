@@ -2,10 +2,10 @@
 import { GOLD } from "../constants";
 
 const PATHWAY_DATA = {
-  "Arousal": { color: "#ef4444", icon: "⚡", desc: "Seeks stimulation to override emotional pain" },
-  "Numbing": { color: "#3b82f6", icon: "🧊", desc: "Shuts down feeling to escape overwhelming stress" },
-  "Fantasy": { color: "#a855f7", icon: "💭", desc: "Creates alternate reality to escape present pain" },
-  "Deprivation": { color: "#f59e0b", icon: "🕳️", desc: "Fills a void of unmet needs through counterfeit connection" },
+  "Arousal": { color: "#ef4444", desc: "Seeks stimulation to override emotional pain" },
+  "Numbing": { color: "#3b82f6", desc: "Shuts down feeling to escape overwhelming stress" },
+  "Fantasy": { color: "#a855f7", desc: "Creates alternate reality to escape present pain" },
+  "Deprivation": { color: "#f59e0b", desc: "Fills a void of unmet needs through counterfeit connection" },
 };
 
 const MANAGES_DATA = {
@@ -40,7 +40,7 @@ export default function NeuropathwayDiagram({ neuropathway, manages }) {
           border: `1px solid ${pw.color}44`, textAlign: "center", minWidth: 90,
         }}>
           <div style={{ fontSize: 10, color: "#666", letterSpacing: 1, marginBottom: 4 }}>PATHWAY</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: pw.color }}>{pw.icon} {neuropathway || "Unknown"}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: pw.color }}>{neuropathway || "Unknown"}</div>
         </div>
 
         <div style={{ color: "#444", fontSize: 18 }}>→</div>

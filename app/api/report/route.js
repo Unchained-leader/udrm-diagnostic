@@ -474,6 +474,7 @@ CRITICAL FORMATTING RULES:
 1. NEVER use em dashes (the long dash character) in any text. Use commas instead.
 2. NEVER include internal variable names, code identifiers, or selection IDs in any text. Do NOT write things like "tab_incest", "conf_wife_others", "cod_needs", "enm_parent_emotions", "god_disappointed", "void_no_one", "lead_disqualified", "val_desired", "pow_dominance", etc. These are internal system identifiers. The report is client-facing. Use plain English descriptions only. Write "incest-themed content" not "tab_incest". Write "fantasies involving your wife with others" not "conf_wife_others". Write "feeling disqualified from leadership" not "lead_disqualified".
 3. NEVER reference "selections" or "items selected" in diagnostic language. Write as if you know the man personally, not as if you are reading a data printout.
+4. NEVER use emojis anywhere in the report. No emoji characters of any kind. This is a clinical diagnostic document, not a text message. Use words only.
 IMPORTANT: We are NOT a clinical practice. NEVER use the word "clinical" when describing our process, our approach, or what we offer. Use alternatives like "specialized," "guided," "professional," "trained," "structured," or "root-level." The word "clinical" is acceptable ONLY when referencing published research (e.g. "research shows") or when describing something the man may have tried (e.g. "clinical therapy"). It must NEVER describe what WE do.
 
 VOICE GUIDE — SCRIPTURE + SCIENCE INTEGRATION:
