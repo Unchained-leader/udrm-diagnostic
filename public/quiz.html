@@ -675,7 +675,17 @@
             </div>
             <div class="form-error" id="formError"></div>
             <button class="btn-gold" id="btnSubmitContact">Open My Dashboard</button>
-            <a href="https://unchainedleader.io/dashboard/login" target="_top" style="display:block; text-align:center; margin-top:14px; color:#999; font-size:12px; text-decoration:none; letter-spacing:0.5px;">Already have a UDRM account? <span style="color:#C9A227; text-decoration:underline;">Sign in</span></a>
+            <div id="existingAccountToggle">
+              <a href="#" id="showLoginForm" style="display:block; text-align:center; margin-top:14px; color:#999; font-size:12px; text-decoration:none; letter-spacing:0.5px;">Already have a UDRM account? <span style="color:#C9A227; text-decoration:underline;">Sign in</span></a>
+            </div>
+            <div id="loginFormInline" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid #2a2a2a;">
+              <p style="color:#999; font-size:12px; text-align:center; margin:0 0 10px;">Sign in to add this assessment to your existing dashboard.</p>
+              <input type="email" id="loginEmail" placeholder="Your email address" autocomplete="email" />
+              <input type="password" inputmode="numeric" maxlength="4" id="loginPin" placeholder="4-digit PIN" autocomplete="current-password" style="text-align:center; letter-spacing:4px; font-size:18px;" />
+              <div class="form-error" id="loginError"></div>
+              <button class="btn-gold" id="btnLoginSubmit">Sign In & Generate Report</button>
+              <a href="#" id="showRegisterForm" style="display:block; text-align:center; margin-top:10px; color:#999; font-size:12px; text-decoration:none;">← Back to create account</a>
+            </div>
           </div>
         </div>
 
@@ -1459,6 +1469,90 @@
         btnSubmitContact.textContent = "Open My Dashboard";
       }
     }
+
+    // Toggle between register and login forms
+    document.getElementById("showLoginForm").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("contactForm").querySelector("input[type=text]").parentElement.style.display = "none"; // hide name
+      document.querySelectorAll("#contactForm > input").forEach(el => el.style.display = "none");
+      document.querySelector("#contactForm > div").style.display = "none"; // hide PIN section
+      document.getElementById("btnSubmitContact").style.display = "none";
+      document.getElementById("existingAccountToggle").style.display = "none";
+      document.getElementById("loginFormInline").style.display = "block";
+    });
+
+    document.getElementById("showRegisterForm").addEventListener("click", (e) => {
+      e.preventDefault();
+      document.querySelectorAll("#contactForm > input").forEach(el => el.style.display = "");
+      document.querySelector("#contactForm > div").style.display = "";
+      document.getElementById("btnSubmitContact").style.display = "";
+      document.getElementById("existingAccountToggle").style.display = "";
+      document.getElementById("loginFormInline").style.display = "none";
+    });
+
+    // Handle login + report generation for existing accounts
+    document.getElementById("btnLoginSubmit").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pin = document.getElementById("loginPin").value.trim();
+      const loginError = document.getElementById("loginError");
+      const btnLogin = document.getElementById("btnLoginSubmit");
+      loginError.textContent = "";
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { loginError.textContent = "Please enter a valid email."; return; }
+      if (!pin || !/^\d{4}$/.test(pin)) { loginError.textContent = "Please enter your 4-digit PIN."; return; }
+
+      btnLogin.disabled = true;
+      btnLogin.textContent = "Signing in...";
+
+      try {
+        // Authenticate
+        const authRes = await fetch(BASE_URL + "/api/dashboard/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, pin }),
+        });
+
+        const authData = await authRes.json();
+        if (!authRes.ok) {
+          loginError.textContent = authData.error || "Login failed. Check your email and PIN.";
+          btnLogin.disabled = false;
+          btnLogin.textContent = "Sign In & Generate Report";
+          return;
+        }
+
+        // Login success — save user and trigger report
+        currentUser = { email: email.toLowerCase(), name: authData.name || email.split("@")[0] };
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); } catch(e) {}
+
+        trackEvent("existing_account_login", { email: email.toLowerCase() });
+
+        btnLogin.textContent = "Generating report...";
+
+        // Save diagnostic data
+        try {
+          await saveDiagnosticData();
+        } catch(e) {
+          console.error("Diagnostic save error:", e.message);
+        }
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Generate report
+        generateAndSendReport();
+
+        clearState();
+
+        // Redirect to dashboard
+        const dashboardUrl = BASE_URL + "/dashboard/overview?token=" + encodeURIComponent(authData.token || "");
+        try { window.top.location.href = dashboardUrl; } catch (e) { window.location.href = dashboardUrl; }
+
+      } catch(e) {
+        loginError.textContent = "Connection error. Please try again.";
+        btnLogin.disabled = false;
+        btnLogin.textContent = "Sign In & Generate Report";
+      }
+    });
 
     // Auto-report for already-logged-in users
     async function handleAutoReport() {
