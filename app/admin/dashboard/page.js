@@ -604,11 +604,42 @@ function LocationsView({ product }) {
         color: "#C5A55A",
       }));
 
-      // Fetch country borders GeoJSON
-      const geoRes = await fetch("https://unpkg.com/world-atlas@2/countries-110m.json");
+      // Fetch country borders GeoJSON (pre-converted, no topojson dependency needed)
+      const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
       const worldTopo = await geoRes.json();
-      const topojson = await import("https://unpkg.com/topojson-client@3?module");
-      const countries = topojson.feature(worldTopo, worldTopo.objects.countries);
+      // Inline topojson feature extraction (avoids dynamic import)
+      const topoFeature = (topology, obj) => {
+        const arcs = topology.arcs;
+        const decodeArc = (arcIdx) => {
+          const reverse = arcIdx < 0;
+          const arc = arcs[reverse ? ~arcIdx : arcIdx];
+          let x = 0, y = 0;
+          const coords = arc.map(([dx, dy]) => {
+            x += dx; y += dy;
+            return [
+              x * topology.transform.scale[0] + topology.transform.translate[0],
+              y * topology.transform.scale[1] + topology.transform.translate[1]
+            ];
+          });
+          if (reverse) coords.reverse();
+          return coords;
+        };
+        const decodeRing = (arcs) => {
+          let coords = [];
+          arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
+          return coords;
+        };
+        const decodeGeom = (geom) => {
+          if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
+          if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
+          return geom;
+        };
+        return {
+          type: "FeatureCollection",
+          features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) }))
+        };
+      };
+      const countries = topoFeature(worldTopo, worldTopo.objects.countries);
 
       // Major world cities for labels
       const majorCities = [
