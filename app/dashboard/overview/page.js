@@ -672,9 +672,9 @@ export default function OverviewPage() {
 
             {[
               { phase: 1, title: "Understanding", desc: "Your diagnostic revealed the system of root narratives driving your pattern.", progress: 37, active: true, complete: false },
-              { phase: 2, title: "Identifying Your Unique Roots", desc: "Map every root narrative encoded across your story — the ones you cannot see on your own.", progress: 0, active: false, complete: false },
+              { phase: 2, title: "Identifying Your Unique Roots", desc: "Map every root narrative encoded across your story, including the ones you cannot see on your own.", progress: 0, active: false, complete: false },
               { phase: 3, title: "Solving Your Unique Roots", desc: "Restructure each root narrative at the neurological and spiritual level through guided RNR.", progress: 0, active: false, complete: false },
-              { phase: 4, title: "Living Without Controlling Urges", desc: "Experience life where the desire itself is gone — not managed, not white-knuckled. Gone.", progress: 0, active: false, complete: false },
+              { phase: 4, title: "Living Without Controlling Urges", desc: "Experience life where unwanted desires no longer have control over you.", progress: 0, active: false, complete: false },
             ].map((step, i) => (
               <div key={i} style={{ display: "flex", gap: 16, marginBottom: i < 3 ? 24 : 0, position: "relative", zIndex: 1 }}>
                 {/* Circle marker */}
@@ -718,7 +718,7 @@ export default function OverviewPage() {
                 <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}44, transparent)` }} />
               </div>
               <div style={{ fontSize: 11, color: "#888", lineHeight: 1.6, marginTop: 8, paddingLeft: 0 }}>
-                <span style={{ color: GOLD }}>Phase 1</span> is what this report gave you — understanding. <span style={{ color: GOLD }}>Phases 2–4</span> are what your recommended next steps below are designed to take you through.
+                <span style={{ color: GOLD }}>Phase 1</span> is what this report gave you: understanding. <span style={{ color: GOLD }}>Phases 2, 3, and 4</span> are what your recommended next steps below are designed to take you through.
               </div>
             </div>
           </div>
