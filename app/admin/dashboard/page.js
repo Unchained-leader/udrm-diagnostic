@@ -7,7 +7,7 @@ const HEALTH_API = "/api/health";
 export default function Dashboard() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
-  const [tab, setTab] = useState("funnel");
+  const [tab, setTab] = useState("dashboard");
   const [product, setProduct] = useState("udrm");
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
@@ -73,6 +73,7 @@ export default function Dashboard() {
   }
 
   const tabs = [
+    { id: "dashboard", label: "Dashboard" },
     { id: "funnel", label: "Funnel" },
     { id: "trends", label: "Trends" },
     { id: "research", label: "Research" },
@@ -130,6 +131,7 @@ export default function Dashboard() {
       </div>
 
       <div style={S.content}>
+        {tab === "dashboard" && <DashboardHomeView data={data} summary={summary} product={product} days={days} setTab={setTab} />}
         {tab === "funnel" && data && <FunnelView data={data} />}
         {tab === "trends" && <TrendsView product={product} days={days} />}
         {tab === "research" && data && <ResearchView data={data} />}
@@ -150,6 +152,289 @@ function Card({ label, value, color }) {
     <div style={S.card}>
       <div style={{ ...S.cardValue, color }}>{value}</div>
       <div style={S.cardLabel}>{label}</div>
+    </div>
+  );
+}
+
+// ═══ DASHBOARD HOME ═══
+function DashboardHomeView({ data, summary, product, days, setTab }) {
+  const tileStyle = {
+    background: "#111", border: "1px solid #222", borderRadius: 12,
+    padding: 16, cursor: "pointer", overflow: "hidden", position: "relative",
+    transition: "border-color 0.2s",
+  };
+  const tileHover = { borderColor: "#C5A55A" };
+  const tileTitle = {
+    fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
+    fontWeight: 600, marginBottom: 10,
+  };
+  const TileWrap = ({ label, tabId, children, style }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+      <div style={{ ...tileStyle, ...(hovered ? tileHover : {}), ...style }}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        onClick={() => setTab(tabId)}>
+        <div style={tileTitle}>{label}</div>
+        {children}
+        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {/* Globe — full width at top */}
+      <div style={{ ...tileStyle, cursor: "default", marginBottom: 16, padding: 0, overflow: "hidden" }}
+        onClick={() => setTab("locations")}>
+        <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
+        <div style={{ height: 400 }}>
+          <MiniGlobe product={product} height={400} />
+        </div>
+        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555", cursor: "pointer" }}>Click to expand →</div>
+      </div>
+
+      {/* Tile grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 16 }}>
+
+        {/* Funnel tile */}
+        <TileWrap label="Funnel" tabId="funnel">
+          {data ? (
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {[
+                { label: "Starts", val: data.funnel?.quiz_started || 0, color: "#C5A55A" },
+                { label: "Completed", val: data.funnel?.quiz_completed || 0, color: "#4CAF50" },
+                { label: "Reports", val: data.funnel?.report_generated || 0, color: "#2196F3" },
+                { label: "Emailed", val: data.funnel?.report_emailed || 0, color: "#9C27B0" },
+              ].map(f => (
+                <div key={f.label} style={{ textAlign: "center", flex: 1, minWidth: 70 }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: f.color }}>{f.val}</div>
+                  <div style={{ fontSize: 9, color: "#888", textTransform: "uppercase" }}>{f.label}</div>
+                </div>
+              ))}
+            </div>
+          ) : <div style={{ color: "#555", fontSize: 12 }}>Loading...</div>}
+        </TileWrap>
+
+        {/* Trends tile */}
+        <TileWrap label="Trends" tabId="trends">
+          <div style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>
+            {summary ? (
+              <>
+                <span style={{ color: "#C5A55A", fontWeight: 600, fontSize: 18 }}>{summary.completions || 0}</span>
+                <span> completions in the last {days} days</span>
+                <br />
+                <span style={{ color: parseFloat(summary.conversionRate) > 50 ? "#4CAF50" : "#FF9800", fontWeight: 600, fontSize: 18 }}>
+                  {summary.conversionRate || 0}%
+                </span>
+                <span> conversion rate</span>
+              </>
+            ) : "Loading..."}
+          </div>
+        </TileWrap>
+
+        {/* Research tile */}
+        <TileWrap label="Research" tabId="research">
+          {data?.clinical ? (
+            <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.5 }}>
+              <div>Top template: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.top_template || "—"}</span></div>
+              <div>Top attachment: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.top_attachment || "—"}</span></div>
+              <div>Avg childhood wound: <span style={{ color: "#C5A55A", fontWeight: 600 }}>{data.clinical.avg_childhood_wound || "—"}</span></div>
+            </div>
+          ) : <div style={{ color: "#555", fontSize: 12 }}>Loading...</div>}
+        </TileWrap>
+
+        {/* Drop-off tile */}
+        <TileWrap label="Drop-off" tabId="dropoff">
+          {data?.dropoff?.length > 0 ? (
+            <div style={{ fontSize: 12, color: "#aaa" }}>
+              {data.dropoff.slice(0, 3).map((d, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span>{d.section || d.step || `Step ${i + 1}`}</span>
+                  <span style={{ color: "#f44336", fontWeight: 600 }}>{d.drop_count || d.drops || 0} drops</span>
+                </div>
+              ))}
+              {data.dropoff.length > 3 && <div style={{ color: "#555", fontSize: 10 }}>+{data.dropoff.length - 3} more</div>}
+            </div>
+          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No drop-off data" : "Loading..."}</div>}
+        </TileWrap>
+
+        {/* Devices tile */}
+        <TileWrap label="Devices" tabId="devices">
+          {data?.devices ? (
+            <div style={{ fontSize: 12, color: "#aaa" }}>
+              {Object.entries(data.devices).slice(0, 4).map(([device, count]) => (
+                <div key={device} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span>{device}</span>
+                  <span style={{ color: "#C5A55A", fontWeight: 600 }}>{count}</span>
+                </div>
+              ))}
+            </div>
+          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No device data" : "Loading..."}</div>}
+        </TileWrap>
+
+        {/* Cohort tile */}
+        <TileWrap label="Cohort" tabId="cohort">
+          {data?.cohort?.length > 0 ? (
+            <div style={{ fontSize: 12, color: "#aaa" }}>
+              {data.cohort.slice(0, 3).map((c, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <span>{c.cohort || c.label || `Cohort ${i + 1}`}</span>
+                  <span style={{ color: "#C5A55A", fontWeight: 600 }}>{c.count || 0}</span>
+                </div>
+              ))}
+            </div>
+          ) : <div style={{ color: "#555", fontSize: 12 }}>{data ? "No cohort data" : "Loading..."}</div>}
+        </TileWrap>
+
+        {/* Submissions tile */}
+        <TileWrap label="Submissions" tabId="submissions">
+          <div style={{ fontSize: 12, color: "#aaa", lineHeight: 1.6 }}>
+            <span style={{ color: "#C5A55A", fontWeight: 600, fontSize: 18 }}>{summary?.completions || 0}</span>
+            <span> total reports generated</span>
+            <br />
+            <span style={{ fontSize: 11, color: "#555" }}>View full submission table with geo data →</span>
+          </div>
+        </TileWrap>
+
+        {/* Health tile */}
+        <TileWrap label="System Health" tabId="health">
+          <HealthMiniTile />
+        </TileWrap>
+
+      </div>
+    </div>
+  );
+}
+
+// Mini globe for dashboard home (simplified, no interactions needed)
+function MiniGlobe({ product, height }) {
+  const containerRef = useRef(null);
+  const globeRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const init = async () => {
+      if (!window.Globe) return;
+      if (globeRef.current) { containerRef.current.innerHTML = ""; globeRef.current = null; }
+
+      const container = containerRef.current;
+      const width = container.clientWidth;
+
+      // Fetch country borders
+      let countries = { features: [] };
+      try {
+        const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+        const worldTopo = await geoRes.json();
+        const topoFeature = (topology, obj) => {
+          const arcs = topology.arcs;
+          const decodeArc = (arcIdx) => {
+            const reverse = arcIdx < 0;
+            const arc = arcs[reverse ? ~arcIdx : arcIdx];
+            let x = 0, y = 0;
+            const coords = arc.map(([dx, dy]) => {
+              x += dx; y += dy;
+              return [
+                x * topology.transform.scale[0] + topology.transform.translate[0],
+                y * topology.transform.scale[1] + topology.transform.translate[1]
+              ];
+            });
+            if (reverse) coords.reverse();
+            return coords;
+          };
+          const decodeRing = (arcs) => {
+            let coords = [];
+            arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
+            return coords;
+          };
+          const decodeGeom = (geom) => {
+            if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
+            if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
+            return geom;
+          };
+          return { type: "FeatureCollection", features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) })) };
+        };
+        countries = topoFeature(worldTopo, worldTopo.objects.countries);
+      } catch (e) {}
+
+      // Fetch location data
+      let points = [];
+      try {
+        const secret = sessionStorage.getItem("admin_secret") || "";
+        const res = await fetch(`/api/analytics?view=locations&secret=${encodeURIComponent(secret)}&days=90`);
+        const d = await res.json();
+        points = (d.locations || []).map(loc => ({
+          lat: parseFloat(loc.geo_lat), lng: parseFloat(loc.geo_lon),
+          size: Math.max(0.3, Math.min(2.5, Math.sqrt(parseInt(loc.count)) * 0.5)),
+          color: "#C5A55A",
+        }));
+      } catch (e) {}
+
+      const globe = window.Globe()
+        .backgroundColor("rgba(0,0,0,0)")
+        .showGlobe(true)
+        .showAtmosphere(true)
+        .atmosphereColor("rgba(100,100,100,0.2)")
+        .atmosphereAltitude(0.1)
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
+        .width(width)
+        .height(height)
+        .polygonsData(countries.features)
+        .polygonCapColor(() => "rgba(15,15,15,0.95)")
+        .polygonSideColor(() => "rgba(30,30,30,0.6)")
+        .polygonStrokeColor(() => "rgba(197,165,90,0.3)")
+        .polygonAltitude(0.005)
+        .pointsData(points)
+        .pointLat("lat")
+        .pointLng("lng")
+        .pointColor("color")
+        .pointAltitude(d => d.size * 0.05)
+        .pointRadius(d => d.size * 0.4)
+        (container);
+
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.4;
+      globe.controls().enableZoom = false;
+      globe.controls().enablePan = false;
+      globe.controls().enableRotate = false;
+      globeRef.current = globe;
+    };
+
+    if (!window.Globe) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/globe.gl";
+      script.onload = () => setTimeout(init, 100);
+      document.head.appendChild(script);
+    } else {
+      init();
+    }
+
+    return () => { if (globeRef.current) { containerRef.current && (containerRef.current.innerHTML = ""); globeRef.current = null; } };
+  }, []);
+
+  return <div ref={containerRef} style={{ width: "100%", height }} />;
+}
+
+// Mini health check for dashboard tile
+function HealthMiniTile() {
+  const [health, setHealth] = useState(null);
+  useEffect(() => {
+    fetch("/api/health").then(r => r.json()).then(setHealth).catch(() => {});
+  }, []);
+
+  if (!health) return <div style={{ color: "#555", fontSize: 12 }}>Checking...</div>;
+
+  const services = health.services || {};
+  return (
+    <div style={{ fontSize: 12 }}>
+      {Object.entries(services).map(([name, svc]) => (
+        <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+          <span style={{ color: "#aaa" }}>{name}</span>
+          <span style={{ color: svc.status === "up" ? "#4CAF50" : svc.status === "degraded" ? "#FF9800" : "#f44336", fontWeight: 600 }}>
+            {svc.status === "up" ? "●" : svc.status === "degraded" ? "◐" : "○"} {svc.status}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
