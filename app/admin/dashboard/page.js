@@ -649,14 +649,36 @@ function LocationsView({ product }) {
         usStates = topoFeature(statesTopo, statesTopo.objects.states);
       } catch (e) { console.warn("Could not load US states:", e); }
 
-      // Major world cities for labels
+      // All 50 US state capitals + DC + key international cities
       const majorCities = [
-        { name: "New York", lat: 40.71, lng: -74.01 }, { name: "Los Angeles", lat: 34.05, lng: -118.24 },
-        { name: "Chicago", lat: 41.88, lng: -87.63 }, { name: "Houston", lat: 29.76, lng: -95.37 },
-        { name: "Dallas", lat: 32.78, lng: -96.80 }, { name: "Atlanta", lat: 33.75, lng: -84.39 },
-        { name: "Nashville", lat: 36.16, lng: -86.78 }, { name: "Miami", lat: 25.76, lng: -80.19 },
-        { name: "Denver", lat: 39.74, lng: -104.99 }, { name: "Phoenix", lat: 33.45, lng: -112.07 },
-        { name: "Seattle", lat: 47.61, lng: -122.33 }, { name: "San Francisco", lat: 37.77, lng: -122.42 },
+        // US State Capitals
+        { name: "Montgomery", lat: 32.38, lng: -86.30 }, { name: "Juneau", lat: 58.30, lng: -134.42 },
+        { name: "Phoenix", lat: 33.45, lng: -112.07 }, { name: "Little Rock", lat: 34.75, lng: -92.29 },
+        { name: "Sacramento", lat: 38.58, lng: -121.49 }, { name: "Denver", lat: 39.74, lng: -104.98 },
+        { name: "Hartford", lat: 41.76, lng: -72.68 }, { name: "Dover", lat: 39.16, lng: -75.52 },
+        { name: "Tallahassee", lat: 30.44, lng: -84.28 }, { name: "Atlanta", lat: 33.75, lng: -84.39 },
+        { name: "Honolulu", lat: 21.31, lng: -157.86 }, { name: "Boise", lat: 43.62, lng: -116.20 },
+        { name: "Springfield", lat: 39.80, lng: -89.65 }, { name: "Indianapolis", lat: 39.77, lng: -86.16 },
+        { name: "Des Moines", lat: 41.59, lng: -93.62 }, { name: "Topeka", lat: 39.05, lng: -95.68 },
+        { name: "Frankfort", lat: 38.20, lng: -84.87 }, { name: "Baton Rouge", lat: 30.46, lng: -91.19 },
+        { name: "Augusta", lat: 44.31, lng: -69.78 }, { name: "Annapolis", lat: 38.97, lng: -76.49 },
+        { name: "Boston", lat: 42.36, lng: -71.06 }, { name: "Lansing", lat: 42.73, lng: -84.56 },
+        { name: "Saint Paul", lat: 44.94, lng: -93.09 }, { name: "Jackson", lat: 32.30, lng: -90.18 },
+        { name: "Jefferson City", lat: 38.58, lng: -92.17 }, { name: "Helena", lat: 46.60, lng: -112.04 },
+        { name: "Lincoln", lat: 40.81, lng: -96.70 }, { name: "Carson City", lat: 39.16, lng: -119.77 },
+        { name: "Concord", lat: 43.21, lng: -71.54 }, { name: "Trenton", lat: 40.22, lng: -74.76 },
+        { name: "Santa Fe", lat: 35.69, lng: -105.94 }, { name: "Albany", lat: 42.65, lng: -73.76 },
+        { name: "Raleigh", lat: 35.78, lng: -78.64 }, { name: "Bismarck", lat: 46.81, lng: -100.78 },
+        { name: "Columbus", lat: 39.96, lng: -82.99 }, { name: "Oklahoma City", lat: 35.47, lng: -97.52 },
+        { name: "Salem", lat: 44.94, lng: -123.03 }, { name: "Harrisburg", lat: 40.26, lng: -76.88 },
+        { name: "Providence", lat: 41.82, lng: -71.41 }, { name: "Columbia", lat: 34.00, lng: -81.03 },
+        { name: "Pierre", lat: 44.37, lng: -100.35 }, { name: "Nashville", lat: 36.17, lng: -86.78 },
+        { name: "Austin", lat: 30.27, lng: -97.74 }, { name: "Salt Lake City", lat: 40.76, lng: -111.89 },
+        { name: "Montpelier", lat: 44.26, lng: -72.58 }, { name: "Richmond", lat: 37.54, lng: -77.43 },
+        { name: "Olympia", lat: 47.04, lng: -122.89 }, { name: "Charleston", lat: 38.35, lng: -81.63 },
+        { name: "Madison", lat: 43.07, lng: -89.40 }, { name: "Cheyenne", lat: 41.14, lng: -104.82 },
+        { name: "Washington DC", lat: 38.91, lng: -77.04 },
+        // International cities
         { name: "London", lat: 51.51, lng: -0.13 }, { name: "Paris", lat: 48.86, lng: 2.35 },
         { name: "Tokyo", lat: 35.68, lng: 139.69 }, { name: "Sydney", lat: -33.87, lng: 151.21 },
         { name: "São Paulo", lat: -23.55, lng: -46.63 }, { name: "Toronto", lat: 43.65, lng: -79.38 },
