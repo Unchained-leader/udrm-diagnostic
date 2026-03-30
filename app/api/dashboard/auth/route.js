@@ -34,7 +34,10 @@ export async function POST(request) {
 
     const token = await createDashboardToken(normalizedEmail, userData.name);
 
-    const response = Response.json({ success: true, name: userData.name });
+    const response = new Response(JSON.stringify({ success: true, name: userData.name }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     setTokenCookie(response, token);
     return response;
   } catch (error) {

@@ -43,7 +43,10 @@ export async function POST(request) {
 
       const token = await createDashboardToken(normalizedEmail, userData.name || trimmedName);
 
-      const response = Response.json({ success: true, name: userData.name || trimmedName, token }, { headers: CORS_HEADERS });
+      const response = new Response(JSON.stringify({ success: true, name: userData.name || trimmedName, token }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+      });
       setTokenCookie(response, token);
       return response;
     }
@@ -68,7 +71,10 @@ export async function POST(request) {
 
     const token = await createDashboardToken(normalizedEmail, trimmedName);
 
-    const response = Response.json({ success: true, name: trimmedName, token }, { headers: CORS_HEADERS });
+    const response = new Response(JSON.stringify({ success: true, name: trimmedName, token }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    });
     setTokenCookie(response, token);
     return response;
   } catch (error) {
