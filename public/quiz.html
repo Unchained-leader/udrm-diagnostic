@@ -1551,25 +1551,9 @@
 
     // Auto-report for already-logged-in users
     async function handleAutoReport() {
-      trackEvent("contact_capture_auto", { email: currentUser.email });
-
-      try {
-        await saveDiagnosticData();
-      } catch(e) {}
-
-      await new Promise(r => setTimeout(r, 1000));
-      generateAndSendReport();
-
-      if (typeof fbq === "function") {
-        fbq("track", "Lead");
-        fbq("trackCustom", "ReportGenerated");
-      }
-
-      clearState();
-
-      // Show confirmation screen for auto-report users (they may not have dashboard PIN set)
-      confirmText.innerHTML = "Your personalized Unwanted Desire Root Map is being built live inside your secure portal.<br><br><span style='text-align:left;display:block;max-width:360px;margin:0 auto;'><strong style=\"color:#c5a55a;\">1.</strong> Results are typically ready in 2-3 minutes.<br><strong style=\"color:#c5a55a;\">2.</strong> A copy will also be sent to <strong>" + currentUser.email + "</strong> from <strong>Unchained Support</strong>.<br><strong style=\"color:#c5a55a;\">3.</strong> Check your spam folder if you don't see the email.</span>";
-      showScreen(screenConfirm);
+      // Always show the contact/account form — create account is the default view
+      // If they already have an account, they can click "Sign in"
+      showScreen(screenContact);
     }
 
     // =====================================================================
@@ -1877,16 +1861,10 @@
     // INIT
     // =====================================================================
     (function init() {
-      // Check for existing user session
-      try {
-        const saved = localStorage.getItem(SESSION_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.email) {
-            currentUser = parsed;
-          }
-        }
-      } catch(e) {}
+      // Clear any cached session — every quiz run should start fresh
+      // Account creation / login happens at the end of the quiz
+      try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
+      currentUser = null;
 
       // Check for saved quiz state
       const state = loadState();
