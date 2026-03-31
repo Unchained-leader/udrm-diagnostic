@@ -230,21 +230,21 @@ export default function OverviewPage() {
     );
   }
 
-  if (!data) {
-    return processing ? null : (
+  if (!data && !processing) {
+    return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
         <div style={{ color: "#555", fontSize: 14 }}>Loading...</div>
       </div>
     );
   }
 
-  const reports = data.reports || [];
+  const reports = data?.reports || [];
   const activeIdx = activeReportIndex >= 0 && activeReportIndex < reports.length ? activeReportIndex : reports.length - 1;
   const activeReport = reports[activeIdx] || {};
-  const a = activeReport.analysis || data.analysis;
-  const name = data.name || "there";
-  const activeReportUrl = activeReport.reportUrl || data.reportUrl;
-  const activeGeneratedAt = activeReport.generatedAt || data.generatedAt;
+  const a = activeReport.analysis || data?.analysis;
+  const name = data?.name || "there";
+  const activeReportUrl = activeReport.reportUrl || data?.reportUrl;
+  const activeGeneratedAt = activeReport.generatedAt || data?.generatedAt;
 
   if (processing || !a) {
     const statusMsg = processingStatus?.message || "Analyzing your responses...";
