@@ -4,7 +4,8 @@ import redis from "../../lib/redis";
 import PDFDocument from "pdfkit";
 import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../../lib/ghl";
-import { createDashboardToken } from "../../lib/auth";
+import { SignJWT } from "jose";
+import { getJwtSecret } from "../../lib/auth";
 import fs from "fs";
 import path from "path";
 import { getDb } from "../../lib/db";
@@ -195,10 +196,12 @@ export async function POST(request) {
     }
 
 
-    // Generate admin impersonation link for GHL (7-day token)
+    // Generate permanent admin link for GHL (no expiration)
     let dashboardUrl = null;
     try {
-      const adminToken = await createDashboardToken(normalizedEmail, userName);
+      const adminToken = await new SignJWT({ email: normalizedEmail, name: userName, admin: true })
+        .setProtectedHeader({ alg: "HS256" })
+        .sign(getJwtSecret());
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://unchainedleader.io";
       dashboardUrl = `${baseUrl}/dashboard/overview?token=${encodeURIComponent(adminToken)}`;
     } catch (e) {
