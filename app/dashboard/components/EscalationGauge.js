@@ -109,14 +109,19 @@ export default function EscalationGauge({ severity, years }) {
 
           {/* "NOW" marker */}
           <line x1={nowX} y1={PAD.top} x2={nowX} y2={PAD.top + chartH} stroke={GOLD} strokeWidth={1} strokeDasharray="3,3" opacity={0.5} />
-          <rect x={nowX - 18} y={PAD.top - 2} width={36} height={16} rx={3} fill={GOLD} />
-          <text x={nowX} y={PAD.top + 10} textAnchor="middle" fontSize={9} fontWeight={700} fill="#000">NOW</text>
+          <rect x={nowX - 20} y={PAD.top - 2} width={40} height={18} rx={3} fill={GOLD} />
+          <text x={nowX} y={PAD.top + 11} textAnchor="middle" fontSize={11} fontWeight={700} fill="#000">NOW</text>
 
-          {/* "No intervention" label on projected line */}
+          {/* "Default trajectory" label — angled to follow the dotted line, below it */}
           {futurePoints.length > 3 && (() => {
-            const labelPt = toSVG(futurePoints[Math.floor(futurePoints.length * 0.6)]);
+            const p1 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.3)]);
+            const p2 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.7)]);
+            const angle = Math.atan2(p2.sy - p1.sy, p2.sx - p1.sx) * (180 / Math.PI);
+            const midX = (p1.sx + p2.sx) / 2;
+            const midY = (p1.sy + p2.sy) / 2 + 18;
             return (
-              <text x={labelPt.sx} y={labelPt.sy - 10} textAnchor="middle" fontSize={9} fill="#ef4444" opacity={0.7}>
+              <text x={midX} y={midY} textAnchor="middle" fontSize={12} fontWeight={600} fill="#ef4444" opacity={0.8}
+                transform={`rotate(${angle}, ${midX}, ${midY})`}>
                 Default trajectory
               </text>
             );
@@ -126,15 +131,15 @@ export default function EscalationGauge({ severity, years }) {
           {yearLabels.map((y, i) => {
             const lx = PAD.left + (y / totalYears) * chartW;
             return (
-              <text key={i} x={lx} y={H - 4} textAnchor="middle" fontSize={9} fill="#555">
+              <text key={i} x={lx} y={H - 2} textAnchor="middle" fontSize={11} fontWeight={600} fill="#fff">
                 {y === 0 ? "Start" : `${y}yr`}
               </text>
             );
           })}
 
           {/* Y-axis labels */}
-          <text x={PAD.left + 4} y={PAD.top + 10} fontSize={9} fill="#555">High</text>
-          <text x={PAD.left + 4} y={PAD.top + chartH - 4} fontSize={9} fill="#555">Low</text>
+          <text x={PAD.left + 4} y={PAD.top + 12} fontSize={11} fontWeight={600} fill="#fff">High</text>
+          <text x={PAD.left + 4} y={PAD.top + chartH - 4} fontSize={11} fontWeight={600} fill="#fff">Low</text>
         </svg>
       </div>
 
