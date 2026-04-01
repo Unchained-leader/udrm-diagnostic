@@ -46,46 +46,60 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "none";
   });
 
-  // ── 2. Convert all images to inline data URLs ──
-  // html2canvas struggles with images even on same-origin.
-  // Converting to data URLs guarantees they render in the capture.
+  // ── 2. Convert all images to inline data URLs via canvas ──
+  // html2canvas can't reliably capture <img> tags. We draw each
+  // image onto a hidden canvas to produce a data URL, then swap.
   const images = element.querySelectorAll("img");
   const origSrcs = [];
 
-  // Fetch each unique URL once, then apply to all matching images
-  const urlCache = new Map();
-  for (const img of images) {
-    if (!img.src || img.src.startsWith("data:")) continue;
-    const url = img.src;
-    if (!urlCache.has(url)) {
-      urlCache.set(url, fetch(url)
-        .then(r => r.blob())
-        .then(blob => new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(blob);
-        }))
-        .catch(e => { console.warn("[PDF] Could not inline:", url, e); return null; })
-      );
-    }
+  function imgToDataUrl(imgEl) {
+    return new Promise((resolve) => {
+      const tryConvert = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = imgEl.naturalWidth || imgEl.width || 200;
+          c.height = imgEl.naturalHeight || imgEl.height || 200;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(imgEl, 0, 0, c.width, c.height);
+          resolve(c.toDataURL("image/png"));
+        } catch (e) {
+          console.warn("[PDF] Canvas draw failed for", imgEl.src, e);
+          resolve(null);
+        }
+      };
+      if (imgEl.complete && imgEl.naturalWidth > 0) {
+        tryConvert();
+      } else {
+        // Image not loaded yet — wait for it
+        const fresh = new Image();
+        fresh.onload = () => {
+          try {
+            const c = document.createElement("canvas");
+            c.width = fresh.naturalWidth;
+            c.height = fresh.naturalHeight;
+            c.getContext("2d").drawImage(fresh, 0, 0);
+            resolve(c.toDataURL("image/png"));
+          } catch (e) {
+            resolve(null);
+          }
+        };
+        fresh.onerror = () => resolve(null);
+        fresh.src = imgEl.src;
+      }
+    });
   }
 
-  // Wait for all fetches, then swap srcs
-  const resolved = new Map();
-  for (const [url, promise] of urlCache) {
-    resolved.set(url, await promise);
-  }
   for (const img of images) {
     if (!img.src || img.src.startsWith("data:")) continue;
-    const dataUrl = resolved.get(img.src);
+    const dataUrl = await imgToDataUrl(img);
     if (dataUrl) {
       origSrcs.push({ el: img, src: img.src });
       img.src = dataUrl;
     }
   }
 
-  // Give the browser a frame to render the swapped images
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Let the browser render the swapped data URL images
+  await new Promise(r => setTimeout(r, 100));
 
   // ── 3. Capture with html2canvas ──
   const canvas = await html2canvas(element, {
