@@ -280,6 +280,8 @@ export default function OverviewPage() {
       { step: "emailed", label: "Sending your report", detail: "Your report is being delivered to your inbox now." },
     ];
     const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
+    const currentIdx = progressMessages.findIndex(p => p.step === statusStep);
+    const progressPercent = currentIdx < 0 ? 5 : Math.min(95, ((currentIdx + 0.5) / progressMessages.length) * 100);
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
         <div style={{ textAlign: "center", maxWidth: 440, padding: 40 }}>
@@ -288,15 +290,20 @@ export default function OverviewPage() {
           <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, marginBottom: 8 }}>YOUR SECURE PORTAL</div>
           <div style={{ color: "#ccc", fontSize: 24, fontWeight: 700, marginBottom: 24 }}>Building Your Root Map Live</div>
 
-          {/* Spinner */}
+          {/* Warning */}
+          <div style={{ color: "#ef4444", fontSize: 13, fontWeight: 700, letterSpacing: 1, marginBottom: 24 }}>DO NOT CLOSE THIS PAGE</div>
+
+          {/* Progress bar */}
           <div style={{ marginBottom: 32 }}>
-            <div style={{
-              width: 60, height: 60, borderRadius: "50%", margin: "0 auto 20px",
-              border: `2px solid ${GOLD}44`,
-              borderTopColor: GOLD,
-              animation: "spin 1.2s linear infinite",
-            }} />
-            <div style={{ color: "#ccc", fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{currentProgress.label}</div>
+            <div style={{ width: "100%", height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden", marginBottom: 20, border: "1px solid #333" }}>
+              <div style={{
+                height: "100%", borderRadius: 4,
+                background: `linear-gradient(90deg, ${GOLD}, #DFC468)`,
+                width: `${progressPercent}%`,
+                transition: "width 1.5s ease-in-out",
+              }} />
+            </div>
+            <div style={{ color: "#ccc", fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{currentProgress.label}...</div>
             <div style={{ color: "#777", fontSize: 17, lineHeight: 1.6 }}>{currentProgress.detail}</div>
           </div>
 
@@ -304,7 +311,7 @@ export default function OverviewPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", maxWidth: 300, margin: "0 auto" }}>
             {progressMessages.map((p, i) => {
               const isActive = p.step === statusStep;
-              const isPast = progressMessages.indexOf(progressMessages.find(pm => pm.step === statusStep)) > i;
+              const isPast = currentIdx > i;
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{
@@ -321,11 +328,7 @@ export default function OverviewPage() {
             })}
           </div>
 
-          <div style={{ color: "#555", fontSize: 12, marginTop: 32 }}>Your results will appear on this page. This typically takes 2–3 minutes.</div>
-
-          <style>{`
-            @keyframes spin { to { transform: rotate(360deg); } }
-          `}</style>
+          <div style={{ color: "#555", fontSize: 12, marginTop: 32 }}>Your results will appear on this page automatically.</div>
         </div>
       </div>
     );
