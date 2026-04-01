@@ -92,11 +92,19 @@ export default function OverviewPage() {
   const [revealedSections, setRevealedSections] = useState(-1); // -1 = not started, increments to reveal sections
   const [freshReveal, setFreshReveal] = useState(false); // true = animate sections in
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [processingElapsed, setProcessingElapsed] = useState(0);
   const contentRef = useRef(null);
   const keyInsightRef = useRef(null);
   const nextStepsRef = useRef(null);
   const bridgeRef = useRef(null);
   const router = useRouter();
+
+  // Timer that ticks every second while in processing state
+  useEffect(() => {
+    if (!processing && data?.analysis) return;
+    const timer = setInterval(() => setProcessingElapsed(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, [processing, data]);
 
   const handlePDFDownload = async () => {
     console.log("[PDF] handlePDFDownload called, contentRef:", !!contentRef.current, "pdfGenerating:", pdfGenerating);
@@ -281,7 +289,12 @@ export default function OverviewPage() {
     ];
     const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
     const currentIdx = progressMessages.findIndex(p => p.step === statusStep);
-    const progressPercent = currentIdx < 0 ? 5 : Math.min(95, ((currentIdx + 0.5) / progressMessages.length) * 100);
+    const stepPercent = currentIdx < 0 ? 5 : Math.min(95, ((currentIdx + 0.5) / progressMessages.length) * 100);
+    // Time-based minimum: 12% at 0s, ramp to 37% at 15s, then creep slowly to 60% by 60s
+    const timePercent = processingElapsed <= 0 ? 12
+      : processingElapsed <= 15 ? 12 + (25 * (processingElapsed / 15))
+      : Math.min(60, 37 + (23 * ((processingElapsed - 15) / 45)));
+    const progressPercent = Math.max(stepPercent, timePercent);
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
         <div style={{ textAlign: "center", maxWidth: 440, padding: 40 }}>
