@@ -29,6 +29,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       name: name || "",
       report_url: reportUrl || "",
       reportUrl: reportUrl || "",
+      impersonation_access: dashboardUrl || "",
     },
     tags: tags || [],
     reportUrl: reportUrl || null,
