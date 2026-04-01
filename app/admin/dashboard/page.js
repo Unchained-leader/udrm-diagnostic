@@ -1508,23 +1508,27 @@ function ClientsView() {
           <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>{results.length} client{results.length > 1 ? "s" : ""} found</div>
           {results.map(client => (
             <div key={client.email} style={{ background: "#111", borderRadius: 10, border: "1px solid #222", overflow: "hidden" }}>
-              {/* Main row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 16, alignItems: "center", padding: "14px 16px", cursor: "pointer" }}
+              {/* Main row — stacks on mobile */}
+              <div style={{ padding: "14px 16px", cursor: "pointer" }}
                 onClick={() => setExpanded(expanded === client.email ? null : client.email)}>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{client.name || "Unknown"}</div>
-                  <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{client.email}</div>
-                  {client.location && <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{client.location}</div>}
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "#c5a55a" }}>{client.reportCount}</div>
-                  <div style={{ fontSize: 10, color: "#666" }}>REPORTS</div>
-                </div>
-                <div style={{ fontSize: 12, color: "#666" }}>
-                  {client.latestReportDate ? new Date(client.latestReportDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{client.name || "Unknown"}</div>
+                    <div style={{ fontSize: 12, color: "#888", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{client.email}</div>
+                    {client.location && <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{client.location}</div>}
+                  </div>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexShrink: 0 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "#c5a55a" }}>{client.reportCount}</div>
+                      <div style={{ fontSize: 10, color: "#666" }}>REPORTS</div>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#666" }}>
+                      {client.latestReportDate ? new Date(client.latestReportDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                    </div>
+                  </div>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); viewDashboard(client.email); }}
-                  style={{ padding: "8px 14px", background: "none", border: "1px solid #c5a55a", color: "#c5a55a", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap" }}>
+                  style={{ marginTop: 10, width: "100%", padding: "10px 14px", background: "none", border: "1px solid #c5a55a", color: "#c5a55a", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer", letterSpacing: 1 }}>
                   VIEW DASHBOARD
                 </button>
               </div>
@@ -1533,7 +1537,7 @@ function ClientsView() {
               {expanded === client.email && (
                 <div style={{ padding: "0 16px 14px", borderTop: "1px solid #1f1f1f" }}>
                   <div style={{ fontSize: 11, color: "#666", marginTop: 12, marginBottom: 8, letterSpacing: 1 }}>DIAGNOSTIC PROFILE</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginBottom: 12 }}>
                     <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
                       <div style={{ fontSize: 10, color: "#555" }}>TEMPLATE</div>
                       <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.arousalTemplateType || "—"}</div>
