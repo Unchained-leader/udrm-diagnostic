@@ -46,20 +46,37 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "none";
   });
 
-  // ── 2. Capture with html2canvas ──
+  // ── 2. Preload all images so html2canvas can capture them ──
+  const images = element.querySelectorAll("img");
+  await Promise.all(
+    Array.from(images).map(
+      (img) =>
+        new Promise((resolve) => {
+          if (img.complete && img.naturalHeight > 0) return resolve();
+          // Force reload with crossOrigin to avoid taint
+          const src = img.src;
+          img.crossOrigin = "anonymous";
+          img.src = "";
+          img.src = src;
+          img.onload = resolve;
+          img.onerror = resolve; // don't block on broken images
+        })
+    )
+  );
+
+  // ── 3. Capture with html2canvas ──
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: true,
-    allowTaint: false,
-    backgroundColor: "#0a0a0a", // Match dashboard dark background
+    allowTaint: true, // allow same-origin images even if crossOrigin fails
+    backgroundColor: "#0a0a0a",
     logging: false,
-    // Ignore interactive-only elements
     ignoreElements: (el) => {
       return el.hasAttribute("data-pdf-exclude");
     },
   });
 
-  // ── 3. Restore DOM ──
+  // ── 4. Restore DOM ──
   element.style.overflow = origOverflow;
   element.style.height = origHeight;
   origDisplay.forEach(({ el, display }) => { el.style.display = display; });
@@ -69,7 +86,7 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "";
   });
 
-  // ── 4. Create single continuous PDF (no page breaks) ──
+  // ── 5. Create single continuous PDF (no page breaks) ──
   const imgWidth = canvas.width;
   const imgHeight = canvas.height;
 
@@ -85,7 +102,7 @@ export default async function generateClientPDF(element, userName = "Report") {
   const imgDataUrl = canvas.toDataURL("image/jpeg", 0.92);
   pdf.addImage(imgDataUrl, "JPEG", 0, 0, PDF_WIDTH_PT, pdfHeightPt);
 
-  // ── 5. Download ──
+  // ── 6. Download ──
   const date = new Date().toISOString().split("T")[0];
   const safeName = userName.replace(/[^a-zA-Z0-9]/g, "_");
   pdf.save(`${safeName}_Root_Mapping_${date}.pdf`);
