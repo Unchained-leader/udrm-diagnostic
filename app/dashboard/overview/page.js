@@ -99,11 +99,19 @@ export default function OverviewPage() {
   const router = useRouter();
 
   const handlePDFDownload = async () => {
-    if (pdfGenerating || !contentRef.current) return;
+    console.log("[PDF] handlePDFDownload called, contentRef:", !!contentRef.current, "pdfGenerating:", pdfGenerating);
+    if (pdfGenerating) return;
+    if (!contentRef.current) {
+      console.error("[PDF] contentRef is null — cannot capture");
+      alert("Report content not ready. Please scroll down first and try again.");
+      return;
+    }
     setPdfGenerating(true);
     try {
       const { default: generateClientPDF } = await import("../utils/generateClientPDF");
-      await generateClientPDF(contentRef.current, a?.name || data?.name || "Report");
+      const userName = data?.name || data?.analysis?.name || "Report";
+      console.log("[PDF] Starting capture for:", userName);
+      await generateClientPDF(contentRef.current, userName);
     } catch (err) {
       console.error("PDF generation failed:", err);
       alert("PDF generation failed. Please try again.");
