@@ -4,6 +4,7 @@ import redis from "../../lib/redis";
 import PDFDocument from "pdfkit";
 import { put } from "@vercel/blob";
 import { ghlDiagnosticComplete, ghlSendReportData } from "../../lib/ghl";
+import { createDashboardToken } from "../../lib/auth";
 import fs from "fs";
 import path from "path";
 import { getDb } from "../../lib/db";
@@ -194,13 +195,24 @@ export async function POST(request) {
     }
 
 
-    // Send to GoHighLevel CRM via webhook (with PDF URL)
+    // Generate admin impersonation link for GHL (7-day token)
+    let dashboardUrl = null;
+    try {
+      const adminToken = await createDashboardToken(normalizedEmail, userName);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://unchainedleader.io";
+      dashboardUrl = `${baseUrl}/dashboard/overview?token=${encodeURIComponent(adminToken)}`;
+    } catch (e) {
+      console.error("[QStash] Failed to generate dashboard URL for GHL:", e.message);
+    }
+
+    // Send to GoHighLevel CRM via webhook (with PDF URL + dashboard link)
     ghlDiagnosticComplete({
       email: normalizedEmail,
       name: userName,
       messages,
       analysis,
       reportUrl,
+      dashboardUrl,
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     // Send report data to Reports | Root Diagnostic workflow (separate webhook)
@@ -210,6 +222,7 @@ export async function POST(request) {
       messages,
       analysis,
       reportUrl,
+      dashboardUrl,
     }).catch((e) => console.error("GHL report webhook error:", e.message));
 
     // Record analytics: report generated + completed diagnostic
