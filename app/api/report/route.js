@@ -1288,7 +1288,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       sectionHeader("SUBSTANCE VS. BEHAVIOR — SAME ROOT");
 
       const substanceVices = ["Alcohol", "THC / Marijuana", "Other Substances", "Nicotine"];
-      const behaviorVices = ["Gambling", "Gaming", "Impulse Spending", "Doom-Scrolling", "Overeating", "Overworking"];
+      const behaviorVices = ["Sexual Behavior", "Gambling", "Gaming", "Impulse Spending", "Doom-Scrolling", "Overeating", "Overworking"];
 
       const colW = (CW - 30) / 2;
       const viceItemH = 26;
@@ -1313,7 +1313,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         // Behavior side
         if (vi < behaviorVices.length) {
           const bLabel = behaviorVices[vi];
-          const bActive = ccb.some(b => (b.behavior || "").toLowerCase().includes(bLabel.toLowerCase().split(" ")[0].toLowerCase()));
+          const bActive = bLabel === "Sexual Behavior" || ccb.some(b => (b.behavior || "").toLowerCase().includes(bLabel.toLowerCase().split(" ")[0].toLowerCase()));
           doc.roundedRect(M + colW + 30, y, colW, viceItemH, 4).fill(bActive ? [15, 30, 55] : CARD_BG);
           doc.roundedRect(M + colW + 30, y, colW, viceItemH, 4).strokeColor(bActive ? [80, 140, 240] : BORDER).lineWidth(bActive ? 0.8 : 0.3).stroke();
           doc.fontSize(11).fillColor(bActive ? [160, 200, 255] : [100, 100, 100]).font(bActive ? "Helvetica-Bold" : "Helvetica").text(bLabel, M + colW + 40, y + 7, { width: colW - 20, align: "center" });

@@ -9,6 +9,7 @@ const SUBSTANCE_VICES = [
 ];
 
 const BEHAVIOR_VICES = [
+  { id: "sexual_behavior", label: "Sexual Behavior", alwaysActive: true },
   { id: "vice_gambling", label: "Gambling" },
   { id: "vice_gaming", label: "Gaming" },
   { id: "vice_spending", label: "Impulse Spending" },
@@ -75,7 +76,7 @@ export default function ViceBalanceDiagram({ coCopingBehaviors }) {
             <div style={{ fontSize: 11, letterSpacing: 2, color: "#3b82f6", marginBottom: 12, textTransform: "uppercase", fontWeight: 700 }}>Behavior</div>
             <div style={{ display: "grid", gap: 6 }}>
               {BEHAVIOR_VICES.map(v => {
-                const active = userVices.has(v.id);
+                const active = v.alwaysActive || userVices.has(v.id);
                 return (
                   <div key={v.id} style={{
                     padding: "8px 10px", borderRadius: 6, fontSize: 12,
