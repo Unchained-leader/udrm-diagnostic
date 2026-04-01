@@ -37,7 +37,7 @@ export default function EscalationGauge({ severity, years }) {
   // SVG dimensions
   const W = 500;
   const H = 180;
-  const PAD = { top: 20, bottom: 30, left: 0, right: 0 };
+  const PAD = { top: 20, bottom: 30, left: 30, right: 10 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
