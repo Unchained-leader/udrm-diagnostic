@@ -786,6 +786,9 @@
           {id:"age_18_24",text:"18\u201324"},{id:"age_25_34",text:"25\u201334"},{id:"age_35_44",text:"35\u201344"},{id:"age_45_54",text:"45\u201354"},{id:"age_55_64",text:"55\u201364"},{id:"age_65_74",text:"65\u201374"},{id:"age_75_84",text:"75\u201384"},{id:"age_85_plus",text:"85+"}
         ]}
       ]},
+      { id:"0b", section:0, title:"Before We Go Deeper", intro:"In order to trace your triggers, you have to face your triggers.\n\nI\u2019m giving you the heavy stuff first to get it out of the way. Your brain may want to avoid this.\n\nDo you agree to lean into the discomfort?", progress:3, blocks:[
+        {type:"consent"}
+      ]},
       { id:"1a", section:1, sectionLabel:"Section 1", title:"Section 1 of 9 \u2014 Your Behavior Patterns", intro:"Select everything that applies to you. There are no wrong answers. In your report, each behavior you select will be mapped to its specific root.", progress:5, blocks:[
         {type:"multi", label:"Sexual Behavior", options:[
           {id:"viewing_porn",text:"Viewing pornography"},{id:"scrolling_social",text:"Scrolling sexual content on social media (reels, stories, accounts)"},{id:"fantasy_daydream",text:"Sexual fantasy/daydreaming (without viewing content)"},{id:"compulsive_mb",text:"Compulsive masturbation"},{id:"sexting",text:"Sexting or online sexual conversations"},{id:"physical_acting",text:"Physical acting out (affairs, hookups, strip clubs)"},{id:"massage_parlors",text:"Massage parlors or paid sexual services"}
@@ -1110,6 +1113,43 @@
           return;
         }
 
+        if (block.type === "consent") {
+          allSelections[blockIdx] = new Set();
+          const group = document.createElement("div");
+          group.style.cssText = "display:flex;gap:16px;margin-top:24px;justify-content:center;";
+
+          const yesBtn = document.createElement("button");
+          yesBtn.textContent = "Yes, I\u2019m Ready";
+          yesBtn.style.cssText = "flex:1;max-width:200px;padding:18px 24px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;cursor:pointer;border:2px solid #22c55e;background:transparent;color:#22c55e;transition:all 0.2s ease;";
+          yesBtn.addEventListener("mouseenter", () => { if (!yesBtn.classList.contains("selected")) { yesBtn.style.background = "rgba(34,197,94,0.1)"; } });
+          yesBtn.addEventListener("mouseleave", () => { if (!yesBtn.classList.contains("selected")) { yesBtn.style.background = "transparent"; } });
+
+          const noBtn = document.createElement("button");
+          noBtn.textContent = "No";
+          noBtn.style.cssText = "flex:1;max-width:200px;padding:18px 24px;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;cursor:pointer;border:2px solid #ef4444;background:transparent;color:#ef4444;transition:all 0.2s ease;";
+          noBtn.addEventListener("mouseenter", () => { if (!noBtn.classList.contains("selected")) { noBtn.style.background = "rgba(239,68,68,0.1)"; } });
+          noBtn.addEventListener("mouseleave", () => { if (!noBtn.classList.contains("selected")) { noBtn.style.background = "transparent"; } });
+
+          yesBtn.addEventListener("click", () => {
+            yesBtn.style.background = "#22c55e"; yesBtn.style.color = "#000"; yesBtn.classList.add("selected");
+            noBtn.style.background = "transparent"; noBtn.style.color = "#ef4444"; noBtn.classList.remove("selected");
+            allSelections[blockIdx] = new Set(["consent_yes"]);
+            validateContinue();
+          });
+
+          noBtn.addEventListener("click", () => {
+            noBtn.style.background = "#ef4444"; noBtn.style.color = "#fff"; noBtn.classList.add("selected");
+            yesBtn.style.background = "transparent"; yesBtn.style.color = "#22c55e"; yesBtn.classList.remove("selected");
+            allSelections[blockIdx] = new Set(["consent_no"]);
+            validateContinue();
+          });
+
+          group.appendChild(yesBtn);
+          group.appendChild(noBtn);
+          sectionContent.appendChild(group);
+          return;
+        }
+
         if (block.label) {
           const lbl = document.createElement("div");
           lbl.className = "section-sublabel";
@@ -1176,6 +1216,24 @@
             });
           }
         });
+        // Restore consent block selections
+        screen.blocks.forEach((block, blockIdx) => {
+          if (block.type === "consent" && prev.selectedIds) {
+            const sel = prev.selectedIds.find(id => id === "consent_yes" || id === "consent_no");
+            if (sel) {
+              if (!allSelections[blockIdx]) allSelections[blockIdx] = new Set();
+              allSelections[blockIdx].add(sel);
+              const buttons = sectionContent.querySelectorAll("button");
+              buttons.forEach(btn => {
+                if (sel === "consent_yes" && btn.textContent.includes("Yes")) {
+                  btn.style.background = "#22c55e"; btn.style.color = "#000"; btn.classList.add("selected");
+                } else if (sel === "consent_no" && btn.textContent === "No") {
+                  btn.style.background = "#ef4444"; btn.style.color = "#fff"; btn.classList.add("selected");
+                }
+              });
+            }
+          }
+        });
         if (prev.textInput) {
           const ta = sectionContent.querySelector(".quiz-textarea");
           if (ta) { ta.value = prev.textInput; textInputValue = prev.textInput; }
@@ -1189,7 +1247,7 @@
         for (const [idx, sel] of Object.entries(allSelections)) {
           const b = screen.blocks[parseInt(idx)];
           if (!b || b.type === "text_input") continue;
-          if (b.type === "single" && sel.size === 0) { valid = false; break; }
+          if ((b.type === "single" || b.type === "consent") && sel.size === 0) { valid = false; break; }
         }
         if (valid) {
           const hasMultis = Object.entries(allSelections).some(([idx]) => {
@@ -1223,8 +1281,12 @@
           if (!block || block.type === "text_input") return;
           allSelections[idx].forEach(id => {
             selectedIds.push(id);
-            const opt = block.options.find(o => o.id === id);
-            if (opt) selectedTexts.push(opt.text);
+            if (block.options) {
+              const opt = block.options.find(o => o.id === id);
+              if (opt) selectedTexts.push(opt.text);
+            } else if (block.type === "consent") {
+              selectedTexts.push(id === "consent_yes" ? "Yes, I'm Ready" : "No");
+            }
           });
         });
 
