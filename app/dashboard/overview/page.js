@@ -445,6 +445,20 @@ export default function OverviewPage() {
         </ResultCard>
         </Reveal>
 
+        {/* Important notice */}
+        <Reveal idx={nextRevealIdx()}>
+        <div style={{
+          background: "linear-gradient(135deg, #2a0a0a, #1a0505)",
+          borderRadius: 12, padding: "24px 20px", marginBottom: 16,
+          border: "1px solid #ef444466",
+        }}>
+          <div style={{ fontSize: 16, letterSpacing: 3, color: "#ef4444", textTransform: "uppercase", fontWeight: 700, marginBottom: 12 }}>IMPORTANT</div>
+          <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ddd", margin: 0 }}>
+            This report will take 5–10 minutes to read. But it will be the most productive 5–10 minutes you can invest in your journey to freedom. You will notice as you read that each section builds on the previous section and gets deeper and deeper as the report goes on. Do not skim this or you will completely waste your time. Is your freedom worth the next ten minutes?
+          </p>
+        </div>
+        </Reveal>
+
         {/* Imprinting Origin */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Your Arousal Template Origin">
