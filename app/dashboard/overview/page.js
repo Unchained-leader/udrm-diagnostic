@@ -139,8 +139,10 @@ function OverviewPage() {
   const isPrintMode = searchParams.get("print") === "true";
 
   // If a token is in the URL (admin impersonation or quiz redirect), set it as a cookie
+  // Runs once on mount only — reads from window.location to avoid re-render loops
   useEffect(() => {
-    const urlToken = searchParams.get("token");
+    const url = new URL(window.location.href);
+    const urlToken = url.searchParams.get("token");
     if (urlToken) {
       fetch("/api/dashboard/set-token", {
         method: "POST",
@@ -149,12 +151,11 @@ function OverviewPage() {
         body: JSON.stringify({ token: urlToken }),
       }).then(() => {
         // Remove token from URL without reloading
-        const url = new URL(window.location.href);
         url.searchParams.delete("token");
         window.history.replaceState({}, "", url.toString());
       }).catch(() => {});
     }
-  }, [searchParams]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer that ticks every second while in processing state
   useEffect(() => {
