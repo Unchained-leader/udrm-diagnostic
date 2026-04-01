@@ -130,39 +130,48 @@ export async function POST(request) {
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
 
     // ═══════════════════════════════════════
-    // GENERATE PDF + EMAIL (SECONDARY)
-    // Wrapped in try/catch so failures don't affect dashboard
+    // STEP A: EMAIL IMMEDIATELY (dashboard link only, no PDF wait)
+    // Client gets notified right away without waiting for PDF capture.
     // ═══════════════════════════════════════
     let reportUrl = null;
 
     try {
-    // Generate PDF via headless browser capture of the dashboard
-    console.log(`[QStash] Capturing dashboard PDF for ${normalizedEmail}`);
-    const captureUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/capture`;
-    const captureRes = await fetch(captureUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: normalizedEmail, secret: process.env.QSTASH_TOKEN }),
-    });
-
-    let finalBuffer;
-    if (captureRes.ok) {
-      const arrayBuf = await captureRes.arrayBuffer();
-      finalBuffer = Buffer.from(arrayBuf);
-      console.log(`[QStash] Dashboard PDF captured: ${Math.round(finalBuffer.length / 1024)}KB`);
-    } else {
-      const errText = await captureRes.text();
-      console.error(`[QStash] Dashboard capture failed (${captureRes.status}): ${errText}`);
-      // Fallback to PDFKit if capture fails
-      console.log("[QStash] Falling back to PDFKit generation");
-      const pdfResult = await generatePDF(analysis, firstName, { gender });
-      finalBuffer = pdfResult.buffer;
+      await sendReportEmail(normalizedEmail, firstName, null, null);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
+      console.log(`[QStash] Email sent for ${normalizedEmail} (dashboard link only)`);
+    } catch (emailErr) {
+      console.error("[QStash] Email delivery error:", emailErr.message);
+      await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
     }
 
-    const pdfBase64 = finalBuffer.toString("base64");
-
-    // Upload PDF to Vercel Blob for permanent storage
+    // ═══════════════════════════════════════
+    // STEP B: CAPTURE PDF + UPLOAD (does not block client)
+    // Client already has dashboard + email. This generates the
+    // dashboard-matching PDF for GHL webhook and Blob storage.
+    // ═══════════════════════════════════════
     try {
+      console.log(`[QStash] Capturing dashboard PDF for ${normalizedEmail}`);
+      const captureUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/capture`;
+      const captureRes = await fetch(captureUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail, secret: process.env.QSTASH_TOKEN }),
+      });
+
+      let finalBuffer;
+      if (captureRes.ok) {
+        const arrayBuf = await captureRes.arrayBuffer();
+        finalBuffer = Buffer.from(arrayBuf);
+        console.log(`[QStash] Dashboard PDF captured: ${Math.round(finalBuffer.length / 1024)}KB`);
+      } else {
+        const errText = await captureRes.text();
+        console.error(`[QStash] Dashboard capture failed (${captureRes.status}): ${errText}`);
+        console.log("[QStash] Falling back to PDFKit generation");
+        const pdfResult = await generatePDF(analysis, firstName, { gender });
+        finalBuffer = pdfResult.buffer;
+      }
+
+      // Upload to Vercel Blob
       const timestamp = Date.now();
       const blob = await put(
         `reports/${normalizedEmail.replace(/[^a-z0-9]/g, "-")}/${timestamp}-diagnostic.pdf`,
@@ -171,40 +180,19 @@ export async function POST(request) {
       );
       reportUrl = blob.url;
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
-    } catch (e) {
-      console.error("Blob upload failed (continuing without URL):", e.message);
-    }
 
-    // Send via Resend (with download link if available)
-    try {
-      await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
-      await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
-    } catch (emailErr) {
-      console.error("Email delivery error:", emailErr.message);
-      await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
-    }
-
-    // Update Redis with PDF URL now that it's available
-    if (reportUrl) {
-      try {
-        reportMeta.reportUrl = reportUrl;
-        await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
-        // Update the last history entry with the report URL
-        const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
-        if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
-          updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
-          await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
-        }
-      } catch (redisUpdateErr) {
-        console.error("Redis URL update error (non-fatal):", redisUpdateErr.message);
+      // Update Redis with PDF URL
+      reportMeta.reportUrl = reportUrl;
+      await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+      const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
+      if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
+        updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
+        await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
       }
+    } catch (pdfErr) {
+      console.error("[QStash] PDF capture pipeline failed (dashboard data safe):", pdfErr.message);
     }
 
-    } catch (pdfPipelineErr) {
-      // PDF/email pipeline failed — dashboard data is already stored
-      console.error("PDF/EMAIL PIPELINE FAILED (dashboard data safe):", pdfPipelineErr.message);
-      console.error("Pipeline error stack:", pdfPipelineErr.stack);
-    }
 
     // Send to GoHighLevel CRM via webhook (with PDF URL)
     ghlDiagnosticComplete({
