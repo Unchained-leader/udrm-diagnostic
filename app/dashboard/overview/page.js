@@ -820,7 +820,7 @@ export default function OverviewPage() {
           {/* Personalized recommendation */}
           <ResultCard title="Your Recommended Next Step">
             <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>
-              {name}, based on your {a.arousalTemplateType || "primary"} pattern, {a.neuropathway || "identified"} neuropathway, and {a.attachmentStyle || "your"} attachment style, this is the recommended next step for your specific diagnostic:
+              Based on your {a.arousalTemplateType || "primary"} pattern, {a.neuropathway || "identified"} neuropathway, and {a.attachmentStyle || "your"} attachment style, this is the recommended next step for your specific diagnostic:
             </p>
             <ResourceCard
               priority={1}
