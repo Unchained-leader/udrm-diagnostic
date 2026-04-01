@@ -85,6 +85,19 @@ export default async function generateClientPDF(element, userName = "Report") {
     }
   }
 
+  // Build a lookup that matches by pathname (ignores origin differences in clone)
+  const pathMap = new Map();
+  for (const [url, dataUrl] of dataUrlMap) {
+    try {
+      const path = new URL(url).pathname;
+      pathMap.set(path, dataUrl);
+    } catch {
+      pathMap.set(url, dataUrl);
+    }
+  }
+
+  console.log("[PDF] Image data URLs prepared:", pathMap.size, "unique images");
+
   // ── 3. Capture with html2canvas (using onclone to fix images) ──
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
@@ -97,8 +110,17 @@ export default async function generateClientPDF(element, userName = "Report") {
       // Swap images in the CLONE only — live DOM stays untouched
       const clonedImgs = clonedDoc.querySelectorAll("img");
       clonedImgs.forEach((img) => {
-        const dataUrl = dataUrlMap.get(img.src);
-        if (dataUrl) img.src = dataUrl;
+        // Try exact match first, then match by pathname
+        let dataUrl = dataUrlMap.get(img.src);
+        if (!dataUrl) {
+          try {
+            const path = new URL(img.src).pathname;
+            dataUrl = pathMap.get(path);
+          } catch {}
+        }
+        if (dataUrl) {
+          img.src = dataUrl;
+        }
       });
     },
   });
