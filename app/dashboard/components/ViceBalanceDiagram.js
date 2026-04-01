@@ -111,16 +111,16 @@ export default function ViceBalanceDiagram({ coCopingBehaviors }) {
         background: "linear-gradient(135deg, #1a1505, #111)",
         borderRadius: 12, padding: "20px", border: `1px solid ${GOLD}33`,
       }}>
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
           Most people look at a behavior like gambling and a substance like alcohol as two very different problems. One is a "behavioral issue." The other is a "substance issue." Different categories, different treatments, different labels.
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
           But they are not different problems. They are different strategies your brain uses to medicate the same root pain.
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 12px" }}>
           The substance numbs. The behavior distracts. The scroll dissociates. The spend creates a dopamine hit. The overwork creates a sense of worth. Every single one is aimed at the same target: the root narrative that says something is wrong with you, missing in you, or broken about you.
         </p>
-        <p style={{ fontSize: 14, lineHeight: 1.8, color: "#ccc", margin: 0 }}>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: 0 }}>
           That is why white-knuckling one behavior so often causes another to intensify. Remove one escape route and the brain finds another. The only way to stop the cycle is to heal what the brain is running from.
         </p>
       </div>
