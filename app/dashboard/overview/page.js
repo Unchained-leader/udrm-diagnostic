@@ -444,7 +444,7 @@ export default function OverviewPage() {
         {/* Prepare Your Mind — Mason's personal message */}
         <Reveal idx={nextRevealIdx()}>
         <div style={{
-          background: CARD_BG,
+          background: "#111111",
           borderRadius: 16,
           padding: "40px 32px",
           borderLeft: `3px solid ${GOLD}`,
