@@ -483,7 +483,8 @@ Return ONLY valid JSON, no markdown:
 
   "coCopingBehaviors": [{"behavior": "behavior name in plain English (e.g. Alcohol, Overeating)", "connection": "2-3 sentences. Use this to reinforce: this is not a lust or perversion problem, just like this is not a substance or food problem. All of it is the brain's creative attempt to medicate root pain. Explain how this specific vice connects to the SAME root narrative driving the sexual behavior. Frame white-knuckling one behavior as why the other intensifies. Connect to why root-level healing (RNR) is the only real solution."}] or null if no vice_ items selected,
 
-  "lifeStressAnalysis": "3-4 sentences connecting the specific abundance/lack selections to the behavioral pattern. Show how each 'lack' area creates pressure the brain must manage, and how the behavior is the brain's attempt to medicate that real stress and pain. If financial lack is selected, weave in how financial pressure keeps the survival brain activated, making the cycle harder to interrupt. If multiple lack areas are present, show how they compound. Connect to why the RNR process addresses root stress, not surface behavior. Or null if no life_ items selected.",
+  "lifeStressScores": {"romantic": "stable" or "unstable", "health": "stable" or "unstable", "financial": "stable" or "unstable", "work": "stable" or "unstable", "god": "stable" or "unstable"} — Map each life_ selection directly: life_*_abundance = "stable", life_*_lack = "unstable". If a specific area was not selected in Section 4, omit it from this object. This MUST match what the user actually selected. Do NOT guess or infer.,
+  "lifeStressAnalysis": "3-4 sentences connecting the specific abundance/lack selections to the behavioral pattern. You MUST explicitly mention every life area the user selected by name (romantic relationship, physical health, financial situation, work fulfillment, relationship with God). Show how each 'lack' area creates pressure the brain must manage, and how the behavior is the brain's attempt to medicate that real stress and pain. If financial lack is selected, weave in how financial pressure keeps the survival brain activated, making the cycle harder to interrupt. If multiple lack areas are present, show how they compound. Connect to why the RNR process addresses root stress, not surface behavior. Or null if no life_ items selected.",
 
   "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
 
@@ -560,6 +561,7 @@ Return ONLY valid JSON, no markdown:
       whatBrainCounterfeits: "Something your soul actually needs",
       behaviorRootMap: [],
       coCopingBehaviors: null,
+      lifeStressScores: {},
       lifeStressAnalysis: null,
       confusingPatternsDecoded: [],
       neuropathway: "Unknown",

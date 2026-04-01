@@ -43,9 +43,19 @@ export default function StressHeatmap({ analysis }) {
   const stressText = analysis.lifeStressAnalysis;
   if (!stressText) return null;
 
-  const textLower = (stressText || "").toLowerCase();
+  // Use structured scores from Claude when available (reliable),
+  // fall back to keyword parsing of freeform text (legacy)
+  const scores = analysis.lifeStressScores || {};
 
   const areaData = AREAS.map(area => {
+    // Structured score takes priority — no guessing
+    if (scores[area.key]) {
+      const s = scores[area.key].toLowerCase();
+      return { ...area, value: s === "stable" ? 1 : s === "unstable" ? -1 : 0 };
+    }
+
+    // Fallback: keyword parsing of AI text
+    const textLower = (stressText || "").toLowerCase();
     const aliases = area.aliases || [area.key];
     const matchedAlias = aliases.find(a => textLower.includes(a));
     const mentioned = !!matchedAlias;
@@ -53,12 +63,10 @@ export default function StressHeatmap({ analysis }) {
     const abundanceWords = ["abundance", "stable", "strong", "healthy", "thriving", "solid", "gift", "grounded", "secure", "fulfilling", "consistent", "growing", "close", "sufficient"];
     const hasLack = mentioned && lackWords.some(w => textLower.includes(w));
     const hasAbundance = mentioned && abundanceWords.some(w => textLower.includes(w));
-    // If both detected, use context proximity to the matched alias
     let value = 0;
     if (hasLack && !hasAbundance) value = -1;
     else if (hasAbundance && !hasLack) value = 1;
     else if (hasLack && hasAbundance) {
-      // Check which word is closer to the matched alias in the text
       const keyIdx = textLower.indexOf(matchedAlias);
       const lackIdx = Math.min(...lackWords.map(w => { const i = textLower.indexOf(w); return i === -1 ? 9999 : Math.abs(i - keyIdx); }));
       const abundIdx = Math.min(...abundanceWords.map(w => { const i = textLower.indexOf(w); return i === -1 ? 9999 : Math.abs(i - keyIdx); }));
