@@ -99,9 +99,9 @@ function ResourceCard({ priority, label, price, title, body, link }) {
       <div style={{ fontSize: 17, fontWeight: 600, color: "#888", marginBottom: 4 }}>{title}</div>
       <p style={{ fontSize: 14, lineHeight: 1.6, color: "#555", margin: "0 0 10px" }}>{body}</p>
       <a href={link} target="_blank" rel="noopener noreferrer" style={{
-        display: "block", textAlign: "center", padding: "8px",
-        background: "none", border: "1px solid #333",
-        color: "#666", fontSize: 11, fontWeight: 600, borderRadius: 6,
+        display: "block", textAlign: "center", padding: "10px",
+        background: `${GOLD}18`, border: `1px solid ${GOLD}44`,
+        color: `${GOLD}aa`, fontSize: 12, fontWeight: 600, borderRadius: 6,
         textDecoration: "none", letterSpacing: 1,
       }}>{isFree ? "Learn More" : "Learn More"}</a>
     </div>
