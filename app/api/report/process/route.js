@@ -147,31 +147,15 @@ export async function POST(request) {
     }
 
     // ═══════════════════════════════════════
-    // STEP B: CAPTURE PDF + UPLOAD (does not block client)
+    // STEP B: GENERATE PDF + UPLOAD (does not block client)
     // Client already has dashboard + email. This generates the
-    // dashboard-matching PDF for GHL webhook and Blob storage.
+    // PDF for GHL webhook and Blob storage via PDFKit.
     // ═══════════════════════════════════════
     try {
-      console.log(`[QStash] Capturing dashboard PDF for ${normalizedEmail}`);
-      const captureUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/capture`;
-      const captureRes = await fetch(captureUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: normalizedEmail, secret: process.env.QSTASH_TOKEN }),
-      });
-
-      let finalBuffer;
-      if (captureRes.ok) {
-        const arrayBuf = await captureRes.arrayBuffer();
-        finalBuffer = Buffer.from(arrayBuf);
-        console.log(`[QStash] Dashboard PDF captured: ${Math.round(finalBuffer.length / 1024)}KB`);
-      } else {
-        const errText = await captureRes.text();
-        console.error(`[QStash] Dashboard capture failed (${captureRes.status}): ${errText}`);
-        console.log("[QStash] Falling back to PDFKit generation");
-        const pdfResult = await generatePDF(analysis, firstName, { gender });
-        finalBuffer = pdfResult.buffer;
-      }
+      console.log(`[QStash] Generating PDF for ${normalizedEmail}`);
+      const pdfResult = await generatePDF(analysis, firstName, { gender });
+      const finalBuffer = pdfResult.buffer;
+      console.log(`[QStash] PDF generated: ${Math.round(finalBuffer.length / 1024)}KB`);
 
       // Upload to Vercel Blob
       const timestamp = Date.now();
