@@ -10,7 +10,7 @@ import { MARKETING_BIBLE_REPORT_GUIDE } from "../lib/marketing-bible";
 import { corsHeaders, optionsResponse } from "../lib/cors";
 import { normalizeEmail, parseRedis } from "../lib/utils";
 
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
@@ -29,6 +29,22 @@ const BORDER = [51, 51, 51];    // #333333
 
 function hexToRgb(hex) {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+}
+
+// Retry helper for transient API failures (429, 500+, timeouts)
+async function withRetry(fn, { maxRetries = 3, baseDelay = 2000 } = {}) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = err?.status || err?.statusCode || 0;
+      const isRetryable = status === 429 || status >= 500 || err.code === "ETIMEDOUT" || err.code === "ECONNRESET" || err.message?.includes("timeout");
+      if (!isRetryable || attempt === maxRetries) throw err;
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      console.warn(`Retry ${attempt}/${maxRetries} after ${delay}ms (${err.message})`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
 }
 
 export async function OPTIONS() {
@@ -56,6 +72,30 @@ export async function POST(request) {
     }
 
     const normalizedEmail = normalizeEmail(email);
+
+    // ── Duplicate submission guard ──
+    const lockKey = `mkt:lock:${normalizedEmail}`;
+    const existingLock = await redis.get(lockKey);
+    if (existingLock) {
+      return Response.json({ success: true, message: "Report already in progress" }, { headers: CORS_HEADERS });
+    }
+    await redis.set(lockKey, { startedAt: new Date().toISOString() }, { ex: 300 }); // 5-min TTL
+
+    // ── Rate limiting ──
+    const emailRateKey = `mkt:rate:${normalizedEmail}`;
+    const globalRateKey = `mkt:rate:global`;
+    const emailCount = await redis.incr(emailRateKey);
+    if (emailCount === 1) await redis.expire(emailRateKey, 3600); // 1-hour window
+    const globalCount = await redis.incr(globalRateKey);
+    if (globalCount === 1) await redis.expire(globalRateKey, 3600);
+    if (emailCount > 3) {
+      await redis.del(lockKey);
+      return Response.json({ error: "Rate limit exceeded. Max 3 reports per hour." }, { status: 429, headers: CORS_HEADERS });
+    }
+    if (globalCount > 100) {
+      await redis.del(lockKey);
+      return Response.json({ error: "System is busy. Please try again in a few minutes." }, { status: 429, headers: CORS_HEADERS });
+    }
 
     // Look up user
     const user = await redis.get(`mkt:user:${normalizedEmail}`);
@@ -87,9 +127,9 @@ export async function POST(request) {
     // Set processing status so dashboard can show progress
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
 
-    // Analyze with Claude
+    // Analyze with Claude (with retry for transient failures)
     const analysisStart = Date.now();
-    const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange });
+    const rawAnalysis = await withRetry(() => analyzeConversation(messages, userName, { gender, ageRange }));
 
     // Sanitize all string values: strip em dashes + internal code identifiers
     function cleanStr(s) {
@@ -142,8 +182,8 @@ export async function POST(request) {
       neuropathway: analysis.neuropathway,
       reportUrl: null, // Will be updated after PDF upload
     };
-    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
-    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis);
+    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
+    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis, { ex: 2592000 });
 
     // Append to report history
     const historyEntry = { ...reportMeta, analysis };
@@ -151,7 +191,7 @@ export async function POST(request) {
     let history = Array.isArray(existingHistory) ? existingHistory : [];
     history.push(historyEntry);
     if (history.length > 10) history = history.slice(-10);
-    await redis.set(`mkt:history:${normalizedEmail}`, history);
+    await redis.set(`mkt:history:${normalizedEmail}`, history, { ex: 2592000 });
 
     // Update status — results are now available in dashboard
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
@@ -300,12 +340,12 @@ export async function POST(request) {
     if (reportUrl) {
       try {
         reportMeta.reportUrl = reportUrl;
-        await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+        await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
         // Update the last history entry with the report URL
         const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
         if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
           updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
-          await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
+          await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory, { ex: 2592000 });
         }
       } catch (redisUpdateErr) {
         console.error("Redis URL update error (non-fatal):", redisUpdateErr.message);
@@ -359,6 +399,9 @@ export async function POST(request) {
       )`;
     } catch(e) { console.error("Analytics write error (non-fatal):", e.message); }
 
+    // Release duplicate submission lock
+    await redis.del(lockKey).catch(() => {});
+
     return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error("Report generation error:", error.message || error);
@@ -393,7 +436,7 @@ async function analyzeConversation(messages, userName, demographics = {}) {
   const generationLabel = GENERATION_MAP[demographics.ageRange] || "Unknown";
 
   const response = await client.messages.create({
-    model: "claude-opus-4-6",
+    model: "claude-sonnet-4-6",
     max_tokens: 16384,
     messages: [{
       role: "user",
