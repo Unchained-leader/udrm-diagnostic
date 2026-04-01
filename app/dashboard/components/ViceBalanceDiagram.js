@@ -29,6 +29,8 @@ export default function ViceBalanceDiagram({ coCopingBehaviors }) {
     });
   }
 
+  // Sexual Behavior is always active — it's the primary issue for every user taking this diagnostic
+  userVices.add("sexual_behavior");
   const userSubstances = SUBSTANCE_VICES.filter(v => userVices.has(v.id));
   const userBehaviors = BEHAVIOR_VICES.filter(v => userVices.has(v.id));
   const hasSubstances = userSubstances.length > 0;
