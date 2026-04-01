@@ -51,24 +51,41 @@ export default async function generateClientPDF(element, userName = "Report") {
   // Converting to data URLs guarantees they render in the capture.
   const images = element.querySelectorAll("img");
   const origSrcs = [];
-  await Promise.all(
-    Array.from(images).map(async (img) => {
-      if (!img.src || img.src.startsWith("data:")) return;
-      origSrcs.push({ el: img, src: img.src });
-      try {
-        const resp = await fetch(img.src);
-        const blob = await resp.blob();
-        const dataUrl = await new Promise((resolve) => {
+
+  // Fetch each unique URL once, then apply to all matching images
+  const urlCache = new Map();
+  for (const img of images) {
+    if (!img.src || img.src.startsWith("data:")) continue;
+    const url = img.src;
+    if (!urlCache.has(url)) {
+      urlCache.set(url, fetch(url)
+        .then(r => r.blob())
+        .then(blob => new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
           reader.readAsDataURL(blob);
-        });
-        img.src = dataUrl;
-      } catch (e) {
-        console.warn("[PDF] Could not inline image:", img.src, e);
-      }
-    })
-  );
+        }))
+        .catch(e => { console.warn("[PDF] Could not inline:", url, e); return null; })
+      );
+    }
+  }
+
+  // Wait for all fetches, then swap srcs
+  const resolved = new Map();
+  for (const [url, promise] of urlCache) {
+    resolved.set(url, await promise);
+  }
+  for (const img of images) {
+    if (!img.src || img.src.startsWith("data:")) continue;
+    const dataUrl = resolved.get(img.src);
+    if (dataUrl) {
+      origSrcs.push({ el: img, src: img.src });
+      img.src = dataUrl;
+    }
+  }
+
+  // Give the browser a frame to render the swapped images
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   // ── 3. Capture with html2canvas ──
   const canvas = await html2canvas(element, {
