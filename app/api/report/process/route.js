@@ -440,6 +440,7 @@ CONFUSING PATTERNS DECODER:
 - conf_race: Race/ethnicity present during imprinting OR brain eroticized cultural "other" as forbidden. Power dynamics mapped onto racial categories from culture.
 - conf_trans: Novelty-driven arousal template needs maximum novelty for dopamine. May also activate taboo circuit. Does NOT define orientation.
 - conf_pain: Pain and arousal share neurochemical pathways. Often traces to childhood physical abuse or corporal punishment near sexual development.
+- conf_crossdressing: Gender identity and arousal wiring become fused during development. Often traces to early experiences where opposite-gender clothing was associated with comfort, safety, or forbidden excitement. The brain encoded the clothing itself as part of the arousal template. Does NOT define gender identity — it reveals a neurological pathway, not an identity destination.
 - conf_humiliation: Root narrative "I am worthless" converting belief into arousal. Brain resolves tension between public identity and private belief about worth.
 
 ATTACHMENT STYLES (based on Section 6):

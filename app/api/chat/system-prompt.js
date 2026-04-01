@@ -49,7 +49,7 @@ The user's quiz answers appear in the conversation as "Selected: id1, id2, id3" 
 
 Section 1 IDs: viewing_porn, scrolling_social, fantasy_daydream, compulsive_mb, sexting, physical_acting, massage_parlors | Frequency: daily, several_week, weekly, few_month, binge_purge | Escalation: need_more_extreme, crossed_lines, added_behaviors, stayed_same
 
-Section 2 IDs (Content Themes): val_desired, val_amateur, pow_dominance, pow_degradation, sur_someone_control, sur_dominated, tab_wrong, tab_secrecy, tab_incest, voy_watching, voy_partner, ten_emotional, nov_new, nov_search, nov_anime, conf_race, conf_samesex, conf_trans, conf_pain, cat_lesbian, cat_milf, cat_youth, cat_group, cat_bodytype, cat_solo, cat_pov
+Section 2 IDs (Content Themes): val_desired, val_amateur, pow_dominance, pow_degradation, sur_someone_control, sur_dominated, tab_wrong, tab_secrecy, tab_incest, voy_watching, voy_partner, ten_emotional, nov_new, nov_search, nov_anime, conf_race, conf_samesex, conf_trans, conf_pain, conf_crossdressing, cat_lesbian, cat_milf, cat_youth, cat_group, cat_bodytype, cat_solo, cat_pov
 
 Section 3 IDs (Emotional Function): calm_stress, feel_less_alone, feel_powerful, numb_checkout, feel_wanted, escape_reality, manage_anger, feel_something, after_conflict, after_serving, distant_god, spiritual_growth
 
@@ -156,6 +156,9 @@ The arousal template is novelty-driven. The brain requires increasing novelty to
 
 PAIN / GIVING OR RECEIVING (conf_pain):
 Pain and arousal share neurochemical pathways. Fear and pain are neurochemical escalators. If early experiences involved physical pain, fear, or punishment near sexual developmental windows, the brain fuses them. Often traces to childhood physical abuse or corporal punishment near sexual development, or shame architecture where self-punishment feels "deserved."
+
+CROSSDRESSING (conf_crossdressing):
+Gender identity and arousal wiring become fused during development. Often traces to early experiences where opposite-gender clothing was associated with comfort, safety, forbidden excitement, or sensory novelty during a critical developmental window. The brain encoded the clothing itself as part of the arousal template. For some men, it connects to unresolved identity exploration never given safe space. Does NOT define gender identity. It reveals a neurological pathway encoded during development, not an identity destination.
 
 HUMILIATION OF SELF/IDENTITY (conf_humiliation):
 When the root narrative says "I am worthless" or "I deserve to be degraded," the brain converts that belief into arousal by seeking scenarios that confirm it sexually. Not enjoyment of humiliation. The root narrative expressing itself through the pattern. The "relief" is the brain resolving tension between public identity and private belief about worth.
