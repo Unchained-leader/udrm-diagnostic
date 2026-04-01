@@ -22,7 +22,6 @@ export default async function generateClientPDF(element, userName = "Report") {
   if (!element) throw new Error("No element provided for PDF capture");
 
   // ── 1. Prepare the DOM for capture ──
-  // Force all sections visible (override progressive reveal)
   const origOverflow = element.style.overflow;
   const origHeight = element.style.height;
   element.style.overflow = "visible";
@@ -46,59 +45,41 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "none";
   });
 
-  // ── 2. Pre-build a map of image data URLs ──
-  // We do NOT modify the live DOM. Instead we convert images to data
-  // URLs here, then apply them inside html2canvas's onclone callback
-  // which operates on a cloned copy of the DOM.
+  // ── 2. Replace <img> with <canvas> elements ──
+  // html2canvas renders <canvas> perfectly but struggles with <img>.
+  // We draw each image onto a canvas, swap it in, capture, then swap back.
+  const swaps = [];
   const images = element.querySelectorAll("img");
-  const dataUrlMap = new Map();
 
   for (const img of images) {
-    if (!img.src || img.src.startsWith("data:") || dataUrlMap.has(img.src)) continue;
+    if (!img.src || !img.complete || img.naturalWidth === 0) continue;
     try {
-      if (img.complete && img.naturalWidth > 0) {
-        const c = document.createElement("canvas");
-        c.width = img.naturalWidth;
-        c.height = img.naturalHeight;
-        c.getContext("2d").drawImage(img, 0, 0);
-        dataUrlMap.set(img.src, c.toDataURL("image/png"));
-      } else {
-        // Load a fresh copy
-        const dataUrl = await new Promise((resolve) => {
-          const fresh = new Image();
-          fresh.onload = () => {
-            try {
-              const c = document.createElement("canvas");
-              c.width = fresh.naturalWidth;
-              c.height = fresh.naturalHeight;
-              c.getContext("2d").drawImage(fresh, 0, 0);
-              resolve(c.toDataURL("image/png"));
-            } catch { resolve(null); }
-          };
-          fresh.onerror = () => resolve(null);
-          fresh.src = img.src;
-        });
-        if (dataUrl) dataUrlMap.set(img.src, dataUrl);
-      }
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      c.getContext("2d").drawImage(img, 0, 0);
+
+      // Copy the img's inline styles to the canvas
+      c.style.cssText = img.style.cssText;
+      // Preserve layout attributes
+      if (img.getAttribute("width")) c.setAttribute("width", img.getAttribute("width"));
+      if (img.getAttribute("height")) c.setAttribute("height", img.getAttribute("height"));
+
+      // Swap img → canvas in the DOM
+      img.parentNode.insertBefore(c, img);
+      img.style.display = "none";
+      swaps.push({ img, canvas: c });
     } catch (e) {
-      console.warn("[PDF] Could not convert image:", img.src, e);
+      console.warn("[PDF] Could not swap image:", img.src, e);
     }
   }
 
-  // Build a lookup that matches by pathname (ignores origin differences in clone)
-  const pathMap = new Map();
-  for (const [url, dataUrl] of dataUrlMap) {
-    try {
-      const path = new URL(url).pathname;
-      pathMap.set(path, dataUrl);
-    } catch {
-      pathMap.set(url, dataUrl);
-    }
-  }
+  console.log("[PDF] Swapped", swaps.length, "images to canvas elements");
 
-  console.log("[PDF] Image data URLs prepared:", pathMap.size, "unique images");
+  // Give the browser a frame to render the swaps
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-  // ── 3. Capture with html2canvas (using onclone to fix images) ──
+  // ── 3. Capture with html2canvas ──
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: false,
@@ -106,26 +87,14 @@ export default async function generateClientPDF(element, userName = "Report") {
     backgroundColor: "#0a0a0a",
     logging: false,
     ignoreElements: (el) => el.hasAttribute("data-pdf-exclude"),
-    onclone: (clonedDoc) => {
-      // Swap images in the CLONE only — live DOM stays untouched
-      const clonedImgs = clonedDoc.querySelectorAll("img");
-      clonedImgs.forEach((img) => {
-        // Try exact match first, then match by pathname
-        let dataUrl = dataUrlMap.get(img.src);
-        if (!dataUrl) {
-          try {
-            const path = new URL(img.src).pathname;
-            dataUrl = pathMap.get(path);
-          } catch {}
-        }
-        if (dataUrl) {
-          img.src = dataUrl;
-        }
-      });
-    },
   });
 
-  // ── 4. Restore DOM (no image restore needed — we never touched them) ──
+  // ── 4. Restore DOM — swap canvas back to img ──
+  for (const { img, canvas: c } of swaps) {
+    img.style.display = "";
+    c.parentNode.removeChild(c);
+  }
+
   element.style.overflow = origOverflow;
   element.style.height = origHeight;
   origDisplay.forEach(({ el, display }) => { el.style.display = display; });
@@ -138,14 +107,12 @@ export default async function generateClientPDF(element, userName = "Report") {
   // ── 5. Create single continuous PDF (no page breaks) ──
   const imgWidth = canvas.width;
   const imgHeight = canvas.height;
-
-  // Calculate PDF height to match content aspect ratio
   const pdfHeightPt = (imgHeight / imgWidth) * PDF_WIDTH_PT;
 
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "pt",
-    format: [PDF_WIDTH_PT, pdfHeightPt], // custom single-page size
+    format: [PDF_WIDTH_PT, pdfHeightPt],
   });
 
   const imgDataUrl = canvas.toDataURL("image/jpeg", 0.92);
