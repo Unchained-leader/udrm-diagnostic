@@ -683,7 +683,7 @@ export default function OverviewPage() {
           <Reveal idx={nextRevealIdx()}>
           <ResultCard title="Strategy Audit">
             <div style={{ fontSize: 17, color: "#888", marginBottom: 12 }}>
-              {a.strategiesCount || 0} strategies tried over {a.yearsFighting || "many"} years
+              {a.strategiesCount || 0} strategies tried over {String(a.yearsFighting || "many").replace(/^over\s+/i, "")} years
             </div>
             {a.strategyBreakdowns.map((s, i) => (
               <ContentBlock key={i} title={s.strategy} body={`Targeted: ${s.targeted}\n\n${s.explanation}`} borderColor={GOLD} />

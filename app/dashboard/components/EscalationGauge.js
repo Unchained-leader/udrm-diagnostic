@@ -139,11 +139,15 @@ export default function EscalationGauge({ severity, years }) {
       </div>
 
       <p style={{ fontSize: 17, color: "#888", marginTop: 14, lineHeight: 1.7 }}>
-        {s >= 4
-          ? `Over ${years || "many"} years, your pattern has escalated significantly. The brain requires increasing intensity to achieve the same dopamine response. Without root-level intervention, this trajectory continues. This is neurological tolerance, not moral failure.`
-          : s >= 2
-          ? `Over ${years || "many"} years, some escalation is present. The brain is beginning to seek more intensity. The dotted line shows where this trajectory leads without root-level intervention.`
-          : `Over ${years || "many"} years, minimal escalation has been detected. Addressing root causes now prevents the trajectory shift shown in the projected line.`}
+        {(() => {
+          // Clean years value: strip leading "Over"/"over" to avoid "Over Over 20"
+          const cleanYears = String(years || "many").replace(/^over\s+/i, "").trim();
+          return s >= 4
+            ? `Over ${cleanYears} years, your pattern has escalated significantly. The brain requires increasing intensity to achieve the same dopamine response. Without root-level intervention, this trajectory continues. This is neurological tolerance, not moral failure.`
+            : s >= 2
+            ? `Over ${cleanYears} years, some escalation is present. The brain is beginning to seek more intensity. The dotted line shows where this trajectory leads without root-level intervention.`
+            : `Over ${cleanYears} years, minimal escalation has been detected. Addressing root causes now prevents the trajectory shift shown in the projected line.`;
+        })()}
       </p>
 
       <div style={{ marginTop: 16, padding: "16px 20px", background: "#111", borderLeft: `3px solid ${GOLD}`, borderRadius: "0 8px 8px 0" }}>
