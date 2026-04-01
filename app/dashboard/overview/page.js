@@ -760,7 +760,7 @@ export default function OverviewPage() {
             <div style={{ position: "absolute", left: 47, top: 0, bottom: 28, width: 2, background: "linear-gradient(to bottom, " + GOLD + ", #333 37%, #222 100%)" }} />
 
             {[
-              { phase: 1, title: "Understanding", desc: "Your diagnostic revealed the system of root narratives driving your pattern.", progress: 37, active: true, complete: false },
+              { phase: 1, title: "Understanding", desc: "Your diagnostic revealed some of the root issues and the patterns that deeper root narratives are driving.", progress: 37, active: true, complete: false },
               { phase: 2, title: "Identifying Your Unique Roots", desc: "Map every root narrative encoded across your story, including the ones you cannot see on your own.", progress: 0, active: false, complete: false },
               { phase: 3, title: "Solving Your Unique Roots", desc: "Restructure each root narrative at the neurological and spiritual level through guided RNR.", progress: 0, active: false, complete: false },
               { phase: 4, title: "Living Without Controlling Urges", desc: "Experience life where unwanted desires no longer have control over you.", progress: 0, active: false, complete: false },
