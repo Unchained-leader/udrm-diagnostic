@@ -871,7 +871,7 @@ export default function OverviewPage() {
           </div>
 
           {/* Secondary options — visually diminished */}
-          <div style={{ display: "grid", gap: 8, opacity: 0.7 }}>
+          <div style={{ display: "grid", gap: 8, opacity: 0.85 }}>
             <ResourceCard
               priority={2}
               label="OPTION 2"
