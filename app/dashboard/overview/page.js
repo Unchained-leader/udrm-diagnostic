@@ -52,29 +52,58 @@ function ContentBlock({ title, body, borderColor }) {
 function ResourceCard({ priority, label, price, title, body, link }) {
   const isPrimary = priority === 1;
   const isFree = price === "FREE";
+
+  if (isPrimary) {
+    // Priority 1: large, bold, impossible to miss
+    return (
+      <div style={{
+        background: "linear-gradient(135deg, #1a1505, #111)",
+        borderRadius: 14, padding: "28px 24px",
+        border: `2px solid ${GOLD}`,
+        marginBottom: 12,
+        boxShadow: `0 0 30px ${GOLD}15`,
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ fontSize: 13, letterSpacing: 2, color: GOLD, textTransform: "uppercase", fontWeight: 700 }}>{label}</div>
+          <div style={{
+            padding: "6px 16px", borderRadius: 6, fontSize: 15, fontWeight: 700,
+            background: "#14532d", color: "#22c55e",
+          }}>{price}</div>
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 700, color: "#fff", marginBottom: 12, lineHeight: 1.3 }}>{title}</div>
+        <p style={{ fontSize: 17, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px" }}>{body}</p>
+        <a href={link} target="_blank" rel="noopener noreferrer" style={{
+          display: "block", textAlign: "center", padding: "16px",
+          background: "linear-gradient(135deg, #DFC468, #9A7730)",
+          color: "#000", fontSize: 15, fontWeight: 700, borderRadius: 10,
+          textDecoration: "none", letterSpacing: 1.5,
+        }}>START HERE — IT&apos;S FREE</a>
+      </div>
+    );
+  }
+
+  // Secondary options: smaller, muted, clearly subordinate
   return (
     <div style={{
-      background: "#111", borderRadius: 10, padding: "20px",
-      border: `1px solid ${isPrimary ? GOLD + "66" : "#2a2a2a"}`,
-      marginBottom: 12,
+      background: "#0d0d0d", borderRadius: 8, padding: "14px 16px",
+      border: "1px solid #1f1f1f",
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <div style={{ fontSize: 10, letterSpacing: 2, color: "#666", textTransform: "uppercase" }}>{label}</div>
         <div style={{
-          padding: "4px 12px", borderRadius: 4, fontSize: 13, fontWeight: 700,
-          background: isFree ? "#14532d" : "#3d2e0a",
-          color: isFree ? "#22c55e" : GOLD,
+          padding: "3px 10px", borderRadius: 4, fontSize: 11, fontWeight: 600,
+          background: isFree ? "#14532d22" : "#3d2e0a44",
+          color: isFree ? "#22c55e88" : `${GOLD}88`,
         }}>{price}</div>
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{title}</div>
-      <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 16px" }}>{body}</p>
+      <div style={{ fontSize: 17, fontWeight: 600, color: "#888", marginBottom: 4 }}>{title}</div>
+      <p style={{ fontSize: 14, lineHeight: 1.6, color: "#555", margin: "0 0 10px" }}>{body}</p>
       <a href={link} target="_blank" rel="noopener noreferrer" style={{
-        display: "block", textAlign: "center", padding: "12px",
-        background: isPrimary ? "linear-gradient(135deg, #DFC468, #9A7730)" : "none",
-        border: isPrimary ? "none" : `1px solid ${GOLD}`,
-        color: isPrimary ? "#000" : GOLD,
-        fontSize: 13, fontWeight: 700, borderRadius: 8, textDecoration: "none", letterSpacing: 1,
-      }}>{isFree ? "ACCESS NOW" : "GET STARTED"}</a>
+        display: "block", textAlign: "center", padding: "8px",
+        background: "none", border: "1px solid #333",
+        color: "#666", fontSize: 11, fontWeight: 600, borderRadius: 6,
+        textDecoration: "none", letterSpacing: 1,
+      }}>{isFree ? "Learn More" : "Learn More"}</a>
     </div>
   );
 }
@@ -835,15 +864,14 @@ export default function OverviewPage() {
             </div>
           </ResultCard>
 
-          {/* Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "8px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
-            <div style={{ fontSize: 11, letterSpacing: 2, color: "#555", whiteSpace: "nowrap" }}>ADDITIONAL RESOURCES</div>
-            <div style={{ flex: 1, height: 1, background: "#2a2a2a" }} />
+          {/* Divider — strong visual break */}
+          <div style={{ padding: "32px 0 16px" }}>
+            <div style={{ height: 1, background: "#1a1a1a" }} />
+            <div style={{ fontSize: 10, letterSpacing: 2, color: "#444", textAlign: "center", marginTop: 12 }}>OTHER RESOURCES</div>
           </div>
 
-          {/* Secondary options — more compact */}
-          <div style={{ display: "grid", gap: 12, padding: "8px 0" }}>
+          {/* Secondary options — visually diminished */}
+          <div style={{ display: "grid", gap: 8, opacity: 0.7 }}>
             <ResourceCard
               priority={2}
               label="OPTION 2"
