@@ -120,7 +120,7 @@ export default function EscalationGauge({ severity, years }) {
             const midX = (p1.sx + p2.sx) / 2;
             const midY = (p1.sy + p2.sy) / 2 + 18;
             return (
-              <text x={midX} y={midY} textAnchor="middle" fontSize={12} fontWeight={600} fill="#ef4444" opacity={0.8}
+              <text x={midX} y={midY} textAnchor="middle" fontSize={15} fontWeight={700} fill="#ef4444" opacity={0.85}
                 transform={`rotate(${angle}, ${midX}, ${midY})`}>
                 Default future
               </text>
