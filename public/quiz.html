@@ -1534,8 +1534,9 @@
         // Small delay for Redis propagation
         await new Promise(r => setTimeout(r, 1000));
 
-        // Generate report (fire and forget — dashboard will poll for results)
-        generateAndSendReport();
+        // Generate report — MUST complete before redirect so the
+        // "queued" status is set in Redis before the dashboard loads
+        await generateAndSendReport();
 
         // Meta pixel: Report Generated
         if (typeof fbq === "function") {
@@ -1616,8 +1617,9 @@
 
         await new Promise(r => setTimeout(r, 1000));
 
-        // Generate report
-        generateAndSendReport();
+        // Generate report — MUST complete before redirect so the
+        // "queued" status is set in Redis before the dashboard loads
+        await generateAndSendReport();
 
         clearState();
 

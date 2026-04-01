@@ -31,11 +31,11 @@ export async function GET(request) {
     const status = await redis.get(`mkt:status:${email}`);
     const statusData = parseRedis(status);
     const isActivelyProcessing = statusData &&
-      (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready") &&
+      (statusData.step === "queued" || statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready") &&
       statusData.startedAt && (Date.now() - new Date(statusData.startedAt).getTime() < 5 * 60 * 1000); // within last 5 min
 
     if (!analysis) {
-      if (statusData && (statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready" || statusData.step === "emailed")) {
+      if (statusData && (statusData.step === "queued" || statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready" || statusData.step === "emailed")) {
         return Response.json({
           success: true,
           processing: true,

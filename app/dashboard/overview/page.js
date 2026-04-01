@@ -280,8 +280,9 @@ export default function OverviewPage() {
 
   if (processing || !a) {
     const statusMsg = processingStatus?.message || "Analyzing your responses...";
-    const statusStep = processingStatus?.step || "analyzing";
+    const statusStep = processingStatus?.step || "queued";
     const progressMessages = [
+      { step: "queued", label: "Preparing your diagnostic", detail: "Your responses have been received. Your report is being queued for analysis." },
       { step: "analyzing", label: "Analyzing your responses", detail: "Your conversation is being read at the root level. Every answer you gave is being mapped." },
       { step: "complete", label: "Building your root map", detail: "Your personalized diagnostic sections are being assembled now." },
       { step: "pdf_ready", label: "Generating your PDF report", detail: "A downloadable copy of your full report is being created." },
