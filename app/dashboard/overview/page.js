@@ -441,6 +441,34 @@ export default function OverviewPage() {
           </Reveal>
         )}
 
+        {/* Prepare Your Mind — Mason's personal message */}
+        <Reveal idx={nextRevealIdx()}>
+        <div style={{
+          background: CARD_BG,
+          borderRadius: 16,
+          padding: "40px 32px",
+          borderLeft: `3px solid ${GOLD}`,
+          margin: "0 0 20px",
+        }}>
+          <h3 style={{ fontFamily: "'Cinzel', serif", color: GOLD, fontSize: 20, fontWeight: 700, marginBottom: 20 }}>
+            Prepare Your Mind
+          </h3>
+          <div style={{ fontSize: 17, lineHeight: 1.8, color: "#999" }}>
+            <p style={{ marginBottom: 16 }}>What we are about to dive into may feel extremely heavy and I want to expose a lie that I bought for most of my life.</p>
+            <p style={{ marginBottom: 16 }}>I believed I was one of the few men with a mind as twisted as mine was.</p>
+            <p style={{ marginBottom: 16 }}>God exposed this lie for me in a powerful way, so I want to share that gift with you.</p>
+            <p style={{ marginBottom: 16 }}>As I&apos;m writing this, over 500,000 have connected with Unchained Leader products in some form.</p>
+            <p style={{ marginBottom: 16 }}>Over 10,000 have come through our core programs.</p>
+            <p style={{ marginBottom: 16 }}>Thousands of men are working towards conquering the very things this report is going to uncover for you, and I&apos;ve watched thousands of men break these exact chains.</p>
+            <p style={{ marginBottom: 16 }}>Even that, is a small portion of the millions of others who haven&apos;t taken steps towards freedom like you&apos;re doing today.</p>
+            <p style={{ marginBottom: 16 }}>You are one of the majority who are battling these exact things, not the minority like I felt for most my life.</p>
+            <p style={{ marginBottom: 16, color: GOLD, fontWeight: 600 }}>Lean into the light.</p>
+            <p style={{ marginBottom: 24 }}>The freedom God had for me, is for you too.</p>
+            <p style={{ fontStyle: "italic", color: GOLD, fontSize: 18 }}>&mdash; Mason</p>
+          </div>
+        </div>
+        </Reveal>
+
         {/* Behavior Root Map — fully expanded */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard title="Behavior-Root Map">
