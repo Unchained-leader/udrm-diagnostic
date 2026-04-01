@@ -104,6 +104,7 @@ export default function Dashboard() {
     { id: "locations", label: "Locations" },
     { id: "health", label: "System Health" },
     { id: "export", label: "Export" },
+    { id: "clients", label: "Clients" },
   ];
 
   return (
@@ -162,6 +163,7 @@ export default function Dashboard() {
         {tab === "locations" && <LocationsView product={product} />}
         {tab === "health" && <HealthView />}
         {tab === "export" && <ExportView product={product} days={days} />}
+        {tab === "clients" && <ClientsView />}
       </div>
     </div>
   );
@@ -1448,6 +1450,138 @@ function BarChart({ items, color, maxOverride }) {
 
 function Empty({ msg }) {
   return <div style={{ color: "#555", padding: 30, textAlign: "center", fontSize: 15 }}>{msg}</div>;
+}
+
+// ═══ CLIENT LOOKUP ═══
+function ClientsView() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [expanded, setExpanded] = useState(null); // email of expanded row
+  const getSecret = () => typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+
+  const search = async () => {
+    if (!query || query.length < 2) return;
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/admin/clients?secret=${encodeURIComponent(getSecret())}&q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.clients);
+      }
+    } catch (e) { console.error(e); }
+    setSearching(false);
+  };
+
+  const viewDashboard = async (email) => {
+    try {
+      const res = await fetch(`/api/admin/impersonate?secret=${encodeURIComponent(getSecret())}&email=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        window.open(data.url, "_blank");
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  return (
+    <div>
+      {/* Search bar */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+        <input
+          type="text" placeholder="Search by name or email..."
+          value={query} onChange={e => setQuery(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && search()}
+          style={{ flex: 1, padding: "12px 16px", background: "#111", border: "1px solid #333", borderRadius: 8, color: "#fff", fontSize: 15 }}
+        />
+        <button onClick={search} disabled={searching}
+          style={{ padding: "12px 24px", background: "#c5a55a", color: "#000", border: "none", borderRadius: 8, fontWeight: 700, fontSize: 14, cursor: "pointer", opacity: searching ? 0.6 : 1 }}>
+          {searching ? "Searching..." : "Search"}
+        </button>
+      </div>
+
+      {/* Results */}
+      {results && results.length === 0 && (
+        <div style={{ color: "#666", textAlign: "center", padding: 40 }}>No clients found for "{query}"</div>
+      )}
+      {results && results.length > 0 && (
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>{results.length} client{results.length > 1 ? "s" : ""} found</div>
+          {results.map(client => (
+            <div key={client.email} style={{ background: "#111", borderRadius: 10, border: "1px solid #222", overflow: "hidden" }}>
+              {/* Main row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 16, alignItems: "center", padding: "14px 16px", cursor: "pointer" }}
+                onClick={() => setExpanded(expanded === client.email ? null : client.email)}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{client.name || "Unknown"}</div>
+                  <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{client.email}</div>
+                  {client.location && <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{client.location}</div>}
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#c5a55a" }}>{client.reportCount}</div>
+                  <div style={{ fontSize: 10, color: "#666" }}>REPORTS</div>
+                </div>
+                <div style={{ fontSize: 12, color: "#666" }}>
+                  {client.latestReportDate ? new Date(client.latestReportDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); viewDashboard(client.email); }}
+                  style={{ padding: "8px 14px", background: "none", border: "1px solid #c5a55a", color: "#c5a55a", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", letterSpacing: 1, whiteSpace: "nowrap" }}>
+                  VIEW DASHBOARD
+                </button>
+              </div>
+
+              {/* Expanded detail */}
+              {expanded === client.email && (
+                <div style={{ padding: "0 16px 14px", borderTop: "1px solid #1f1f1f" }}>
+                  <div style={{ fontSize: 11, color: "#666", marginTop: 12, marginBottom: 8, letterSpacing: 1 }}>DIAGNOSTIC PROFILE</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
+                      <div style={{ fontSize: 10, color: "#555" }}>TEMPLATE</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.arousalTemplateType || "—"}</div>
+                    </div>
+                    <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
+                      <div style={{ fontSize: 10, color: "#555" }}>NEUROPATHWAY</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.neuropathway || "—"}</div>
+                    </div>
+                    <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
+                      <div style={{ fontSize: 10, color: "#555" }}>ATTACHMENT</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.attachmentStyle || "—"}</div>
+                    </div>
+                  </div>
+
+                  {/* Report history */}
+                  {client.allReports.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 11, color: "#666", marginBottom: 8, letterSpacing: 1 }}>REPORT HISTORY</div>
+                      {client.allReports.map((r, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #1a1a1a" }}>
+                          <div>
+                            <span style={{ fontSize: 12, color: "#888" }}>Report #{r.index}</span>
+                            <span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>
+                              {r.generatedAt ? new Date(r.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "—"}
+                            </span>
+                          </div>
+                          {r.reportUrl && (
+                            <a href={r.reportUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize: 11, color: "#c5a55a", textDecoration: "none" }}>PDF ↗</a>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!results && (
+        <div style={{ color: "#555", textAlign: "center", padding: 60, fontSize: 15 }}>
+          Search for a client by name or email to view their records, reports, and dashboard.
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ═══ STYLES ═══

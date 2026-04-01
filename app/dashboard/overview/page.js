@@ -130,6 +130,24 @@ export default function OverviewPage() {
   const searchParams = useSearchParams();
   const isPrintMode = searchParams.get("print") === "true";
 
+  // If a token is in the URL (admin impersonation or quiz redirect), set it as a cookie
+  useEffect(() => {
+    const urlToken = searchParams.get("token");
+    if (urlToken) {
+      fetch("/api/dashboard/set-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token: urlToken }),
+      }).then(() => {
+        // Remove token from URL without reloading
+        const url = new URL(window.location.href);
+        url.searchParams.delete("token");
+        window.history.replaceState({}, "", url.toString());
+      }).catch(() => {});
+    }
+  }, [searchParams]);
+
   // Timer that ticks every second while in processing state
   useEffect(() => {
     if (!processing && data?.analysis) return;
