@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ResultCard from "../components/ResultCard";
@@ -108,7 +108,15 @@ function ResourceCard({ priority, label, price, title, body, link }) {
   );
 }
 
-export default function OverviewPage() {
+export default function OverviewPageWrapper() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>Loading...</div>}>
+      <OverviewPage />
+    </Suspense>
+  );
+}
+
+function OverviewPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
