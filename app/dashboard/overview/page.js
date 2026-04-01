@@ -392,7 +392,7 @@ export default function OverviewPage() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, paddingBottom: 16, borderBottom: "1px solid #1f1f1f" }}>
         <div>
-          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, textTransform: "uppercase" }}>Unchained Leader</div>
+          <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, textTransform: "uppercase" }}>Unchained Analytics</div>
           <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Your Root Mapping Results</div>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
