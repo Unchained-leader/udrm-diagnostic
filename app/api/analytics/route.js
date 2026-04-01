@@ -414,6 +414,11 @@ export async function GET(request) {
         topLocations,
       }, { headers: CORS_HEADERS });
 
+    } else if (view === "export") {
+      // Export tab renders client-side download links to /api/analytics/export;
+      // no server-side data needed, just return an empty success response.
+      return Response.json({}, { headers: CORS_HEADERS });
+
     } else if (view === "trends") {
       // Daily event counts for current period + previous period (for overlay comparison)
       const metric = searchParams.get("metric") || "quiz_start";
