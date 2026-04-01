@@ -46,29 +46,35 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "none";
   });
 
-  // ── 2. Preload all images so html2canvas can capture them ──
+  // ── 2. Convert all images to inline data URLs ──
+  // html2canvas struggles with images even on same-origin.
+  // Converting to data URLs guarantees they render in the capture.
   const images = element.querySelectorAll("img");
+  const origSrcs = [];
   await Promise.all(
-    Array.from(images).map(
-      (img) =>
-        new Promise((resolve) => {
-          if (img.complete && img.naturalHeight > 0) return resolve();
-          // Force reload with crossOrigin to avoid taint
-          const src = img.src;
-          img.crossOrigin = "anonymous";
-          img.src = "";
-          img.src = src;
-          img.onload = resolve;
-          img.onerror = resolve; // don't block on broken images
-        })
-    )
+    Array.from(images).map(async (img) => {
+      if (!img.src || img.src.startsWith("data:")) return;
+      origSrcs.push({ el: img, src: img.src });
+      try {
+        const resp = await fetch(img.src);
+        const blob = await resp.blob();
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        img.src = dataUrl;
+      } catch (e) {
+        console.warn("[PDF] Could not inline image:", img.src, e);
+      }
+    })
   );
 
   // ── 3. Capture with html2canvas ──
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
-    useCORS: true,
-    allowTaint: true, // allow same-origin images even if crossOrigin fails
+    useCORS: false,
+    allowTaint: true,
     backgroundColor: "#0a0a0a",
     logging: false,
     ignoreElements: (el) => {
@@ -85,6 +91,8 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transform = transform;
     el.style.transition = "";
   });
+  // Restore original image srcs
+  origSrcs.forEach(({ el, src }) => { el.src = src; });
 
   // ── 5. Create single continuous PDF (no page breaks) ──
   const imgWidth = canvas.width;
