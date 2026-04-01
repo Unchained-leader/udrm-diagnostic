@@ -9,8 +9,9 @@ import { getDb } from "../lib/db";
 import { MARKETING_BIBLE_REPORT_GUIDE } from "../lib/marketing-bible";
 import { corsHeaders, optionsResponse } from "../lib/cors";
 import { normalizeEmail, parseRedis } from "../lib/utils";
+import { Client as QStashClient } from "@upstash/qstash";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 // ═══════════════════════════════════════════════════════════════
 // UNCHAINED LEADER — ROOT GENRE DIAGNOSTIC REPORT (2-3 pages)
@@ -124,8 +125,48 @@ export async function POST(request) {
       return Response.json({ error: "No diagnostic data found." }, { status: 400, headers: CORS_HEADERS });
     }
 
+    // Store diagnostic data in Redis so the background worker can access it
+    await redis.set(`mkt:diagnostic:${normalizedEmail}`, { messages }, { ex: 3600 });
+
     // Set processing status so dashboard can show progress
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "analyzing", message: "Analyzing your responses...", startedAt: new Date().toISOString() }, { ex: 3600 });
+
+    // ═══════════════════════════════════════
+    // ENQUEUE TO QSTASH FOR BACKGROUND PROCESSING
+    // Returns immediately — heavy work runs async
+    // ═══════════════════════════════════════
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
+    const qstash = new QStashClient({ token: process.env.QSTASH_TOKEN });
+    await qstash.publishJSON({
+      url: `${appUrl}/api/report/process`,
+      body: { email: normalizedEmail, name: userName, gender, ageRange, geo },
+      retries: 3,
+      deduplicationId: `report-${normalizedEmail}-${Date.now()}`,
+    });
+
+    return Response.json({ success: true, message: "Report queued", status: "processing" }, { headers: CORS_HEADERS });
+  } catch (error) {
+    console.error("Report enqueue error:", error.message || error);
+    console.error("Error stack:", error.stack);
+    return Response.json({ error: `Failed to queue report: ${error.message || "unknown error"}` }, { status: 500, headers: CORS_HEADERS });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORTED: processReport — called by /api/report/process (QStash background worker)
+// ═══════════════════════════════════════════════════════════════
+export async function processReport({ email, name, gender, ageRange, geo }) {
+  const normalizedEmail = normalizeEmail(email);
+  const lockKey = `mkt:lock:${normalizedEmail}`;
+  const userName = name || "Brother";
+  const firstName = userName.split(" ")[0];
+
+  try {
+    // Get diagnostic messages from Redis
+    const stored = await redis.get(`mkt:diagnostic:${normalizedEmail}`);
+    const parsed = typeof stored === "string" ? JSON.parse(stored) : stored;
+    const messages = parsed?.messages || [];
+    if (!messages.length) throw new Error("No diagnostic data found in Redis");
 
     // Analyze with Claude (with retry for transient failures)
     const analysisStart = Date.now();
@@ -135,16 +176,11 @@ export async function POST(request) {
     function cleanStr(s) {
       if (!s) return s;
       return s
-        // Em dashes to commas
         .replace(/\u2014/g, ",").replace(/ — /g, ", ").replace(/— /g, ", ").replace(/ —/g, ",").replace(/—/g, ",")
-        // Strip internal identifiers like (tab_incest), (conf_wife_others), etc.
         .replace(/\s*\((?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\)/gi, "")
-        // Strip standalone identifiers like "tab_incest" without parens
         .replace(/\b(?:tab|conf|val|pow|sur|voy|ten|nov|cod|enm|void|lead|god|anx|avoid|fear|sec|home|dad|mom|church)_[a-z_]+\b/gi, "")
-        // Replace "Brother," with first name
         .replace(/^Brother,/i, `${firstName || "Brother"},`)
         .replace(/\bBrother,\b/g, `${firstName || "Brother"},`)
-        // Replace "clinical" when describing our process (not when referencing research)
         .replace(/\bclinical process\b/gi, "specialized process")
         .replace(/\bclinical approach\b/gi, "specialized approach")
         .replace(/\bclinical program\b/gi, "structured program")
@@ -152,7 +188,6 @@ export async function POST(request) {
         .replace(/\bclinical clarity\b/gi, "clear insight")
         .replace(/\bclinical explanation\b/gi, "research-backed explanation")
         .replace(/\bclinical reason\b/gi, "specific reason")
-        // Clean up double spaces left behind
         .replace(/  +/g, " ").trim();
     }
     function sanitizeObj(obj) {
@@ -173,14 +208,13 @@ export async function POST(request) {
 
     // ═══════════════════════════════════════
     // STORE DASHBOARD DATA FIRST (PRIORITY)
-    // Dashboard works even if PDF generation fails
     // ═══════════════════════════════════════
     const reportMeta = {
       generatedAt: new Date().toISOString(),
       arousalTemplateType: analysis.arousalTemplateType,
       attachmentStyle: analysis.attachmentStyle,
       neuropathway: analysis.neuropathway,
-      reportUrl: null, // Will be updated after PDF upload
+      reportUrl: null,
     };
     await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
     await redis.set(`mkt:analysis:${normalizedEmail}`, analysis, { ex: 2592000 });
@@ -198,191 +232,130 @@ export async function POST(request) {
 
     // ═══════════════════════════════════════
     // GENERATE PDF + EMAIL (SECONDARY)
-    // Wrapped in try/catch so failures don't affect dashboard
     // ═══════════════════════════════════════
     let reportUrl = null;
 
     try {
-    // Generate PDF
-    let pdfResult;
-    try {
-      pdfResult = await generatePDF(analysis, firstName, { gender });
-    } catch (pdfErr) {
-      console.error("PDF GENERATION CRASHED:", pdfErr.message);
-      console.error("PDF crash stack:", pdfErr.stack);
-      throw pdfErr;
-    }
-    let pdfBuffer = pdfResult.buffer;
-
-    // ═══════════════════════════════════════
-    // QC CHECK — validate PDF before sending
-    // ═══════════════════════════════════════
-    const qcIssues = [];
-    const pdfStr = pdfBuffer.toString("latin1");
-
-    // 1. Page count — expect 15-30 pages
-    const pageCount = (pdfStr.match(/\/Type\s*\/Page[^s]/g) || []).length;
-    if (pageCount < 10) qcIssues.push(`Low page count: ${pageCount} (expected 15+)`);
-    if (pageCount > 40) qcIssues.push(`High page count: ${pageCount} (expected under 35)`);
-
-    // 2. File size — expect 30KB-500KB
-    const sizeKB = Math.round(pdfBuffer.length / 1024);
-    if (sizeKB < 20) qcIssues.push(`File too small: ${sizeKB}KB (expected 30KB+)`);
-
-    // 3. Blank/near-blank page detection using content position tracking
-    const contentLog = pdfResult.pageContentLog;
-    const MIN_CONTENT_Y = 150; // pages with content ending before y=150 are nearly blank
-    const pageEndPositions = {};
-    for (const entry of contentLog) {
-      // Track the maximum y (most content) per page
-      if (!pageEndPositions[entry.page] || entry.endY > pageEndPositions[entry.page]) {
-        pageEndPositions[entry.page] = entry.endY;
+      let pdfResult;
+      try {
+        pdfResult = await generatePDF(analysis, firstName, { gender });
+      } catch (pdfErr) {
+        console.error("PDF GENERATION CRASHED:", pdfErr.message);
+        throw pdfErr;
       }
-    }
-    const blankPages = [];
-    for (const [page, endY] of Object.entries(pageEndPositions)) {
-      const p = parseInt(page);
-      if (p === 1) continue; // skip cover page (uses absolute positioning)
-      if (p === pdfResult.pageNum) continue; // skip last page (may have less content)
-      if (endY < MIN_CONTENT_Y) {
-        blankPages.push(`page ${p} (content ends at y=${Math.round(endY)})`);
-      }
-    }
-    if (blankPages.length > 0) {
-      qcIssues.push(`Near-blank pages detected: ${blankPages.join(", ")}`);
-    }
+      let pdfBuffer = pdfResult.buffer;
 
-    // 4. Check for essential content markers
-    const hasScorecard = pdfStr.includes("Results at a Glance") || pdfStr.includes("RESULTS AT A GLANCE");
-    const hasTemplate = pdfStr.includes("AROUSAL TEMPLATE") || pdfStr.includes("Arousal Template");
-    const hasNextSteps = pdfStr.includes("PRIORITIZED NEXT STEPS") || pdfStr.includes("Priority");
-    if (!hasScorecard) qcIssues.push("Missing: Results at a Glance section");
-    if (!hasTemplate) qcIssues.push("Missing: Arousal Template section");
-    if (!hasNextSteps) qcIssues.push("Missing: Next Steps section");
+      // ═══════════════════════════════════════
+      // QC CHECK — validate PDF before sending
+      // ═══════════════════════════════════════
+      const qcIssues = [];
+      const pdfStr = pdfBuffer.toString("latin1");
 
-    // 5. Check for internal code leaks
-    const codeLeaks = pdfStr.match(/(?:tab_|conf_|val_|pow_|sur_|voy_|ten_|nov_|cod_|enm_|void_|lead_)[a-z_]+/g);
-    if (codeLeaks && codeLeaks.length > 0) qcIssues.push(`Internal codes leaked: ${[...new Set(codeLeaks)].slice(0, 3).join(", ")}`);
+      const pageCount = (pdfStr.match(/\/Type\s*\/Page[^s]/g) || []).length;
+      if (pageCount < 10) qcIssues.push(`Low page count: ${pageCount}`);
+      if (pageCount > 40) qcIssues.push(`High page count: ${pageCount}`);
 
-    // Log QC results
-    if (qcIssues.length > 0) {
-      console.warn(`PDF QC WARNINGS (${qcIssues.length}):`, qcIssues.join(" | "));
-      console.warn("Page content log:", JSON.stringify(contentLog));
-    }
+      const sizeKB = Math.round(pdfBuffer.length / 1024);
+      if (sizeKB < 20) qcIssues.push(`File too small: ${sizeKB}KB`);
 
-    // If any QC issues found, regenerate with tighter spacing to fix layout problems
-    if (qcIssues.length > 0) {
-      console.warn("QC FAILED — regenerating with tighter layout (spacing: 0.85)");
-      const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85, gender });
-      const pdfStr2 = pdfResult2.buffer.toString("latin1");
-      const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
-
-      // Run same QC checks on tightened PDF
-      const qcIssues2 = [];
-
-      // Blank page check
-      const contentLog2 = pdfResult2.pageContentLog;
-      const pageEndPositions2 = {};
-      for (const entry of contentLog2) {
-        if (!pageEndPositions2[entry.page] || entry.endY > pageEndPositions2[entry.page]) {
-          pageEndPositions2[entry.page] = entry.endY;
+      const contentLog = pdfResult.pageContentLog;
+      const MIN_CONTENT_Y = 150;
+      const pageEndPositions = {};
+      for (const entry of contentLog) {
+        if (!pageEndPositions[entry.page] || entry.endY > pageEndPositions[entry.page]) {
+          pageEndPositions[entry.page] = entry.endY;
         }
       }
-      for (const [page, endY] of Object.entries(pageEndPositions2)) {
+      const blankPages = [];
+      for (const [page, endY] of Object.entries(pageEndPositions)) {
         const p = parseInt(page);
-        if (p === 1 || p === pdfResult2.pageNum) continue;
-        if (endY < MIN_CONTENT_Y) qcIssues2.push(`page ${p} still blank`);
+        if (p === 1 || p === pdfResult.pageNum) continue;
+        if (endY < MIN_CONTENT_Y) blankPages.push(`page ${p}`);
       }
+      if (blankPages.length > 0) qcIssues.push(`Near-blank pages: ${blankPages.join(", ")}`);
 
-      // Section check
-      if (!pdfStr2.includes("RESULTS AT A GLANCE") && !pdfStr2.includes("Results at a Glance")) qcIssues2.push("Missing scorecard");
-      if (!pdfStr2.includes("AROUSAL TEMPLATE") && !pdfStr2.includes("Arousal Template")) qcIssues2.push("Missing template");
+      if (!pdfStr.includes("Results at a Glance") && !pdfStr.includes("RESULTS AT A GLANCE")) qcIssues.push("Missing: Scorecard");
+      if (!pdfStr.includes("AROUSAL TEMPLATE") && !pdfStr.includes("Arousal Template")) qcIssues.push("Missing: Template");
+      if (!pdfStr.includes("PRIORITIZED NEXT STEPS") && !pdfStr.includes("Priority")) qcIssues.push("Missing: Next Steps");
 
-      if (qcIssues2.length < qcIssues.length) {
-        pdfBuffer = pdfResult2.buffer;
-      } else if (qcIssues2.length === 0) {
-        pdfBuffer = pdfResult2.buffer;
-      } else {
-        console.warn(`Tighter layout still has ${qcIssues2.length} issues. Using best available.`);
-        // Use whichever has fewer issues
+      const codeLeaks = pdfStr.match(/(?:tab_|conf_|val_|pow_|sur_|voy_|ten_|nov_|cod_|enm_|void_|lead_)[a-z_]+/g);
+      if (codeLeaks && codeLeaks.length > 0) qcIssues.push(`Internal codes leaked: ${[...new Set(codeLeaks)].slice(0, 3).join(", ")}`);
+
+      if (qcIssues.length > 0) {
+        console.warn(`PDF QC WARNINGS: ${qcIssues.join(" | ")}`);
+        const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85, gender });
+        const pdfStr2 = pdfResult2.buffer.toString("latin1");
+        const qcIssues2 = [];
+        const contentLog2 = pdfResult2.pageContentLog;
+        const pageEndPositions2 = {};
+        for (const entry of contentLog2) {
+          if (!pageEndPositions2[entry.page] || entry.endY > pageEndPositions2[entry.page]) pageEndPositions2[entry.page] = entry.endY;
+        }
+        for (const [page, endY] of Object.entries(pageEndPositions2)) {
+          const p = parseInt(page);
+          if (p === 1 || p === pdfResult2.pageNum) continue;
+          if (endY < MIN_CONTENT_Y) qcIssues2.push(`page ${p} still blank`);
+        }
+        if (!pdfStr2.includes("RESULTS AT A GLANCE") && !pdfStr2.includes("Results at a Glance")) qcIssues2.push("Missing scorecard");
+        if (!pdfStr2.includes("AROUSAL TEMPLATE") && !pdfStr2.includes("Arousal Template")) qcIssues2.push("Missing template");
         if (qcIssues2.length <= qcIssues.length) pdfBuffer = pdfResult2.buffer;
       }
-    }
 
-    var finalBuffer = pdfBuffer;
+      const finalBuffer = pdfBuffer;
+      const pdfBase64 = finalBuffer.toString("base64");
 
-    const pdfBase64 = finalBuffer.toString("base64");
-
-    // Upload PDF to Vercel Blob for permanent storage
-    try {
-      const timestamp = Date.now();
-      const blob = await put(
-        `reports/${normalizedEmail.replace(/[^a-z0-9]/g, "-")}/${timestamp}-diagnostic.pdf`,
-        finalBuffer,
-        { access: "public", contentType: "application/pdf" }
-      );
-      reportUrl = blob.url;
-      await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
-    } catch (e) {
-      console.error("Blob upload failed (continuing without URL):", e.message);
-    }
-
-    // Send via Resend (with download link if available)
-    try {
-      await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
-      await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
-    } catch (emailErr) {
-      console.error("Email delivery error:", emailErr.message);
-      await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
-    }
-
-    // Update Redis with PDF URL now that it's available
-    if (reportUrl) {
+      // Upload PDF to Vercel Blob
       try {
-        reportMeta.reportUrl = reportUrl;
-        await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
-        // Update the last history entry with the report URL
-        const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
-        if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
-          updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
-          await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory, { ex: 2592000 });
-        }
-      } catch (redisUpdateErr) {
-        console.error("Redis URL update error (non-fatal):", redisUpdateErr.message);
+        const timestamp = Date.now();
+        const blob = await put(
+          `reports/${normalizedEmail.replace(/[^a-z0-9]/g, "-")}/${timestamp}-diagnostic.pdf`,
+          finalBuffer,
+          { access: "public", contentType: "application/pdf" }
+        );
+        reportUrl = blob.url;
+        await redis.set(`mkt:status:${normalizedEmail}`, { step: "pdf_ready", message: "PDF report generated", reportUrl, completedAt: new Date().toISOString() }, { ex: 3600 });
+      } catch (e) {
+        console.error("Blob upload failed:", e.message);
       }
-    }
 
+      // Send email
+      try {
+        await sendReportEmail(normalizedEmail, firstName, pdfBase64, reportUrl);
+        await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
+      } catch (emailErr) {
+        console.error("Email delivery error:", emailErr.message);
+        await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
+      }
+
+      // Update Redis with PDF URL
+      if (reportUrl) {
+        try {
+          reportMeta.reportUrl = reportUrl;
+          await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
+          const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
+          if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
+            updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
+            await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory, { ex: 2592000 });
+          }
+        } catch (redisUpdateErr) {
+          console.error("Redis URL update error:", redisUpdateErr.message);
+        }
+      }
     } catch (pdfPipelineErr) {
-      // PDF/email pipeline failed — dashboard data is already stored
       console.error("PDF/EMAIL PIPELINE FAILED (dashboard data safe):", pdfPipelineErr.message);
-      console.error("Pipeline error stack:", pdfPipelineErr.stack);
     }
 
-    // Send to GoHighLevel CRM via webhook (with PDF URL)
-    ghlDiagnosticComplete({
-      email: normalizedEmail,
-      name: userName,
-      messages,
-      analysis,
-      reportUrl,
-    }).catch((e) => console.error("GHL webhook error:", e.message));
+    // GoHighLevel CRM webhooks
+    ghlDiagnosticComplete({ email: normalizedEmail, name: userName, messages, analysis, reportUrl }).catch((e) => console.error("GHL webhook error:", e.message));
+    ghlSendReportData({ email: normalizedEmail, name: userName, messages, analysis, reportUrl }).catch((e) => console.error("GHL report webhook error:", e.message));
 
-    // Send report data to Reports | Root Diagnostic workflow (separate webhook)
-    ghlSendReportData({
-      email: normalizedEmail,
-      name: userName,
-      messages,
-      analysis,
-      reportUrl,
-    }).catch((e) => console.error("GHL report webhook error:", e.message));
-
-    // Record analytics: report generated + completed diagnostic
+    // Analytics
     try {
       const sql = getDb();
       await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
-        VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })}, ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon})`;
+        VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })}, ${geo?.ip}, ${geo?.city}, ${geo?.region}, ${geo?.country}, ${geo?.lat}, ${geo?.lon})`;
       await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
-        VALUES (${normalizedEmail}, 'udrm', 'report_emailed', ${JSON.stringify({ email: normalizedEmail })}, ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon})`;
+        VALUES (${normalizedEmail}, 'udrm', 'report_emailed', ${JSON.stringify({ email: normalizedEmail })}, ${geo?.ip}, ${geo?.city}, ${geo?.region}, ${geo?.country}, ${geo?.lat}, ${geo?.lon})`;
       await sql`INSERT INTO completed_diagnostics (
         session_id, email, product, name, arousal_template_type, neuropathway, attachment_style,
         codependency_score, enmeshment_score, relational_void_score, leadership_burden_score,
@@ -395,18 +368,19 @@ export async function POST(request) {
         ${parseInt(analysis.relationalVoidScore) || 0}, ${parseInt(analysis.leadershipBurdenScore) || 0},
         ${analysis.escalationPresent || false}, ${parseInt(analysis.strategiesCount) || 0},
         ${analysis.yearsFighting || null}, ${reportUrl}, NOW(),
-        ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon}
+        ${geo?.ip}, ${geo?.city}, ${geo?.region}, ${geo?.country}, ${geo?.lat}, ${geo?.lon}
       )`;
-    } catch(e) { console.error("Analytics write error (non-fatal):", e.message); }
+    } catch(e) { console.error("Analytics write error:", e.message); }
 
     // Release duplicate submission lock
     await redis.del(lockKey).catch(() => {});
 
-    return Response.json({ success: true, message: "Report sent", reportUrl }, { headers: CORS_HEADERS });
+    return { success: true, reportUrl };
   } catch (error) {
-    console.error("Report generation error:", error.message || error);
-    console.error("Error stack:", error.stack);
-    return Response.json({ error: `Failed to generate report: ${error.message || "unknown error"}` }, { status: 500, headers: CORS_HEADERS });
+    // Release lock on failure
+    await redis.del(lockKey).catch(() => {});
+    await redis.set(`mkt:status:${normalizedEmail}`, { step: "failed", message: "Report generation failed. Please try again.", error: error.message, failedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
+    throw error;
   }
 }
 

@@ -4,6 +4,9 @@
       "maxDuration": 60
     },
     "app/api/report/route.js": {
+      "maxDuration": 60
+    },
+    "app/api/report/process/route.js": {
       "maxDuration": 300
     }
   },
