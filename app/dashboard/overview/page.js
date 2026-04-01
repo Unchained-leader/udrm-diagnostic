@@ -559,7 +559,7 @@ export default function OverviewPage() {
           <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: "0 0 12px" }}>{a.attachmentFuels}</p>
           {a.godAttachment && (
             <div style={{ padding: "12px 16px", background: "#1a1a1a", borderRadius: 8, borderLeft: `3px solid ${GOLD}` }}>
-              <div style={{ fontSize: 11, color: GOLD, letterSpacing: 1, marginBottom: 6 }}>HOW THIS SHOWS UP WITH GOD</div>
+              <div style={{ fontSize: 17, color: GOLD, letterSpacing: 1, fontWeight: 700, marginBottom: 8 }}>HOW THIS SHOWS UP WITH GOD</div>
               <p style={{ fontSize: 17, lineHeight: 1.7, color: "#999", margin: 0 }}>{a.godAttachment}</p>
             </div>
           )}
