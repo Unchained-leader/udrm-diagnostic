@@ -46,74 +46,64 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "none";
   });
 
-  // ── 2. Convert all images to inline data URLs via canvas ──
-  // html2canvas can't reliably capture <img> tags. We draw each
-  // image onto a hidden canvas to produce a data URL, then swap.
+  // ── 2. Pre-build a map of image data URLs ──
+  // We do NOT modify the live DOM. Instead we convert images to data
+  // URLs here, then apply them inside html2canvas's onclone callback
+  // which operates on a cloned copy of the DOM.
   const images = element.querySelectorAll("img");
-  const origSrcs = [];
-
-  function imgToDataUrl(imgEl) {
-    return new Promise((resolve) => {
-      const tryConvert = () => {
-        try {
-          const c = document.createElement("canvas");
-          c.width = imgEl.naturalWidth || imgEl.width || 200;
-          c.height = imgEl.naturalHeight || imgEl.height || 200;
-          const ctx = c.getContext("2d");
-          ctx.drawImage(imgEl, 0, 0, c.width, c.height);
-          resolve(c.toDataURL("image/png"));
-        } catch (e) {
-          console.warn("[PDF] Canvas draw failed for", imgEl.src, e);
-          resolve(null);
-        }
-      };
-      if (imgEl.complete && imgEl.naturalWidth > 0) {
-        tryConvert();
-      } else {
-        // Image not loaded yet — wait for it
-        const fresh = new Image();
-        fresh.onload = () => {
-          try {
-            const c = document.createElement("canvas");
-            c.width = fresh.naturalWidth;
-            c.height = fresh.naturalHeight;
-            c.getContext("2d").drawImage(fresh, 0, 0);
-            resolve(c.toDataURL("image/png"));
-          } catch (e) {
-            resolve(null);
-          }
-        };
-        fresh.onerror = () => resolve(null);
-        fresh.src = imgEl.src;
-      }
-    });
-  }
+  const dataUrlMap = new Map();
 
   for (const img of images) {
-    if (!img.src || img.src.startsWith("data:")) continue;
-    const dataUrl = await imgToDataUrl(img);
-    if (dataUrl) {
-      origSrcs.push({ el: img, src: img.src });
-      img.src = dataUrl;
+    if (!img.src || img.src.startsWith("data:") || dataUrlMap.has(img.src)) continue;
+    try {
+      if (img.complete && img.naturalWidth > 0) {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        c.getContext("2d").drawImage(img, 0, 0);
+        dataUrlMap.set(img.src, c.toDataURL("image/png"));
+      } else {
+        // Load a fresh copy
+        const dataUrl = await new Promise((resolve) => {
+          const fresh = new Image();
+          fresh.onload = () => {
+            try {
+              const c = document.createElement("canvas");
+              c.width = fresh.naturalWidth;
+              c.height = fresh.naturalHeight;
+              c.getContext("2d").drawImage(fresh, 0, 0);
+              resolve(c.toDataURL("image/png"));
+            } catch { resolve(null); }
+          };
+          fresh.onerror = () => resolve(null);
+          fresh.src = img.src;
+        });
+        if (dataUrl) dataUrlMap.set(img.src, dataUrl);
+      }
+    } catch (e) {
+      console.warn("[PDF] Could not convert image:", img.src, e);
     }
   }
 
-  // Let the browser render the swapped data URL images
-  await new Promise(r => setTimeout(r, 100));
-
-  // ── 3. Capture with html2canvas ──
+  // ── 3. Capture with html2canvas (using onclone to fix images) ──
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: false,
     allowTaint: true,
     backgroundColor: "#0a0a0a",
     logging: false,
-    ignoreElements: (el) => {
-      return el.hasAttribute("data-pdf-exclude");
+    ignoreElements: (el) => el.hasAttribute("data-pdf-exclude"),
+    onclone: (clonedDoc) => {
+      // Swap images in the CLONE only — live DOM stays untouched
+      const clonedImgs = clonedDoc.querySelectorAll("img");
+      clonedImgs.forEach((img) => {
+        const dataUrl = dataUrlMap.get(img.src);
+        if (dataUrl) img.src = dataUrl;
+      });
     },
   });
 
-  // ── 4. Restore DOM ──
+  // ── 4. Restore DOM (no image restore needed — we never touched them) ──
   element.style.overflow = origOverflow;
   element.style.height = origHeight;
   origDisplay.forEach(({ el, display }) => { el.style.display = display; });
@@ -122,8 +112,6 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transform = transform;
     el.style.transition = "";
   });
-  // Restore original image srcs
-  origSrcs.forEach(({ el, src }) => { el.src = src; });
 
   // ── 5. Create single continuous PDF (no page breaks) ──
   const imgWidth = canvas.width;
