@@ -112,7 +112,7 @@ export default function EscalationGauge({ severity, years }) {
           <rect x={nowX - 20} y={PAD.top - 2} width={40} height={18} rx={3} fill={GOLD} />
           <text x={nowX} y={PAD.top + 11} textAnchor="middle" fontSize={11} fontWeight={700} fill="#000">NOW</text>
 
-          {/* "Default trajectory" label — angled to follow the dotted line, below it */}
+          {/* "Default future" label — angled to follow the dotted line, below it */}
           {futurePoints.length > 3 && (() => {
             const p1 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.3)]);
             const p2 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.7)]);
@@ -122,7 +122,7 @@ export default function EscalationGauge({ severity, years }) {
             return (
               <text x={midX} y={midY} textAnchor="middle" fontSize={12} fontWeight={600} fill="#ef4444" opacity={0.8}
                 transform={`rotate(${angle}, ${midX}, ${midY})`}>
-                Default trajectory
+                Default future
               </text>
             );
           })()}
