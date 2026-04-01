@@ -437,6 +437,7 @@ export default function OverviewPage() {
         <div style={{ width: 60, height: 2, background: GOLD, margin: "0 auto 20px" }} />
         <div style={{ fontSize: 19, color: "#ccc" }}>Personalized for {name}</div>
         <div style={{ fontSize: 17, color: "#888", marginTop: 6 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+        <div style={{ fontSize: 14, color: "#666", marginTop: 4 }}>{activeGeneratedAt ? new Date(activeGeneratedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}</div>
         <div style={{ fontSize: 11, color: "#555", letterSpacing: 3, marginTop: 12 }}>CONFIDENTIAL</div>
         <div style={{ fontSize: 13, color: "#666", marginTop: 16, maxWidth: 500, margin: "16px auto 0", lineHeight: 1.5 }}>
           This diagnostic was developed by Mason Cain, PSAP, PMAP, credentialed through the International Institute for Trauma and Addiction Professionals. Unchained Leader is a LegitScript-certified program.

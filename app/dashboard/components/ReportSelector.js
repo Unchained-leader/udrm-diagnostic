@@ -10,7 +10,10 @@ export default function ReportSelector({ reports, activeIndex, onSelect }) {
   const active = reports[activeIndex];
   const formatDate = (iso, index) => {
     if (!iso) return `Report #${index + 1}`;
-    return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    const d = new Date(iso);
+    const date = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return `${date} at ${time}`;
   };
 
   return (
