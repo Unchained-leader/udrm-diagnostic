@@ -1,5 +1,3 @@
-import chromium from "@sparticuz/chromium";
-import puppeteerCore from "puppeteer-core";
 import { createDashboardToken } from "../../lib/auth";
 
 export const maxDuration = 120; // 2 minutes for chromium cold start + render
@@ -26,6 +24,10 @@ export async function POST(request) {
 
   let browser = null;
   try {
+    // Dynamic imports — these are large binaries that must not be loaded at build time
+    const chromium = (await import("@sparticuz/chromium")).default;
+    const puppeteerCore = (await import("puppeteer-core")).default;
+
     // Generate a temporary JWT for the dashboard
     const token = await createDashboardToken(email, "User");
 
