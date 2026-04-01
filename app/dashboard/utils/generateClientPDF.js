@@ -5,12 +5,11 @@ import { jsPDF } from "jspdf";
 
 // ═══════════════════════════════════════════════════════════════
 // Client-side PDF generator — captures the dashboard as-rendered
-// and produces a pixel-perfect multi-page PDF.
+// and produces a single continuous PDF (no page breaks).
 // ═══════════════════════════════════════════════════════════════
 
-const LETTER_W = 612; // points
-const LETTER_H = 792;
-const PDF_SCALE = 2;  // 2x for retina-quality output
+const PDF_WIDTH_PT = 612; // letter width in points
+const PDF_SCALE = 2;      // 2x for retina-quality output
 
 /**
  * Capture a DOM element and generate a downloadable PDF.
@@ -70,51 +69,21 @@ export default async function generateClientPDF(element, userName = "Report") {
     el.style.transition = "";
   });
 
-  // ── 4. Slice canvas into pages ──
+  // ── 4. Create single continuous PDF (no page breaks) ──
   const imgWidth = canvas.width;
   const imgHeight = canvas.height;
 
-  // PDF page dimensions in canvas pixels
-  const pageWidthPx = imgWidth;
-  const pageHeightPx = (LETTER_H / LETTER_W) * imgWidth;
-
-  const totalPages = Math.ceil(imgHeight / pageHeightPx);
+  // Calculate PDF height to match content aspect ratio
+  const pdfHeightPt = (imgHeight / imgWidth) * PDF_WIDTH_PT;
 
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "pt",
-    format: "letter",
+    format: [PDF_WIDTH_PT, pdfHeightPt], // custom single-page size
   });
 
-  for (let page = 0; page < totalPages; page++) {
-    if (page > 0) pdf.addPage();
-
-    // Create a slice canvas for this page
-    const sliceCanvas = document.createElement("canvas");
-    sliceCanvas.width = pageWidthPx;
-    const sliceHeight = Math.min(pageHeightPx, imgHeight - page * pageHeightPx);
-    sliceCanvas.height = sliceHeight;
-
-    const ctx = sliceCanvas.getContext("2d");
-    // Fill background in case the slice is shorter than a full page
-    ctx.fillStyle = "#0a0a0a";
-    ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-
-    // Draw the portion of the full canvas for this page
-    ctx.drawImage(
-      canvas,
-      0, page * pageHeightPx,           // source x, y
-      pageWidthPx, sliceHeight,          // source width, height
-      0, 0,                              // dest x, y
-      pageWidthPx, sliceHeight           // dest width, height
-    );
-
-    const sliceDataUrl = sliceCanvas.toDataURL("image/jpeg", 0.92);
-
-    // Scale to fill the PDF page
-    const pdfImgHeight = (sliceHeight / pageWidthPx) * LETTER_W;
-    pdf.addImage(sliceDataUrl, "JPEG", 0, 0, LETTER_W, pdfImgHeight);
-  }
+  const imgDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+  pdf.addImage(imgDataUrl, "JPEG", 0, 0, PDF_WIDTH_PT, pdfHeightPt);
 
   // ── 5. Download ──
   const date = new Date().toISOString().split("T")[0];
