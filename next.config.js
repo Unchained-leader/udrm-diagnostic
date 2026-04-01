@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // PDFKit needs access to font files on disk
-  serverExternalPackages: ["pdfkit"],
+  serverExternalPackages: ["pdfkit", "@sparticuz/chromium"],
   experimental: {
-    serverComponentsExternalPackages: ["pdfkit"],
+    serverComponentsExternalPackages: ["pdfkit", "@sparticuz/chromium"],
   },
   // Allow CORS for GoHighLevel embedding
   async headers() {

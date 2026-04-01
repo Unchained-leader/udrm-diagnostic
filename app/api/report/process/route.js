@@ -136,113 +136,28 @@ export async function POST(request) {
     let reportUrl = null;
 
     try {
-    // Generate PDF
-    let pdfResult;
-    try {
-      pdfResult = await generatePDF(analysis, firstName, { gender });
-    } catch (pdfErr) {
-      console.error("PDF GENERATION CRASHED:", pdfErr.message);
-      console.error("PDF crash stack:", pdfErr.stack);
-      throw pdfErr;
+    // Generate PDF via headless browser capture of the dashboard
+    console.log(`[QStash] Capturing dashboard PDF for ${normalizedEmail}`);
+    const captureUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/capture`;
+    const captureRes = await fetch(captureUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: normalizedEmail, secret: process.env.QSTASH_TOKEN }),
+    });
+
+    let finalBuffer;
+    if (captureRes.ok) {
+      const arrayBuf = await captureRes.arrayBuffer();
+      finalBuffer = Buffer.from(arrayBuf);
+      console.log(`[QStash] Dashboard PDF captured: ${Math.round(finalBuffer.length / 1024)}KB`);
+    } else {
+      const errText = await captureRes.text();
+      console.error(`[QStash] Dashboard capture failed (${captureRes.status}): ${errText}`);
+      // Fallback to PDFKit if capture fails
+      console.log("[QStash] Falling back to PDFKit generation");
+      const pdfResult = await generatePDF(analysis, firstName, { gender });
+      finalBuffer = pdfResult.buffer;
     }
-    let pdfBuffer = pdfResult.buffer;
-
-    // ═══════════════════════════════════════
-    // QC CHECK — validate PDF before sending
-    // ═══════════════════════════════════════
-    const qcIssues = [];
-    const pdfStr = pdfBuffer.toString("latin1");
-
-    // 1. Page count — expect 15-30 pages
-    const pageCount = (pdfStr.match(/\/Type\s*\/Page[^s]/g) || []).length;
-    if (pageCount < 10) qcIssues.push(`Low page count: ${pageCount} (expected 15+)`);
-    if (pageCount > 40) qcIssues.push(`High page count: ${pageCount} (expected under 35)`);
-
-    // 2. File size — expect 30KB-500KB
-    const sizeKB = Math.round(pdfBuffer.length / 1024);
-    if (sizeKB < 20) qcIssues.push(`File too small: ${sizeKB}KB (expected 30KB+)`);
-
-    // 3. Blank/near-blank page detection using content position tracking
-    const contentLog = pdfResult.pageContentLog;
-    const MIN_CONTENT_Y = 150; // pages with content ending before y=150 are nearly blank
-    const pageEndPositions = {};
-    for (const entry of contentLog) {
-      // Track the maximum y (most content) per page
-      if (!pageEndPositions[entry.page] || entry.endY > pageEndPositions[entry.page]) {
-        pageEndPositions[entry.page] = entry.endY;
-      }
-    }
-    const blankPages = [];
-    for (const [page, endY] of Object.entries(pageEndPositions)) {
-      const p = parseInt(page);
-      if (p === 1) continue; // skip cover page (uses absolute positioning)
-      if (p === pdfResult.pageNum) continue; // skip last page (may have less content)
-      if (endY < MIN_CONTENT_Y) {
-        blankPages.push(`page ${p} (content ends at y=${Math.round(endY)})`);
-      }
-    }
-    if (blankPages.length > 0) {
-      qcIssues.push(`Near-blank pages detected: ${blankPages.join(", ")}`);
-    }
-
-    // 4. Check for essential content markers
-    const hasScorecard = pdfStr.includes("Results at a Glance") || pdfStr.includes("RESULTS AT A GLANCE");
-    const hasTemplate = pdfStr.includes("AROUSAL TEMPLATE") || pdfStr.includes("Arousal Template");
-    const hasNextSteps = pdfStr.includes("PRIORITIZED NEXT STEPS") || pdfStr.includes("Priority");
-    if (!hasScorecard) qcIssues.push("Missing: Results at a Glance section");
-    if (!hasTemplate) qcIssues.push("Missing: Arousal Template section");
-    if (!hasNextSteps) qcIssues.push("Missing: Next Steps section");
-
-    // 5. Check for internal code leaks
-    const codeLeaks = pdfStr.match(/(?:tab_|conf_|val_|pow_|sur_|voy_|ten_|nov_|cod_|enm_|void_|lead_)[a-z_]+/g);
-    if (codeLeaks && codeLeaks.length > 0) qcIssues.push(`Internal codes leaked: ${[...new Set(codeLeaks)].slice(0, 3).join(", ")}`);
-
-    // Log QC results
-    if (qcIssues.length > 0) {
-      console.warn(`PDF QC WARNINGS (${qcIssues.length}):`, qcIssues.join(" | "));
-      console.warn("Page content log:", JSON.stringify(contentLog));
-    }
-
-    // If any QC issues found, regenerate with tighter spacing to fix layout problems
-    if (qcIssues.length > 0) {
-      console.warn("QC FAILED — regenerating with tighter layout (spacing: 0.85)");
-      const pdfResult2 = await generatePDF(analysis, firstName, { spacingMultiplier: 0.85, gender });
-      const pdfStr2 = pdfResult2.buffer.toString("latin1");
-      const pageCount2 = (pdfStr2.match(/\/Type\s*\/Page[^s]/g) || []).length;
-
-      // Run same QC checks on tightened PDF
-      const qcIssues2 = [];
-
-      // Blank page check
-      const contentLog2 = pdfResult2.pageContentLog;
-      const pageEndPositions2 = {};
-      for (const entry of contentLog2) {
-        if (!pageEndPositions2[entry.page] || entry.endY > pageEndPositions2[entry.page]) {
-          pageEndPositions2[entry.page] = entry.endY;
-        }
-      }
-      for (const [page, endY] of Object.entries(pageEndPositions2)) {
-        const p = parseInt(page);
-        if (p === 1 || p === pdfResult2.pageNum) continue;
-        if (endY < MIN_CONTENT_Y) qcIssues2.push(`page ${p} still blank`);
-      }
-
-      // Section check
-      if (!pdfStr2.includes("RESULTS AT A GLANCE") && !pdfStr2.includes("Results at a Glance")) qcIssues2.push("Missing scorecard");
-      if (!pdfStr2.includes("AROUSAL TEMPLATE") && !pdfStr2.includes("Arousal Template")) qcIssues2.push("Missing template");
-
-      if (qcIssues2.length < qcIssues.length) {
-        pdfBuffer = pdfResult2.buffer;
-      } else if (qcIssues2.length === 0) {
-        pdfBuffer = pdfResult2.buffer;
-      } else {
-        console.warn(`Tighter layout still has ${qcIssues2.length} issues. Using best available.`);
-        // Use whichever has fewer issues
-        if (qcIssues2.length <= qcIssues.length) pdfBuffer = pdfResult2.buffer;
-      }
-    }
-
-    var finalBuffer = pdfBuffer;
 
     const pdfBase64 = finalBuffer.toString("base64");
 

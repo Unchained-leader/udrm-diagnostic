@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ResultCard from "../components/ResultCard";
 
@@ -127,6 +127,8 @@ export default function OverviewPage() {
   const nextStepsRef = useRef(null);
   const bridgeRef = useRef(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPrintMode = searchParams.get("print") === "true";
 
   // Timer that ticks every second while in processing state
   useEffect(() => {
@@ -378,7 +380,8 @@ export default function OverviewPage() {
   }
 
   // Reveal wrapper — sections fade in progressively or show instantly
-  const isRevealing = freshReveal && revealedSections >= 0;
+  // In print mode, always show everything immediately
+  const isRevealing = !isPrintMode && freshReveal && revealedSections >= 0;
   const Reveal = ({ idx, children }) => isRevealing ? (
     <div style={{
       opacity: revealedSections >= idx ? 1 : 0,
@@ -386,6 +389,16 @@ export default function OverviewPage() {
       transition: "opacity 0.6s ease, transform 0.6s ease",
     }}>{children}</div>
   ) : <>{children}</>;
+
+  // In print mode, signal when the page is ready for capture
+  useEffect(() => {
+    if (isPrintMode && data && !loading) {
+      // Give charts a moment to render
+      setTimeout(() => {
+        document.documentElement.setAttribute("data-print-ready", "true");
+      }, 2000);
+    }
+  }, [isPrintMode, data, loading]);
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px" }}>
@@ -395,7 +408,7 @@ export default function OverviewPage() {
           <div style={{ color: GOLD, fontSize: 11, letterSpacing: 3, textTransform: "uppercase" }}>Unchained Analytics</div>
           <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Your Root Mapping Results</div>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        {!isPrintMode && <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {reports.length > 1 && (
             <button onClick={() => setShowTrends(!showTrends)} style={{
               padding: "8px 16px", background: showTrends ? `${GOLD}22` : "none",
@@ -405,11 +418,11 @@ export default function OverviewPage() {
           )}
           <button onClick={handlePDFDownload} disabled={pdfGenerating} data-pdf-exclude style={{ padding: "8px 16px", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6, border: "none", cursor: pdfGenerating ? "wait" : "pointer", letterSpacing: 1, opacity: pdfGenerating ? 0.6 : 1 }}>{pdfGenerating ? "GENERATING..." : "PDF REPORT"}</button>
           <button onClick={handleLogout} style={{ padding: "8px 16px", background: "none", border: "1px solid #333", color: "#888", fontSize: 12, borderRadius: 6, cursor: "pointer" }}>Sign Out</button>
-        </div>
+        </div>}
       </div>
 
-      {/* Report Selector */}
-      <ReportSelector reports={reports} activeIndex={activeIdx} onSelect={(i) => { setActiveReportIndex(i); setShowTrends(false); }} />
+      {/* Report Selector — hidden in print mode */}
+      {!isPrintMode && <ReportSelector reports={reports} activeIndex={activeIdx} onSelect={(i) => { setActiveReportIndex(i); setShowTrends(false); }} />}
 
       {/* Trend Overlay View */}
       {showTrends && reports.length > 1 ? (
