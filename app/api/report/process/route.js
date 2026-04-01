@@ -535,7 +535,7 @@ Return ONLY valid JSON, no markdown:
   "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure. CRITICAL FOR SPIRITUAL STRATEGIES (prayer, deliverance prayer, fasting, Bible study, church attendance): NEVER discredit or discount the power of God, prayer, or any spiritual practice. God CAN and DOES perform miracles. Scripture gives us countless examples. But Scripture also shows that God often forges and refines us THROUGH the fire, not by removing us from it (Isaiah 48:10, 1 Peter 1:7, James 1:2-4). Frame it this way: prayer and spiritual disciplines position the heart and invite God into the process. They are essential and powerful. But God also designed the brain with neurological pathways that respond to specific guided processes. Just as God heals through medicine and surgery, He also works through the process of restructuring root narratives. The strategy was not wrong. It was incomplete on its own, not because God lacks power, but because He often works THROUGH process, not around it. The refining fire is the process."}],
 
   "keyInsight": "The single most powerful paragraph. 5-7 sentences. Do NOT start with the man's first name or 'Brother.' Start directly with the insight. This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across his entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. The enemy built this system deliberately because of the assignment on his life. The complexity is evidence of how dangerous he is to the kingdom of darkness. No amount of willpower, accountability software, or even awareness can untangle a system this deep alone. BUT — and this is the part most men never hear — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. It is like a maze: impossibly complex from the inside, simple when someone hands you the map. Write directly to him as Mason would.",
-  "closingStatement": "4-5 sentences. Do NOT start with the man's first name or 'Brother.' Start directly with the statement. You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
+  "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
 }`
     }],
   });
@@ -1564,12 +1564,15 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     // SECTION 9 — WHAT THIS MEANS
     // ════════════════════════════════════════
     checkFit(200);
-    doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
-    y += 24;
+    doc.fontSize(24).fillColor(GOLD).font("Helvetica-Bold").text("WHAT THIS MEANS", M, y, { characterSpacing: 2 });
+    y += 28;
 
-    // What This Means — no first name, starts directly
+    // What This Means — starts with first name
     let closingText = sanitize(analysis.closingStatement || "You are not broken. You are not disqualified. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is closer than you think.");
     closingText = closingText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
+    if (!closingText.startsWith(firstName)) {
+      closingText = `${firstName}, ${closingText.charAt(0).toLowerCase()}${closingText.slice(1)}`;
+    }
     _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
       closingText,
       M, y, { width: CW, lineGap: 5 }

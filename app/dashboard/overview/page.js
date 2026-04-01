@@ -723,7 +723,7 @@ export default function OverviewPage() {
         {/* Closing Statement */}
         <Reveal idx={nextRevealIdx()}>
         <ResultCard style={{ background: "linear-gradient(135deg, #1a1505, #111)" }}>
-          <div style={{ fontSize: 11, letterSpacing: 2, color: GOLD, textTransform: "uppercase", marginBottom: 14, textAlign: "center" }}>WHAT THIS MEANS</div>
+          <div style={{ fontSize: 16, letterSpacing: 3, color: GOLD, textTransform: "uppercase", marginBottom: 16, textAlign: "center", fontWeight: 700 }}>WHAT THIS MEANS</div>
           <p style={{ fontSize: 19, lineHeight: 1.8, color: "#ccc", margin: "0 0 20px", textAlign: "center", fontStyle: "italic" }}>{a.closingStatement}</p>
           <p style={{ fontSize: 17, lineHeight: 1.7, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>The path is laid out. The question is whether you will take the first step.</p>
         </ResultCard>
