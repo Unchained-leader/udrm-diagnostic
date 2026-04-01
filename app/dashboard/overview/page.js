@@ -91,10 +91,26 @@ export default function OverviewPage() {
   const [stickyDismissed, setStickyDismissed] = useState(false);
   const [revealedSections, setRevealedSections] = useState(-1); // -1 = not started, increments to reveal sections
   const [freshReveal, setFreshReveal] = useState(false); // true = animate sections in
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const contentRef = useRef(null);
   const keyInsightRef = useRef(null);
   const nextStepsRef = useRef(null);
   const bridgeRef = useRef(null);
   const router = useRouter();
+
+  const handlePDFDownload = async () => {
+    if (pdfGenerating || !contentRef.current) return;
+    setPdfGenerating(true);
+    try {
+      const { default: generateClientPDF } = await import("../utils/generateClientPDF");
+      await generateClientPDF(contentRef.current, a?.name || data?.name || "Report");
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("PDF generation failed. Please try again.");
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
 
   useEffect(() => {
     let pollTimer = null;
@@ -333,9 +349,7 @@ export default function OverviewPage() {
               fontSize: 12, borderRadius: 6, cursor: "pointer", fontWeight: showTrends ? 700 : 400,
             }}>{showTrends ? "VIEW REPORT" : "TRENDS"}</button>
           )}
-          {activeReportUrl && (
-            <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 16px", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6, textDecoration: "none", letterSpacing: 1 }}>PDF REPORT</a>
-          )}
+          <button onClick={handlePDFDownload} disabled={pdfGenerating} data-pdf-exclude style={{ padding: "8px 16px", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", fontSize: 12, fontWeight: 700, borderRadius: 6, border: "none", cursor: pdfGenerating ? "wait" : "pointer", letterSpacing: 1, opacity: pdfGenerating ? 0.6 : 1 }}>{pdfGenerating ? "GENERATING..." : "PDF REPORT"}</button>
           <button onClick={handleLogout} style={{ padding: "8px 16px", background: "none", border: "1px solid #333", color: "#888", fontSize: 12, borderRadius: 6, cursor: "pointer" }}>Sign Out</button>
         </div>
       </div>
@@ -354,7 +368,7 @@ export default function OverviewPage() {
           </ResultCard>
         </div>
       ) : (
-      <>
+      <div ref={contentRef}>
       {/* Cover / Hero Section */}
       <Reveal idx={nextRevealIdx()}>
       <div style={{
@@ -820,21 +834,20 @@ export default function OverviewPage() {
         </Reveal>
 
         {/* PDF Download */}
-        {activeReportUrl && (
-          <Reveal idx={nextRevealIdx()}>
-          <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <a href={activeReportUrl} target="_blank" rel="noopener noreferrer" style={{
-              display: "inline-block", padding: "14px 40px",
-              background: "linear-gradient(135deg, #DFC468, #9A7730)",
-              color: "#000", fontSize: 14, fontWeight: 700, borderRadius: 8,
-              textDecoration: "none", letterSpacing: 1,
-            }}>DOWNLOAD FULL PDF REPORT</a>
-          </div>
-          </Reveal>
-        )}
+        <Reveal idx={nextRevealIdx()}>
+        <div style={{ textAlign: "center", padding: "24px 0" }} data-pdf-exclude>
+          <button onClick={handlePDFDownload} disabled={pdfGenerating} style={{
+            display: "inline-block", padding: "14px 40px",
+            background: "linear-gradient(135deg, #DFC468, #9A7730)",
+            color: "#000", fontSize: 14, fontWeight: 700, borderRadius: 8,
+            border: "none", cursor: pdfGenerating ? "wait" : "pointer", letterSpacing: 1,
+            opacity: pdfGenerating ? 0.6 : 1,
+          }}>{pdfGenerating ? "GENERATING PDF..." : "DOWNLOAD FULL PDF REPORT"}</button>
+        </div>
+        </Reveal>
 
       </div>
-      </>)}
+      </div>)}
 
       {/* Footer */}
       <div style={{ textAlign: "center", padding: "40px 0 20px", borderTop: "1px solid #1f1f1f", marginTop: 40 }}>
