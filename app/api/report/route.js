@@ -551,7 +551,7 @@ Return ONLY valid JSON, no markdown:
   "strategiesTried": ["Array of strategy names the man selected in plain English"],
   "strategiesCount": "number of strategies selected",
   "yearsFighting": "from the duration question (e.g. '10 to 20', 'Over 20'). Do NOT include the word 'years' in this value.",
-  "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure."}],
+  "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure. CRITICAL FOR SPIRITUAL STRATEGIES (prayer, deliverance prayer, fasting, Bible study, church attendance): NEVER discredit or discount the power of God, prayer, or any spiritual practice. God CAN and DOES perform miracles. Scripture gives us countless examples. But Scripture also shows that God often forges and refines us THROUGH the fire, not by removing us from it (Isaiah 48:10, 1 Peter 1:7, James 1:2-4). Frame it this way: prayer and spiritual disciplines position the heart and invite God into the process. They are essential and powerful. But God also designed the brain with neurological pathways that respond to specific guided processes. Just as God heals through medicine and surgery, He also works through the process of restructuring root narratives. The strategy was not wrong. It was incomplete on its own, not because God lacks power, but because He often works THROUGH process, not around it. The refining fire is the process."}],
 
   "keyInsight": "The single most powerful paragraph. 5-7 sentences. Start with the man's first name (${userName}), NOT 'Brother.' This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across his entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. The enemy built this system deliberately because of the assignment on his life. The complexity is evidence of how dangerous he is to the kingdom of darkness. No amount of willpower, accountability software, or even awareness can untangle a system this deep alone. BUT — and this is the part most men never hear — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. It is like a maze: impossibly complex from the inside, simple when someone hands you the map. Write directly to him as Mason would.",
   "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
@@ -1417,44 +1417,70 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
 
       writeGapWidening("Every strategy on this list was aimed at managing the behavior. Not one of them reached the root narrative driving it. That is not a failure of effort. It is a failure of targeting.");
 
-      // Spiritual Bypass section — conditional on prayer/deliverance/fasting strategies
+      // Spiritual Integration section — conditional on prayer/deliverance/fasting strategies
       const spiritualStrats = strategies.filter(s => {
         const lower = (s || "").toLowerCase();
         return lower.includes("prayer") || lower.includes("spiritual") || lower.includes("bible") || lower.includes("fasting") || lower.includes("deliverance") || lower.includes("church");
       });
 
-      if (spiritualStrats.length >= 2) {
+      if (spiritualStrats.length >= 1) {
         checkFit(80);
         y += 10;
-        doc.fontSize(20).fillColor(GOLD).font("Helvetica").text("SPIRITUAL BYPASS INDICATOR", M, y, { characterSpacing: 1 });
-        y = doc.y + 10;
-
-        // Score: 2 spiritual strategies = moderate, 3+ = high
-        const bypassScore = spiritualStrats.length >= 3 ? "High" : "Moderate";
-        const bypassColor = spiritualStrats.length >= 3 ? [200, 60, 60] : [220, 180, 40];
-
-        doc.roundedRect(M, y, CW, 36, 6).fill(CARD_BG);
-        doc.fontSize(18).fillColor(GOLD).font("Helvetica").text("Spiritual Bypass Score:", M + 14, y + 10);
-        doc.fontSize(18).fillColor(bypassColor).font("Helvetica-Bold").text(bypassScore, M + 220, y + 10);
-        y += 48;
+        doc.fontSize(20).fillColor(GOLD).font("Helvetica").text("SIN NATURE vs. BEHAVIORAL CYCLE", M, y, { characterSpacing: 1 });
+        y = doc.y + 12;
 
         _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
-          `You selected ${spiritualStrats.length} spiritually focused strategies. Psychologist John Welwood, who coined the term "spiritual bypass" in 1984, defined it as "using spiritual practices to avoid dealing with painful feelings, unresolved wounds, and developmental needs." This is not a critique of prayer, Scripture, or spiritual disciplines. They are essential. But when they are used as the only strategy against a neurologically encoded pattern, they become a bypass around the wound rather than a path through it.`,
+          "There is a critical distinction that most men have never been taught, and it changes everything about how you fight this battle.",
           M, y, { width: CW, lineGap: 4 }
         );
-        y = doc.y + 12;
+        y = doc.y + 10;
+
+        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+          "Your sin nature is the soil. Every human being carries it (Romans 3:23). It is the universal tendency toward sin that Scripture is clear about. You will carry this soil until glory. It cannot be uprooted because it is part of the human condition this side of eternity.",
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 10;
+
+        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+          "But the behavioral cycle this report is mapping is not your sin nature. It is a specific pattern of neurological pathways, encoded wounds, and root narratives that GREW in that soil. And unlike the soil itself, these roots CAN be identified, understood, and uprooted. That is what Root Narrative Restructuring does.",
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 10;
 
         _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
-          "If your child broke their arm, you would not choose between prayer and an X-ray. You would choose both. The arm needs to be set by someone trained to set it, and God's healing power works through that process, not instead of it. Your root narrative works the same way. Prayer positions the heart. But restructuring the neuropathway requires a guided, specialized process that prayer was never designed to replace.",
+          "The sin nature is permanent. The behavioral cycle is not. Confusing the two is why so many men believe they are beyond help.",
           M, y, { width: CW, lineGap: 4 }
         );
+        y = doc.y + 16;
+
+        checkFit(80);
+        doc.fontSize(20).fillColor(GOLD).font("Helvetica").text("SPIRITUAL PRACTICES + PROCESS", M, y, { characterSpacing: 1 });
         y = doc.y + 12;
 
-        // Personalized analogy
         const spiritStratNames = spiritualStrats.map(s => sanitize(s).toLowerCase()).join(", ");
-        const personalizedBypass = `You tried ${spiritStratNames} against a ${sanitize(analysis.arousalTemplateType || "deeply encoded")} pattern with ${sanitize(analysis.attachmentStyle || "insecure")} attachment. That is like praying over a compound fracture without letting anyone set the bone. The prayer matters. But the bone still needs to be set by someone who can see it.`;
-        checkFit(50);
-        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(personalizedBypass, M, y, { width: CW, lineGap: 4 });
+
+        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+          `You listed ${spiritStratNames} among your strategies. Let us be direct: God is powerful enough to deliver any man from any pattern in an instant. He has done it. Scripture is full of miracles. And if He chooses to do that for you, nothing in this report overrides that.`,
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 10;
+
+        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+          "But Scripture also shows us that God most often works THROUGH process, not around it. Isaiah 48:10 says He refines us in the furnace of affliction. 1 Peter 1:7 says our faith is tested by fire so it may be proved genuine. James 1:2-4 says trials produce perseverance, and perseverance must finish its work so that you may be mature and complete, not lacking anything.",
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 10;
+
+        _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
+          "Prayer and spiritual disciplines are essential. They position the heart, invite God into the battle, and anchor identity. But just as God heals a broken bone through the process of medicine and time, He often heals neurologically encoded patterns through a guided process that restructures them at the root. The spiritual practices are not the problem. They were never meant to carry the full weight alone.",
+          M, y, { width: CW, lineGap: 4 }
+        );
+        y = doc.y + 10;
+
+        _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
+          "The refining fire is not punishment. It is process. And the fact that you are still in this fight means the fire is still doing its work in you.",
+          M, y, { width: CW, lineGap: 4 }
+        );
         y = doc.y + 14;
       }
     }
