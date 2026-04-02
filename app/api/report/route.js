@@ -73,6 +73,7 @@ export async function POST(request) {
     // Enqueue to QStash for background processing
     const qstashClient = new Client({ token: process.env.QSTASH_TOKEN });
     const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/process`;
+    const failureUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/report/failure`;
 
     console.log(`[QStash] Enqueuing report for ${normalizedEmail} -> ${callbackUrl}`);
 
@@ -86,7 +87,8 @@ export async function POST(request) {
         ageRange,
         geo,
       },
-      retries: 3,
+      retries: 5,
+      failureCallback: failureUrl,
     });
 
     console.log(`[QStash] Report enqueued successfully for ${normalizedEmail}`);

@@ -14,6 +14,27 @@ import { MARKETING_BIBLE_REPORT_GUIDE } from "../../lib/marketing-bible";
 export const maxDuration = 300;
 
 // ═══════════════════════════════════════════════════════════════
+// Retry helper — exponential backoff with jitter for Claude 429s
+// ═══════════════════════════════════════════════════════════════
+async function callWithBackoff(fn, { maxRetries = 4, label = "API" } = {}) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = err?.status || err?.statusCode;
+      if (status === 429 && attempt < maxRetries) {
+        const retryAfter = parseInt(err?.headers?.["retry-after"] || "0", 10);
+        const backoff = Math.max(retryAfter * 1000, Math.pow(2, attempt) * 1000 + Math.random() * 1000);
+        console.warn(`[${label}] 429 rate limited, attempt ${attempt + 1}/${maxRetries}, waiting ${Math.round(backoff / 1000)}s`);
+        await new Promise(r => setTimeout(r, backoff));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // POST /api/report/process — QStash background worker
 // Called by QStash after /api/report enqueues a job.
 // Does ALL heavy work: Claude analysis, PDF, email, webhooks.
@@ -265,7 +286,7 @@ const GENERATION_MAP = {
 };
 
 async function analyzeConversation(messages, userName, demographics = {}) {
-  const client = new Anthropic();
+  const client = new Anthropic({ maxRetries: 0 }); // We handle retries ourselves via callWithBackoff
 
   const conversationText = messages
     .filter(m => m.content && !m.content.includes("[PROGRESS:"))
@@ -274,7 +295,7 @@ async function analyzeConversation(messages, userName, demographics = {}) {
 
   const generationLabel = GENERATION_MAP[demographics.ageRange] || "Unknown";
 
-  const response = await client.messages.create({
+  const response = await callWithBackoff(() => client.messages.create({
     model: "claude-sonnet-4-20250514",  // Switch to "claude-opus-4-6" for higher quality (slower, 10x more expensive)
     max_tokens: 16384,
     messages: [{
@@ -441,7 +462,9 @@ Return ONLY valid JSON, no markdown:
   "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
 }`
     }],
-  });
+  }), { label: "Claude" });
+
+  console.log(`[Claude] Usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output, stop: ${response.stop_reason}`);
 
   const text = response.content[0].text;
   try {

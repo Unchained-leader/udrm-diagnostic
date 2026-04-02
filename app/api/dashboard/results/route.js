@@ -35,6 +35,13 @@ export async function GET(request) {
       statusData.startedAt && (Date.now() - new Date(statusData.startedAt).getTime() < 5 * 60 * 1000); // within last 5 min
 
     if (!analysis) {
+      // Report generation permanently failed — tell the user clearly
+      if (statusData && statusData.step === "failed") {
+        return Response.json({
+          error: statusData.message || "Report generation failed. Please try again.",
+          failed: true,
+        }, { status: 500 });
+      }
       if (statusData && (statusData.step === "queued" || statusData.step === "analyzing" || statusData.step === "complete" || statusData.step === "pdf_ready" || statusData.step === "emailed")) {
         return Response.json({
           success: true,
