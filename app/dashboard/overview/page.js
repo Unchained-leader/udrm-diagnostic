@@ -364,8 +364,6 @@ function OverviewPage() {
   const activeGeneratedAt = activeReport.generatedAt || data?.generatedAt;
 
   if (processing || !a) {
-    const statusMsg = processingStatus?.message || "Analyzing your responses...";
-    const statusStep = processingStatus?.step || "queued";
     const progressMessages = [
       { step: "queued", label: "Preparing your diagnostic", detail: "Your responses have been received. Your report is being queued for analysis." },
       { step: "analyzing", label: "Analyzing your responses", detail: "Your conversation is being read at the root level. Every answer you gave is being mapped." },
@@ -373,13 +371,26 @@ function OverviewPage() {
       { step: "pdf_ready", label: "Generating your PDF report", detail: "A downloadable copy of your full report is being created." },
       { step: "emailed", label: "Sending your report", detail: "Your report is being delivered to your inbox now." },
     ];
-    const currentProgress = progressMessages.find(p => p.step === statusStep) || progressMessages[0];
-    const currentIdx = progressMessages.findIndex(p => p.step === statusStep);
-    const stepPercent = currentIdx < 0 ? 5 : Math.min(95, ((currentIdx + 0.5) / progressMessages.length) * 100);
-    // Time-based minimum: 12% at 0s, ramp to 37% at 15s, then creep slowly to 60% by 60s
-    const timePercent = processingElapsed <= 0 ? 12
-      : processingElapsed <= 15 ? 12 + (25 * (processingElapsed / 15))
-      : Math.min(60, 37 + (23 * ((processingElapsed - 15) / 45)));
+
+    // Time-driven step progression over ~2 minutes so it never feels stuck.
+    // The backend jumps from "analyzing" to "complete" after ~30-60s,
+    // so we use elapsed time to smoothly walk through steps 1-5.
+    const timeBasedIdx = processingElapsed < 15 ? 0   // 0-15s:  Step 1 — Preparing
+      : processingElapsed < 50 ? 1                     // 15-50s: Step 2 — Analyzing
+      : processingElapsed < 80 ? 2                     // 50-80s: Step 3 — Building
+      : processingElapsed < 105 ? 3                    // 80-105s: Step 4 — PDF
+      : 4;                                              // 105s+:  Step 5 — Sending
+
+    // If backend is actually ahead (e.g. fast report), use that instead
+    const backendStep = processingStatus?.step || "queued";
+    const backendIdx = progressMessages.findIndex(p => p.step === backendStep);
+    const currentIdx = Math.max(timeBasedIdx, backendIdx < 0 ? 0 : backendIdx);
+
+    const currentProgress = progressMessages[currentIdx];
+    const stepPercent = Math.min(95, ((currentIdx + 0.5) / progressMessages.length) * 100);
+    // Smooth time-based progress bar: 5% → 92% over 120 seconds
+    const timePercent = processingElapsed <= 0 ? 5
+      : Math.min(92, 5 + (87 * Math.min(processingElapsed / 120, 1)));
     const progressPercent = Math.max(stepPercent, timePercent);
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
@@ -409,7 +420,7 @@ function OverviewPage() {
           {/* Progress steps */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start", maxWidth: 300, margin: "0 auto" }}>
             {progressMessages.map((p, i) => {
-              const isActive = p.step === statusStep;
+              const isActive = i === currentIdx;
               const isPast = currentIdx > i;
               return (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
