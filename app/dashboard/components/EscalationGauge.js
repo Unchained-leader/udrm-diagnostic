@@ -36,8 +36,8 @@ export default function EscalationGauge({ severity, years }) {
 
   // SVG dimensions
   const W = 500;
-  const H = 180;
-  const PAD = { top: 20, bottom: 30, left: 30, right: 10 };
+  const H = 200;
+  const PAD = { top: 24, bottom: 36, left: 35, right: 50 };
   const chartW = W - PAD.left - PAD.right;
   const chartH = H - PAD.top - PAD.bottom;
 
@@ -114,13 +114,14 @@ export default function EscalationGauge({ severity, years }) {
 
           {/* "Default future" label — angled to follow the dotted line, below it */}
           {futurePoints.length > 3 && (() => {
-            const p1 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.3)]);
-            const p2 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.7)]);
-            const angle = Math.atan2(p2.sy - p1.sy, p2.sx - p1.sx) * (180 / Math.PI);
+            const p1 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.2)]);
+            const p2 = toSVG(futurePoints[Math.floor(futurePoints.length * 0.6)]);
+            const rawAngle = Math.atan2(p2.sy - p1.sy, p2.sx - p1.sx) * (180 / Math.PI);
+            const angle = Math.max(-25, Math.min(rawAngle, 0)); // Clamp: never steeper than -25 degrees
             const midX = (p1.sx + p2.sx) / 2;
-            const midY = (p1.sy + p2.sy) / 2 + 18;
+            const midY = (p1.sy + p2.sy) / 2 + 20;
             return (
-              <text x={midX} y={midY} textAnchor="middle" fontSize={15} fontWeight={700} fill="#ef4444" opacity={0.85}
+              <text x={midX} y={midY} textAnchor="middle" fontSize={13} fontWeight={700} fill="#ef4444" opacity={0.85}
                 transform={`rotate(${angle}, ${midX}, ${midY})`}>
                 Default future
               </text>
@@ -131,7 +132,7 @@ export default function EscalationGauge({ severity, years }) {
           {yearLabels.map((y, i) => {
             const lx = PAD.left + (y / totalYears) * chartW;
             return (
-              <text key={i} x={lx} y={H - 2} textAnchor="middle" fontSize={11} fontWeight={600} fill="#fff">
+              <text key={i} x={lx} y={H - 8} textAnchor="middle" fontSize={10} fontWeight={600} fill="#666">
                 {y === 0 ? "Start" : `${y}yr`}
               </text>
             );
