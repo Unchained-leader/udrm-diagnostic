@@ -83,17 +83,14 @@ export default async function generateClientPDF(element, userName = "Report") {
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
   // ── 3. Capture with html2canvas ──
-  // Use the element's actual scroll width so we capture everything as-rendered.
-  // This avoids both text clipping (too narrow) and chart collapse (width change).
-  const captureWidth = Math.max(element.scrollWidth, 832); // at least 800px + 32px padding
+  // Let html2canvas auto-detect dimensions from the element.
+  // Do NOT set width/windowWidth — it can cause blank captures or chart collapse.
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: false,
     allowTaint: true,
     backgroundColor: "#0a0a0a",
     logging: false,
-    width: captureWidth,
-    windowWidth: captureWidth,
     ignoreElements: (el) => el.hasAttribute("data-pdf-exclude"),
   });
 
