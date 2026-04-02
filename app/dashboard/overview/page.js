@@ -1,5 +1,21 @@
 "use client";
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, Component } from "react";
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: "monospace", background: "#1a0000", color: "#ff6666", minHeight: "100vh" }}>
+          <strong>Dashboard Error (debug):</strong>
+          <pre style={{ whiteSpace: "pre-wrap", marginTop: 16, fontSize: 13 }}>{String(this.state.error)}{"\n\n"}{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ResultCard from "../components/ResultCard";
@@ -110,9 +126,11 @@ function ResourceCard({ priority, label, price, title, body, link }) {
 
 export default function OverviewPageWrapper() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>Loading...</div>}>
-      <OverviewPage />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense fallback={<div style={{ minHeight: "100vh", background: "#0a0a0a", display: "flex", alignItems: "center", justifyContent: "center", color: "#666" }}>Loading...</div>}>
+        <OverviewPage />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
