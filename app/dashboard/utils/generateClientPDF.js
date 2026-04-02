@@ -95,20 +95,18 @@ export default async function generateClientPDF(element, userName = "Report") {
   await new Promise(r => setTimeout(r, 1500));
 
   // ── 3. Capture with html2canvas ──
-  // After narrowing to 500px, the content is taller (text wraps more).
-  // Explicitly pass the new scrollHeight so nothing gets cut off.
-  const captureHeight = element.scrollHeight;
-  console.log("[PDF] Capture dimensions:", element.scrollWidth, "x", captureHeight);
+  // Let html2canvas auto-detect the full element height.
+  // Do NOT pass explicit height/windowHeight — they can cap the capture.
+  console.log("[PDF] Element dimensions before capture:", element.scrollWidth, "x", element.scrollHeight);
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: false,
     allowTaint: true,
     backgroundColor: "#0a0a0a",
     logging: false,
-    height: captureHeight,
-    windowHeight: captureHeight,
     ignoreElements: (el) => el.hasAttribute("data-pdf-exclude"),
   });
+  console.log("[PDF] Canvas captured:", canvas.width, "x", canvas.height);
 
   // ── 4. Restore DOM — swap canvas back to img ──
   for (const { img, canvas: c } of swaps) {
