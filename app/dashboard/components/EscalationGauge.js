@@ -7,7 +7,9 @@ export default function EscalationGauge({ severity, years }) {
   const label = s >= 4 ? "High" : s >= 3 ? "Moderate-High" : s >= 2 ? "Moderate" : s >= 1 ? "Low" : "None";
 
   // Parse years into a number for the timeline
-  const yearNum = parseFloat(String(years).replace(/[^0-9.]/g, "")) || 10;
+  // Extract just the first number found (handles "10 to 20", "20+", "many", "5", etc.)
+  const yearMatch = String(years).match(/\d+/);
+  const yearNum = yearMatch ? parseFloat(yearMatch[0]) : 10;
   const totalYears = Math.max(yearNum + 5, 8); // extend 5 years into the future for projection
 
   // Build escalation curve data points (past)
