@@ -9,10 +9,10 @@ import { jsPDF } from "jspdf";
 // ═══════════════════════════════════════════════════════════════
 
 const PDF_WIDTH_PT = 612; // letter width in points
-// Scale must keep canvas under Chrome's 32768px max dimension.
-// At 500px width, content is ~20000px tall → 2x = 40000px (exceeds limit, cuts off).
-// 1.5x = 30000px (safe). Quality is still good — 750px effective width.
-const PDF_SCALE = 1.5;
+// At 500px mobile width, content is ~25000px tall. Chrome caps canvas at 32768px.
+// 2x → 50000px (cut off). 1.5x → 37500px (cut off). 1x → 25000px (safe).
+// 1x at 500px maps to 612pt PDF width — effectively print-resolution quality.
+const PDF_SCALE = 1;
 
 /**
  * Capture a DOM element and generate a downloadable PDF.
