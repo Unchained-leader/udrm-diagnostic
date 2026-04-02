@@ -24,8 +24,21 @@ export default async function generateClientPDF(element, userName = "Report") {
   // ── 1. Prepare the DOM for capture ──
   const origOverflow = element.style.overflow;
   const origHeight = element.style.height;
+  const origWidth = element.style.width;
+  const origMaxWidth = element.style.maxWidth;
+  const origPaddingRight = element.style.paddingRight;
+  const origWordBreak = element.style.wordBreak;
+  const origOverflowWrap = element.style.overflowWrap;
+
   element.style.overflow = "visible";
   element.style.height = "auto";
+  // Force a consistent width so text never clips at the right edge
+  element.style.width = "780px";
+  element.style.maxWidth = "780px";
+  element.style.paddingRight = "20px";
+  // Prevent any text overflow
+  element.style.wordBreak = "break-word";
+  element.style.overflowWrap = "break-word";
 
   // Expand any collapsed/hidden sections
   const hiddenEls = element.querySelectorAll('[data-pdf-hidden="true"], [style*="display: none"], [style*="display:none"]');
@@ -86,6 +99,7 @@ export default async function generateClientPDF(element, userName = "Report") {
     allowTaint: true,
     backgroundColor: "#0a0a0a",
     logging: false,
+    windowWidth: 860, // Force consistent render width so text doesn't clip
     ignoreElements: (el) => el.hasAttribute("data-pdf-exclude"),
   });
 
@@ -97,6 +111,11 @@ export default async function generateClientPDF(element, userName = "Report") {
 
   element.style.overflow = origOverflow;
   element.style.height = origHeight;
+  element.style.width = origWidth;
+  element.style.maxWidth = origMaxWidth;
+  element.style.paddingRight = origPaddingRight;
+  element.style.wordBreak = origWordBreak;
+  element.style.overflowWrap = origOverflowWrap;
   origDisplay.forEach(({ el, display }) => { el.style.display = display; });
   origOpacity.forEach(({ el, opacity, transform }) => {
     el.style.opacity = opacity;
