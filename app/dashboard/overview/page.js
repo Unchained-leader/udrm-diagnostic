@@ -148,8 +148,6 @@ function OverviewPage() {
   const [freshReveal, setFreshReveal] = useState(false); // true = animate sections in
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [processingElapsed, setProcessingElapsed] = useState(0);
-  // tokenReady: false if URL has a token (we must set cookie first), true otherwise
-  const [tokenReady, setTokenReady] = useState(false);
   const contentRef = useRef(null);
   const keyInsightRef = useRef(null);
   const nextStepsRef = useRef(null);
@@ -158,37 +156,89 @@ function OverviewPage() {
   const searchParams = useSearchParams();
   const isPrintMode = searchParams.get("print") === "true";
 
-  // If a token is in the URL (admin impersonation or quiz redirect), set it as a cookie
-  // Runs once on mount only — reads from window.location to avoid re-render loops
-  // Sets tokenReady=true only after cookie is confirmed set (prevents race with fetchResults)
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const urlToken = url.searchParams.get("token");
-    if (urlToken) {
-      fetch("/api/dashboard/set-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token: urlToken }),
-      }).then(() => {
-        // Remove token from URL without reloading
-        url.searchParams.delete("token");
-        window.history.replaceState({}, "", url.toString());
-        setTokenReady(true);
-      }).catch(() => {
-        setTokenReady(true); // still try to load even on error
-      });
-    } else {
-      setTokenReady(true);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Timer that ticks every second while in processing state
   useEffect(() => {
     if (!processing && data?.analysis) return;
     const timer = setInterval(() => setProcessingElapsed(t => t + 1), 1000);
     return () => clearInterval(timer);
   }, [processing, data]);
+
+  // On mount: if a ?token= is in the URL, set it as cookie first, then fetch results.
+  // Combined into one effect so there is no tokenReady state (avoids extra re-renders → error #310).
+  useEffect(() => {
+    let pollTimer = null;
+    let cancelled = false;
+    let wasPolling = false;
+
+    function fetchResults() {
+      fetch("/api/dashboard/results")
+        .then(r => r.json())
+        .then(d => {
+          if (cancelled) return;
+          if (d.error) {
+            if (d.error.includes("authenticated") || d.error.includes("expired")) {
+              router.push("/dashboard/login");
+              return;
+            }
+            if (d.error.includes("processing") || d.error.includes("No results found")) {
+              wasPolling = true;
+              setProcessing(true);
+              setProcessingStatus({ step: "analyzing", message: "Analyzing your responses..." });
+              setLoading(false);
+              pollTimer = setTimeout(fetchResults, 4000);
+              return;
+            }
+            setError(d.error);
+          } else if (d.processing) {
+            wasPolling = true;
+            setProcessing(true);
+            setProcessingStatus(d.status || { step: "analyzing", message: "Analyzing your responses..." });
+            setLoading(false);
+            pollTimer = setTimeout(fetchResults, 4000);
+            return;
+          } else if (d.newReportProcessing) {
+            wasPolling = true;
+            setProcessing(true);
+            setProcessingStatus(d.processingStatus || { step: "analyzing", message: "Analyzing your responses..." });
+            setData(d);
+            setLoading(false);
+            pollTimer = setTimeout(fetchResults, 4000);
+            return;
+          } else {
+            if (d.analysis) d.analysis = uncensorDeep(d.analysis);
+            if (d.reports) d.reports = d.reports.map(r => r.analysis ? { ...r, analysis: uncensorDeep(r.analysis) } : r);
+            if (wasPolling) setFreshReveal(true);
+            setProcessing(false);
+            setProcessingStatus(null);
+            setData(d);
+            if (d.reports) setActiveReportIndex(d.reports.length - 1);
+          }
+          setLoading(false);
+        })
+        .catch(() => { if (!cancelled) { setError("Failed to load results."); setLoading(false); } });
+    }
+
+    async function init() {
+      const url = new URL(window.location.href);
+      const urlToken = url.searchParams.get("token");
+      if (urlToken) {
+        try {
+          await fetch("/api/dashboard/set-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ token: urlToken }),
+          });
+          url.searchParams.delete("token");
+          window.history.replaceState({}, "", url.toString());
+        } catch {}
+      }
+      if (!cancelled) fetchResults();
+    }
+
+    init();
+    return () => { cancelled = true; if (pollTimer) clearTimeout(pollTimer); };
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePDFDownload = async () => {
     console.log("[PDF] handlePDFDownload called, contentRef:", !!contentRef.current, "pdfGenerating:", pdfGenerating);
@@ -212,67 +262,6 @@ function OverviewPage() {
     }
   };
 
-  useEffect(() => {
-    let pollTimer = null;
-    let cancelled = false;
-    let wasPolling = false;
-
-    function fetchResults() {
-      fetch("/api/dashboard/results")
-        .then(r => r.json())
-        .then(d => {
-          if (cancelled) return;
-          if (d.error) {
-            if (d.error.includes("authenticated") || d.error.includes("expired")) {
-              router.push("/dashboard/login");
-              return;
-            }
-            // If processing status unknown, show processing screen and poll
-            if (d.error.includes("processing") || d.error.includes("No results found")) {
-              wasPolling = true;
-              setProcessing(true);
-              setProcessingStatus({ step: "analyzing", message: "Analyzing your responses..." });
-              setLoading(false);
-              pollTimer = setTimeout(fetchResults, 4000);
-              return;
-            }
-            setError(d.error);
-          } else if (d.processing) {
-            // Report is being generated (no existing reports) — show processing screen and poll
-            wasPolling = true;
-            setProcessing(true);
-            setProcessingStatus(d.status || { step: "analyzing", message: "Analyzing your responses..." });
-            setLoading(false);
-            pollTimer = setTimeout(fetchResults, 4000);
-            return;
-          } else if (d.newReportProcessing) {
-            // Existing user with old reports, but a NEW report is building — show building screen and poll
-            wasPolling = true;
-            setProcessing(true);
-            setProcessingStatus(d.processingStatus || { step: "analyzing", message: "Analyzing your responses..." });
-            setData(d); // populate data so old reports are accessible if needed
-            setLoading(false);
-            pollTimer = setTimeout(fetchResults, 4000);
-            return;
-          } else {
-            if (d.analysis) d.analysis = uncensorDeep(d.analysis);
-            if (d.reports) d.reports = d.reports.map(r => r.analysis ? { ...r, analysis: uncensorDeep(r.analysis) } : r);
-            // If we were polling (processing), trigger fresh reveal animation
-            if (wasPolling) setFreshReveal(true);
-            setProcessing(false);
-            setProcessingStatus(null);
-            setData(d);
-            if (d.reports) setActiveReportIndex(d.reports.length - 1);
-          }
-          setLoading(false);
-        })
-        .catch(() => { if (!cancelled) { setError("Failed to load results."); setLoading(false); } });
-    }
-
-    if (!tokenReady) return; // wait for cookie to be set before fetching
-    fetchResults();
-    return () => { cancelled = true; if (pollTimer) clearTimeout(pollTimer); };
-  }, [router, tokenReady]);
 
   // Progressive reveal: animate sections in one-by-one
   const TOTAL_SECTIONS = 50;
