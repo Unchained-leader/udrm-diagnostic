@@ -15,8 +15,8 @@ export default function ScoreRadar({ analysis }) {
   ].map(d => ({ ...d, pct: Math.round((d.val / d.max) * 100) }));
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
-      <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
+    <ResponsiveContainer width="100%" height={360} minWidth={400}>
+      <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
         <PolarGrid stroke="#2a2a2a" />
         <PolarAngleAxis dataKey="dim" tick={{ fill: "#fff", fontSize: 12, fontWeight: 600 }} />
         <Radar name="Score" dataKey="pct" stroke={GOLD} fill={GOLD} fillOpacity={0.2} strokeWidth={2} />
