@@ -14,9 +14,74 @@ import { MARKETING_BIBLE_REPORT_GUIDE } from "../../lib/marketing-bible";
 export const maxDuration = 300;
 
 // ═══════════════════════════════════════════════════════════════
+// Pipeline metrics — non-blocking writes to Postgres
+// ═══════════════════════════════════════════════════════════════
+function logMetric({ service, eventType, tokensInput, tokensOutput, durationMs, costCents, email, errorMessage }) {
+  const sql = getDb();
+  sql`INSERT INTO pipeline_metrics (service, event_type, tokens_input, tokens_output, duration_ms, cost_cents, email, error_message)
+    VALUES (${service}, ${eventType}, ${tokensInput || null}, ${tokensOutput || null}, ${durationMs || null}, ${costCents || null}, ${email || null}, ${errorMessage || null})`
+    .catch(e => console.error("[Metrics] Write failed (non-fatal):", e.message));
+}
+
+// Sonnet pricing: $3/M input, $15/M output
+function calcCostCents(inputTokens, outputTokens) {
+  return ((inputTokens || 0) * 3 / 1_000_000 + (outputTokens || 0) * 15 / 1_000_000) * 100;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Slack alert helper — deduplicated via Redis TTL
+// ═══════════════════════════════════════════════════════════════
+async function sendPipelineAlert(alertKey, message) {
+  if (!process.env.SLACK_WEBHOOK_URL) return;
+  try {
+    const lockKey = `pipeline:alert:${alertKey}`;
+    const existing = await redis.get(lockKey);
+    if (existing) return; // Already alerted within TTL
+    await redis.set(lockKey, "1", { ex: 300 }); // 5 min dedup
+    await fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: message }),
+    });
+  } catch (e) { console.error("[Slack] Pipeline alert failed:", e.message); }
+}
+
+async function checkPipelineLimits(email) {
+  try {
+    const sql = getDb();
+    const tpmLimit = parseInt(process.env.ANTHROPIC_OUTPUT_TPM_LIMIT || "8000", 10);
+
+    // Check output tokens in last 60 seconds
+    const [tpmRow] = await sql`SELECT COALESCE(SUM(tokens_output), 0) as total FROM pipeline_metrics
+      WHERE service = 'anthropic' AND event_type = 'report_complete' AND created_at > NOW() - INTERVAL '60 seconds'`;
+    const currentTPM = parseInt(tpmRow?.total || 0);
+    if (currentTPM > tpmLimit * 0.7) {
+      await sendPipelineAlert("capacity", `:warning: *Pipeline capacity alert* <!channel>\nOutput tokens: ${currentTPM.toLocaleString()}/${tpmLimit.toLocaleString()} TPM (${Math.round(currentTPM / tpmLimit * 100)}%) in the last 60 seconds\nAction: Consider upgrading Anthropic API tier`);
+    }
+
+    // Check today's email count (free tier = 100/day)
+    const emailLimit = parseInt(process.env.RESEND_DAILY_LIMIT || "100", 10);
+    const [emailRow] = await sql`SELECT COUNT(*) as total FROM pipeline_metrics
+      WHERE service = 'resend' AND event_type = 'email_sent' AND created_at > CURRENT_DATE`;
+    const emailsToday = parseInt(emailRow?.total || 0);
+    if (emailsToday > emailLimit * 0.8) {
+      await sendPipelineAlert("email_limit", `:warning: *Email limit alert* <!channel>\nEmails sent today: ${emailsToday}/${emailLimit} (${Math.round(emailsToday / emailLimit * 100)}%)\nAction: Upgrade Resend plan`);
+    }
+
+    // Check failures in last hour
+    const [failRow] = await sql`SELECT COUNT(*) as total FROM pipeline_metrics
+      WHERE event_type = 'report_failed' AND created_at > NOW() - INTERVAL '1 hour'`;
+    const recentFailures = parseInt(failRow?.total || 0);
+    if (recentFailures >= 3) {
+      await sendPipelineAlert("failures", `:rotating_light: *Pipeline failure spike* <!channel>\n${recentFailures} report failures in the last hour\nLatest: ${email || "unknown"}\nCheck Vercel logs immediately`);
+    }
+  } catch (e) { console.error("[Metrics] Limit check failed (non-fatal):", e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Retry helper — exponential backoff with jitter for Claude 429s
 // ═══════════════════════════════════════════════════════════════
-async function callWithBackoff(fn, { maxRetries = 4, label = "API" } = {}) {
+async function callWithBackoff(fn, { maxRetries = 4, label = "API", email } = {}) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn();
@@ -26,6 +91,7 @@ async function callWithBackoff(fn, { maxRetries = 4, label = "API" } = {}) {
         const retryAfter = parseInt(err?.headers?.["retry-after"] || "0", 10);
         const backoff = Math.max(retryAfter * 1000, Math.pow(2, attempt) * 1000 + Math.random() * 1000);
         console.warn(`[${label}] 429 rate limited, attempt ${attempt + 1}/${maxRetries}, waiting ${Math.round(backoff / 1000)}s`);
+        logMetric({ service: "anthropic", eventType: "rate_limited", email, errorMessage: `429 attempt ${attempt + 1}` });
         await new Promise(r => setTimeout(r, backoff));
         continue;
       }
@@ -85,7 +151,18 @@ export async function POST(request) {
 
     // Analyze with Claude
     const analysisStart = Date.now();
-    const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange });
+    const rawAnalysis = await analyzeConversation(messages, userName, { gender, ageRange }, { email: normalizedEmail });
+    const analysisDuration = Date.now() - analysisStart;
+
+    // Log pipeline metric for this report (non-blocking)
+    // rawAnalysis._usage is set by analyzeConversation (see below)
+    const usage = rawAnalysis._usage || {};
+    logMetric({
+      service: "anthropic", eventType: "report_complete", email: normalizedEmail,
+      tokensInput: usage.input_tokens, tokensOutput: usage.output_tokens,
+      durationMs: analysisDuration, costCents: calcCostCents(usage.input_tokens, usage.output_tokens),
+    });
+    checkPipelineLimits(normalizedEmail); // async, non-blocking
 
     // Sanitize all string values: strip em dashes + internal code identifiers
     function cleanStr(s) {
@@ -160,10 +237,12 @@ export async function POST(request) {
 
     try {
       await sendReportEmail(normalizedEmail, firstName, null, null);
+      logMetric({ service: "resend", eventType: "email_sent", email: normalizedEmail });
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "emailed", message: "Report emailed", completedAt: new Date().toISOString() }, { ex: 3600 });
       console.log(`[QStash] Email sent for ${normalizedEmail} (dashboard link only)`);
     } catch (emailErr) {
       console.error("[QStash] Email delivery error:", emailErr.message);
+      logMetric({ service: "resend", eventType: "report_failed", email: normalizedEmail, errorMessage: emailErr.message });
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
     }
 
@@ -259,6 +338,7 @@ export async function POST(request) {
     console.log(`[QStash] Report complete for ${normalizedEmail}`);
     return Response.json({ success: true, message: "Report processed" });
   } catch (error) {
+    logMetric({ service: "anthropic", eventType: "report_failed", email: normalizedEmail, errorMessage: error.message });
     console.error(`[QStash] Report processing failed for ${normalizedEmail}:`, error.message);
     console.error("[QStash] Error stack:", error.stack);
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "failed", message: "Report generation failed. Please try again.", error: error.message }, { ex: 3600 }).catch(() => {});
@@ -285,7 +365,7 @@ const GENERATION_MAP = {
   "age_85_plus": "Silent Generation (born before 1942)",
 };
 
-async function analyzeConversation(messages, userName, demographics = {}) {
+async function analyzeConversation(messages, userName, demographics = {}, { email } = {}) {
   const client = new Anthropic({ maxRetries: 0 }); // We handle retries ourselves via callWithBackoff
 
   const conversationText = messages
@@ -462,25 +542,29 @@ Return ONLY valid JSON, no markdown:
   "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
 }`
     }],
-  }), { label: "Claude" });
+  }), { label: "Claude", email });
 
   console.log(`[Claude] Usage: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output, stop: ${response.stop_reason}`);
 
   const text = response.content[0].text;
+  const _usage = response.usage; // Stash for metrics logging in caller
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    parsed._usage = _usage;
+    return parsed;
   } catch (e) {
     console.error("JSON parse failed, attempting extraction. Error:", e.message);
     console.error("First 500 chars of response:", text.substring(0, 500));
     // Try to extract JSON from the response
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      try { return JSON.parse(match[0]); } catch (e2) {
+      try { const p = JSON.parse(match[0]); p._usage = _usage; return p; } catch (e2) {
         console.error("Extracted JSON also failed:", e2.message);
       }
     }
     // Fallback
     return {
+      _usage,
       arousalTemplateType: "Unknown",
       arousalTemplateSecondary: null,
       rootNarrativeStatement: "Unable to determine from available data",

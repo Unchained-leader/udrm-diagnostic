@@ -469,6 +469,75 @@ export async function GET(request) {
       return Response.json({ current, previous, multiCurrent, multiPrevious, days, metric }, { headers: CORS_HEADERS });
     }
 
+    } else if (view === "pipeline") {
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const tpmLimit = parseInt(process.env.ANTHROPIC_OUTPUT_TPM_LIMIT || "8000", 10);
+
+      // Summary counts
+      const [counts] = await sql`SELECT
+        COUNT(*) FILTER (WHERE event_type = 'report_complete') as reports_complete,
+        COUNT(*) FILTER (WHERE event_type = 'report_failed') as reports_failed,
+        COUNT(*) FILTER (WHERE event_type = 'rate_limited') as rate_limited,
+        COUNT(*) FILTER (WHERE event_type = 'email_sent') as emails_sent,
+        COALESCE(SUM(tokens_input) FILTER (WHERE event_type = 'report_complete'), 0) as total_input_tokens,
+        COALESCE(SUM(tokens_output) FILTER (WHERE event_type = 'report_complete'), 0) as total_output_tokens,
+        COALESCE(SUM(cost_cents) FILTER (WHERE event_type = 'report_complete'), 0) as total_cost_cents,
+        COALESCE(AVG(duration_ms) FILTER (WHERE event_type = 'report_complete'), 0) as avg_duration_ms,
+        COALESCE(AVG(tokens_input) FILTER (WHERE event_type = 'report_complete'), 0) as avg_input_tokens,
+        COALESCE(AVG(tokens_output) FILTER (WHERE event_type = 'report_complete'), 0) as avg_output_tokens
+        FROM pipeline_metrics WHERE created_at >= ${since}`;
+
+      // Hourly breakdown (last 24h)
+      const hourly = await sql`SELECT
+        DATE_TRUNC('hour', created_at) as hour,
+        COUNT(*) FILTER (WHERE event_type = 'report_complete') as reports,
+        COUNT(*) FILTER (WHERE event_type = 'report_failed') as failures,
+        COUNT(*) FILTER (WHERE event_type = 'rate_limited') as rate_limits
+        FROM pipeline_metrics WHERE created_at >= NOW() - INTERVAL '24 hours'
+        GROUP BY DATE_TRUNC('hour', created_at) ORDER BY hour`;
+
+      // Current velocity
+      const [vel1] = await sql`SELECT COUNT(*) as c FROM pipeline_metrics WHERE event_type = 'report_complete' AND created_at >= NOW() - INTERVAL '1 minute'`;
+      const [vel5] = await sql`SELECT COUNT(*) as c FROM pipeline_metrics WHERE event_type = 'report_complete' AND created_at >= NOW() - INTERVAL '5 minutes'`;
+      const [vel60] = await sql`SELECT COUNT(*) as c FROM pipeline_metrics WHERE event_type = 'report_complete' AND created_at >= NOW() - INTERVAL '60 minutes'`;
+
+      // Current TPM (output tokens in last 60s)
+      const [tpmRow] = await sql`SELECT COALESCE(SUM(tokens_output), 0) as total FROM pipeline_metrics
+        WHERE service = 'anthropic' AND event_type = 'report_complete' AND created_at > NOW() - INTERVAL '60 seconds'`;
+
+      // Today's email count
+      const [emailToday] = await sql`SELECT COUNT(*) as c FROM pipeline_metrics WHERE service = 'resend' AND event_type = 'email_sent' AND created_at > CURRENT_DATE`;
+
+      // Recent rate limit events
+      const rateLimitEvents = await sql`SELECT created_at, email, error_message FROM pipeline_metrics
+        WHERE event_type = 'rate_limited' AND created_at >= ${since} ORDER BY created_at DESC LIMIT 20`;
+
+      // Recent failures
+      const failureEvents = await sql`SELECT created_at, email, error_message FROM pipeline_metrics
+        WHERE event_type = 'report_failed' AND created_at >= ${since} ORDER BY created_at DESC LIMIT 20`;
+
+      return Response.json({
+        counts: {
+          reportsComplete: parseInt(counts.reports_complete),
+          reportsFailed: parseInt(counts.reports_failed),
+          rateLimited: parseInt(counts.rate_limited),
+          emailsSent: parseInt(counts.emails_sent),
+          totalInputTokens: parseInt(counts.total_input_tokens),
+          totalOutputTokens: parseInt(counts.total_output_tokens),
+          totalCostCents: parseFloat(counts.total_cost_cents),
+          avgDurationMs: Math.round(parseFloat(counts.avg_duration_ms)),
+          avgInputTokens: Math.round(parseFloat(counts.avg_input_tokens)),
+          avgOutputTokens: Math.round(parseFloat(counts.avg_output_tokens)),
+        },
+        hourly,
+        velocity: { last1min: parseInt(vel1.c), last5min: parseInt(vel5.c), last60min: parseInt(vel60.c) },
+        capacity: { currentOutputTPM: parseInt(tpmRow.total), tpmLimit, pctUsed: Math.round(parseInt(tpmRow.total) / tpmLimit * 100) },
+        emailsToday: parseInt(emailToday.c),
+        rateLimitEvents,
+        failureEvents,
+      }, { headers: CORS_HEADERS });
+    }
+
     return Response.json({ error: "Invalid view" }, { status: 400, headers: CORS_HEADERS });
   } catch (error) {
     console.error("Analytics query error:", error);

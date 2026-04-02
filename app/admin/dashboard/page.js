@@ -103,6 +103,7 @@ export default function Dashboard() {
     { id: "submissions", label: "Submissions" },
     { id: "locations", label: "Locations" },
     { id: "health", label: "System Health" },
+    { id: "pipeline", label: "Pipeline" },
     { id: "export", label: "Export" },
     { id: "clients", label: "Clients" },
   ];
@@ -162,6 +163,7 @@ export default function Dashboard() {
         {tab === "submissions" && <SubmissionsView product={product} days={days} />}
         {tab === "locations" && <LocationsView product={product} />}
         {tab === "health" && <HealthView />}
+        {tab === "pipeline" && <PipelineView days={days} />}
         {tab === "export" && <ExportView product={product} days={days} />}
         {tab === "clients" && <ClientsView />}
       </div>
@@ -1412,6 +1414,153 @@ function HealthView() {
           <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Last 50 checks (hover for details)</div>
         </>
       )}
+    </div>
+  );
+}
+
+// ═══ PIPELINE ═══
+function PipelineView({ days }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPipeline = async () => {
+    setLoading(true);
+    try {
+      const s = sessionStorage.getItem("admin_secret");
+      const r = await fetch(`${API}?secret=${encodeURIComponent(s)}&view=pipeline&days=${days}`);
+      setData(await r.json());
+    } catch (e) { console.error("Pipeline fetch error:", e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPipeline(); }, [days]);
+
+  if (loading) return <div style={{ color: "#666", padding: 40 }}>Loading pipeline metrics...</div>;
+  if (!data || data.error) return <div style={{ color: "#f44336", padding: 40 }}>Failed to load pipeline data. Run the migration first.</div>;
+
+  const c = data.counts || {};
+  const cap = data.capacity || {};
+  const vel = data.velocity || {};
+  const capColor = cap.pctUsed > 80 ? "#f44336" : cap.pctUsed > 50 ? "#FF9800" : "#4CAF50";
+  const costDollars = (c.totalCostCents / 100).toFixed(2);
+  const avgCostCents = c.reportsComplete > 0 ? (c.totalCostCents / c.reportsComplete).toFixed(2) : "0";
+  const avgDurationSec = (c.avgDurationMs / 1000).toFixed(1);
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h2 style={S.sectionTitle}>Pipeline Monitoring</h2>
+        <button onClick={fetchPipeline} style={S.refreshBtn}>Refresh</button>
+      </div>
+
+      {/* Top metric cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
+        <PipelineCard label="Reports Generated" value={c.reportsComplete} color="#4CAF50" />
+        <PipelineCard label="Failed" value={c.reportsFailed} color={c.reportsFailed > 0 ? "#f44336" : "#4CAF50"} />
+        <PipelineCard label="Rate Limited" value={c.rateLimited} color={c.rateLimited > 0 ? "#FF9800" : "#4CAF50"} />
+        <PipelineCard label="Total Cost" value={`$${costDollars}`} color="#c5a55a" />
+        <PipelineCard label="Avg Duration" value={`${avgDurationSec}s`} color="#2196F3" />
+        <PipelineCard label="Avg Cost/Report" value={`${avgCostCents}¢`} color="#c5a55a" />
+        <PipelineCard label="Emails Sent Today" value={data.emailsToday} color="#2196F3" />
+      </div>
+
+      {/* Capacity gauge */}
+      <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <span style={{ color: "#999", fontSize: 12, letterSpacing: 1, textTransform: "uppercase" }}>Output TPM Capacity (last 60s)</span>
+          <span style={{ color: capColor, fontWeight: 700, fontSize: 18 }}>{cap.pctUsed}%</span>
+        </div>
+        <div style={{ width: "100%", height: 10, background: "#1a1a1a", borderRadius: 5, overflow: "hidden" }}>
+          <div style={{ height: "100%", borderRadius: 5, background: capColor, width: `${Math.min(cap.pctUsed, 100)}%`, transition: "width 0.5s" }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+          <span style={{ color: "#555", fontSize: 11 }}>{(cap.currentOutputTPM || 0).toLocaleString()} tokens</span>
+          <span style={{ color: "#555", fontSize: 11 }}>Tier limit: {(cap.tpmLimit || 0).toLocaleString()} TPM</span>
+        </div>
+      </div>
+
+      {/* Velocity */}
+      <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+        <div style={{ color: "#999", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Current Velocity</div>
+        <div style={{ display: "flex", gap: 24 }}>
+          <div><span style={{ color: "#fff", fontSize: 24, fontWeight: 700 }}>{vel.last1min}</span><span style={{ color: "#555", fontSize: 12, marginLeft: 6 }}>last 1 min</span></div>
+          <div><span style={{ color: "#fff", fontSize: 24, fontWeight: 700 }}>{vel.last5min}</span><span style={{ color: "#555", fontSize: 12, marginLeft: 6 }}>last 5 min</span></div>
+          <div><span style={{ color: "#fff", fontSize: 24, fontWeight: 700 }}>{vel.last60min}</span><span style={{ color: "#555", fontSize: 12, marginLeft: 6 }}>last hour</span></div>
+        </div>
+      </div>
+
+      {/* Token breakdown */}
+      <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+        <div style={{ color: "#999", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Token Usage ({days}d)</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            <div style={{ color: "#666", fontSize: 11 }}>Input Tokens (total)</div>
+            <div style={{ color: "#ccc", fontSize: 18, fontWeight: 600 }}>{c.totalInputTokens?.toLocaleString()}</div>
+            <div style={{ color: "#555", fontSize: 11 }}>avg {c.avgInputTokens?.toLocaleString()}/report</div>
+          </div>
+          <div>
+            <div style={{ color: "#666", fontSize: 11 }}>Output Tokens (total)</div>
+            <div style={{ color: "#ccc", fontSize: 18, fontWeight: 600 }}>{c.totalOutputTokens?.toLocaleString()}</div>
+            <div style={{ color: "#555", fontSize: 11 }}>avg {c.avgOutputTokens?.toLocaleString()}/report</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reports per hour chart */}
+      {data.hourly && data.hourly.length > 0 && (
+        <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+          <div style={{ color: "#999", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Reports Per Hour (24h)</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 80 }}>
+            {data.hourly.map((h, i) => {
+              const maxReports = Math.max(...data.hourly.map(x => parseInt(x.reports) || 0), 1);
+              const barH = Math.max(2, (parseInt(h.reports) / maxReports) * 70);
+              const hasFailures = parseInt(h.failures) > 0;
+              return (
+                <div key={i} title={`${new Date(h.hour).toLocaleString()}: ${h.reports} reports${hasFailures ? `, ${h.failures} failures` : ""}`}
+                  style={{ flex: 1, height: barH, borderRadius: 2, background: hasFailures ? "#f44336" : "#4CAF50", minWidth: 4 }} />
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 11, color: "#555", marginTop: 4 }}>Hover for details. Red = failures in that hour.</div>
+        </div>
+      )}
+
+      {/* Rate limit events */}
+      {data.rateLimitEvents && data.rateLimitEvents.length > 0 && (
+        <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+          <div style={{ color: "#FF9800", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Rate Limit Events ({data.rateLimitEvents.length})</div>
+          {data.rateLimitEvents.slice(0, 10).map((e, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
+              <span style={{ color: "#666", minWidth: 140 }}>{new Date(e.created_at).toLocaleString()}</span>
+              <span style={{ color: "#999" }}>{e.email}</span>
+              <span style={{ color: "#FF9800" }}>{e.error_message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Failure events */}
+      {data.failureEvents && data.failureEvents.length > 0 && (
+        <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+          <div style={{ color: "#f44336", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Failures ({data.failureEvents.length})</div>
+          {data.failureEvents.slice(0, 10).map((e, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
+              <span style={{ color: "#666", minWidth: 140 }}>{new Date(e.created_at).toLocaleString()}</span>
+              <span style={{ color: "#999" }}>{e.email}</span>
+              <span style={{ color: "#f44336" }}>{e.error_message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PipelineCard({ label, value, color }) {
+  return (
+    <div style={{ background: "#111", borderRadius: 8, padding: "14px 16px", border: "1px solid #222" }}>
+      <div style={{ color: "#666", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <div style={{ color: color || "#fff", fontSize: 22, fontWeight: 700 }}>{value}</div>
     </div>
   );
 }

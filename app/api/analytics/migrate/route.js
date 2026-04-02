@@ -86,6 +86,22 @@ export async function POST(request) {
     await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
     await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lon DOUBLE PRECISION`;
 
+    // Pipeline metrics — tracks API usage, costs, rate limits, failures
+    await sql`
+      CREATE TABLE IF NOT EXISTS pipeline_metrics (
+        id SERIAL PRIMARY KEY,
+        service VARCHAR(50) NOT NULL,
+        event_type VARCHAR(50) NOT NULL,
+        tokens_input INTEGER,
+        tokens_output INTEGER,
+        duration_ms INTEGER,
+        cost_cents DECIMAL(10,4),
+        email VARCHAR(255),
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+
     // Indexes for common queries
     await sql`CREATE INDEX IF NOT EXISTS idx_events_product ON analytics_events(product)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_events_type ON analytics_events(event_type)`;
@@ -94,6 +110,8 @@ export async function POST(request) {
     await sql`CREATE INDEX IF NOT EXISTS idx_responses_session ON quiz_responses(session_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_responses_section ON quiz_responses(section_num)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_diagnostics_product ON completed_diagnostics(product)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_pipeline_service_created ON pipeline_metrics(service, created_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_pipeline_event_created ON pipeline_metrics(event_type, created_at)`;
 
     return Response.json({ success: true, message: "Schema created successfully" }, { headers: CORS_HEADERS });
   } catch (error) {
