@@ -63,12 +63,13 @@ export default function EscalationGauge({ severity, years }) {
   // "Now" marker position
   const nowX = PAD.left + (yearNum / totalYears) * chartW;
 
-  // Year labels
-  const yearLabels = [];
-  const labelInterval = totalYears <= 10 ? 2 : totalYears <= 20 ? 5 : 10;
-  for (let y = 0; y <= totalYears; y += labelInterval) {
-    yearLabels.push(y);
-  }
+  // Year labels — always exactly 3: Start, Now, and the projected end
+  // This prevents overlap regardless of timeline length
+  const yearLabels = [
+    { year: 0, label: "Start" },
+    { year: yearNum, label: `${Math.round(yearNum)}yr (now)` },
+    { year: totalYears, label: `${Math.round(totalYears)}yr` },
+  ];
 
   return (
     <div>
@@ -119,7 +120,9 @@ export default function EscalationGauge({ severity, years }) {
             const rawAngle = Math.atan2(p2.sy - p1.sy, p2.sx - p1.sx) * (180 / Math.PI);
             const angle = Math.max(-25, Math.min(rawAngle, 0)); // Clamp: never steeper than -25 degrees
             const midX = (p1.sx + p2.sx) / 2;
-            const midY = (p1.sy + p2.sy) / 2 + 20;
+            // More offset when curve is flat (low severity) so text doesn't sit on the line
+            const verticalOffset = s <= 2 ? 26 : 20;
+            const midY = (p1.sy + p2.sy) / 2 + verticalOffset;
             return (
               <text x={midX} y={midY} textAnchor="middle" fontSize={13} fontWeight={700} fill="#ef4444" opacity={0.85}
                 transform={`rotate(${angle}, ${midX}, ${midY})`}>
@@ -128,12 +131,12 @@ export default function EscalationGauge({ severity, years }) {
             );
           })()}
 
-          {/* X-axis year labels */}
-          {yearLabels.map((y, i) => {
-            const lx = PAD.left + (y / totalYears) * chartW;
+          {/* X-axis year labels — always 3: Start, Now, End */}
+          {yearLabels.map((yl, i) => {
+            const lx = PAD.left + (yl.year / totalYears) * chartW;
             return (
-              <text key={i} x={lx} y={H - 8} textAnchor="middle" fontSize={10} fontWeight={600} fill="#666">
-                {y === 0 ? "Start" : `${y}yr`}
+              <text key={i} x={lx} y={H - 8} textAnchor={i === 0 ? "start" : i === yearLabels.length - 1 ? "end" : "middle"} fontSize={10} fontWeight={600} fill="#666">
+                {yl.label}
               </text>
             );
           })}
