@@ -308,6 +308,17 @@ function OverviewPage() {
     return () => observer.disconnect();
   }, [stickyDismissed, data]);
 
+  // In print mode, signal when the page is ready for capture
+  // Must be before any early returns to satisfy Rules of Hooks
+  useEffect(() => {
+    if (isPrintMode && data && !loading) {
+      // Give charts a moment to render
+      setTimeout(() => {
+        document.documentElement.setAttribute("data-print-ready", "true");
+      }, 2000);
+    }
+  }, [isPrintMode, data, loading]);
+
   async function handleLogout() {
     await fetch("/api/dashboard/logout", { method: "POST" });
     router.push("/dashboard/login");
@@ -432,16 +443,6 @@ function OverviewPage() {
       transition: "opacity 0.6s ease, transform 0.6s ease",
     }}>{children}</div>
   ) : <>{children}</>;
-
-  // In print mode, signal when the page is ready for capture
-  useEffect(() => {
-    if (isPrintMode && data && !loading) {
-      // Give charts a moment to render
-      setTimeout(() => {
-        document.documentElement.setAttribute("data-print-ready", "true");
-      }, 2000);
-    }
-  }, [isPrintMode, data, loading]);
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px" }}>
