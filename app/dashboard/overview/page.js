@@ -130,6 +130,8 @@ function OverviewPage() {
   const [freshReveal, setFreshReveal] = useState(false); // true = animate sections in
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [processingElapsed, setProcessingElapsed] = useState(0);
+  // tokenReady: false if URL has a token (we must set cookie first), true otherwise
+  const [tokenReady, setTokenReady] = useState(false);
   const contentRef = useRef(null);
   const keyInsightRef = useRef(null);
   const nextStepsRef = useRef(null);
@@ -140,6 +142,7 @@ function OverviewPage() {
 
   // If a token is in the URL (admin impersonation or quiz redirect), set it as a cookie
   // Runs once on mount only — reads from window.location to avoid re-render loops
+  // Sets tokenReady=true only after cookie is confirmed set (prevents race with fetchResults)
   useEffect(() => {
     const url = new URL(window.location.href);
     const urlToken = url.searchParams.get("token");
@@ -153,7 +156,12 @@ function OverviewPage() {
         // Remove token from URL without reloading
         url.searchParams.delete("token");
         window.history.replaceState({}, "", url.toString());
-      }).catch(() => {});
+        setTokenReady(true);
+      }).catch(() => {
+        setTokenReady(true); // still try to load even on error
+      });
+    } else {
+      setTokenReady(true);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -243,9 +251,10 @@ function OverviewPage() {
         .catch(() => { if (!cancelled) { setError("Failed to load results."); setLoading(false); } });
     }
 
+    if (!tokenReady) return; // wait for cookie to be set before fetching
     fetchResults();
     return () => { cancelled = true; if (pollTimer) clearTimeout(pollTimer); };
-  }, [router]);
+  }, [router, tokenReady]);
 
   // Progressive reveal: animate sections in one-by-one
   const TOTAL_SECTIONS = 50;
