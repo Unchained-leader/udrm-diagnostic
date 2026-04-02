@@ -467,7 +467,6 @@ export async function GET(request) {
       }
 
       return Response.json({ current, previous, multiCurrent, multiPrevious, days, metric }, { headers: CORS_HEADERS });
-    }
 
     } else if (view === "pipeline") {
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
