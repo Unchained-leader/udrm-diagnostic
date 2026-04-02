@@ -24,11 +24,19 @@ export default async function generateClientPDF(element, userName = "Report") {
   // ── 1. Prepare the DOM for capture ──
   const origOverflow = element.style.overflow;
   const origHeight = element.style.height;
+  const origWidth = element.style.width;
+  const origMaxWidth = element.style.maxWidth;
+  const origPadding = element.style.padding;
 
   element.style.overflow = "visible";
   element.style.height = "auto";
-  // DO NOT change element width — Recharts ResponsiveContainer will collapse charts to 0.
-  // Instead, we use html2canvas windowWidth option to control the render context.
+
+  // Narrow the element to mobile-like width so charts and text fill the page
+  // proportionally — matching how the report looks on a phone screen.
+  // We must wait after this for Recharts ResponsiveContainer to re-render.
+  element.style.width = "500px";
+  element.style.maxWidth = "500px";
+  element.style.padding = "20px 16px";
 
   // Expand any collapsed/hidden sections
   const hiddenEls = element.querySelectorAll('[data-pdf-hidden="true"], [style*="display: none"], [style*="display:none"]');
@@ -79,12 +87,11 @@ export default async function generateClientPDF(element, userName = "Report") {
 
   console.log("[PDF] Swapped", swaps.length, "images to canvas elements");
 
-  // Give the browser a frame to render the swaps
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  // Wait for Recharts ResponsiveContainer to detect the width change and re-render.
+  // ResizeObserver fires async, so we need real time — not just animation frames.
+  await new Promise(r => setTimeout(r, 1500));
 
   // ── 3. Capture with html2canvas ──
-  // Let html2canvas auto-detect dimensions from the element.
-  // Do NOT set width/windowWidth — it can cause blank captures or chart collapse.
   const canvas = await html2canvas(element, {
     scale: PDF_SCALE,
     useCORS: false,
@@ -102,6 +109,9 @@ export default async function generateClientPDF(element, userName = "Report") {
 
   element.style.overflow = origOverflow;
   element.style.height = origHeight;
+  element.style.width = origWidth;
+  element.style.maxWidth = origMaxWidth;
+  element.style.padding = origPadding;
   origDisplay.forEach(({ el, display }) => { el.style.display = display; });
   origOpacity.forEach(({ el, opacity, transform }) => {
     el.style.opacity = opacity;
