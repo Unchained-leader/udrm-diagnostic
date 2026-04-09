@@ -33,7 +33,7 @@ export default function ScorecardBreakdown({ analysis }) {
         <BarChart data={data} layout="vertical" margin={{ left: 0, right: 50, top: 5, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" horizontal={false} />
           <XAxis type="number" domain={[0, 100]} tick={{ fill: "#fff", fontSize: 12, fontWeight: 600 }} axisLine={{ stroke: "#333" }} tickFormatter={v => `${v}%`} />
-          <YAxis type="category" dataKey="name" tick={{ fill: "#fff", fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={140} />
+          <YAxis type="category" dataKey="name" tick={{ fill: "#fff", fontSize: 12, fontWeight: 600 }} axisLine={false} tickLine={false} width={110} />
           <Bar dataKey="pct" radius={[0, 6, 6, 0]} barSize={16}>
             {data.map((d, i) => <Cell key={i} fill={getColor(d.pct)} />)}
             <LabelList dataKey="label" position="right" fill="#fff" fontSize={12} fontWeight={600} />

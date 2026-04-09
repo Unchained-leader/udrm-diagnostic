@@ -57,7 +57,7 @@ function ContentBlock({ title, body, borderColor }) {
       background: "#1a1a1a", borderRadius: 10, padding: "16px 18px",
       border: `1px solid ${borderColor || "#2a2a2a"}`, marginBottom: 10,
     }}>
-      <div style={{ fontSize: 19, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10 }}>{uncensor(title)}</div>
+      <div style={{ fontSize: 19, fontWeight: 600, color: borderColor || "#fff", marginBottom: 10, wordBreak: "break-word" }}>{uncensor(title)}</div>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ margin: "0 0 8px", fontSize: 17, lineHeight: 1.7, color: "#999" }}>{p}</p>
       ))}
@@ -456,7 +456,7 @@ function OverviewPage() {
   ) : <>{children}</>;
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px" }}>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px 16px 60px", overflowX: "hidden" }}>
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, paddingBottom: 16, borderBottom: "1px solid #1f1f1f" }}>
         <div>
