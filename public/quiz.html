@@ -917,6 +917,27 @@
       screenHeight: window.screen.height,
     };
 
+    // Referrer & UTM tracking
+    const referrerInfo = (function() {
+      const params = new URLSearchParams(window.location.search);
+      let referrerDomain = "";
+      try {
+        if (document.referrer) {
+          referrerDomain = new URL(document.referrer).hostname;
+        }
+      } catch (e) {}
+      return {
+        referrerUrl: document.referrer || "",
+        referrerDomain: referrerDomain,
+        landingPage: window.location.href,
+        utmSource: params.get("utm_source") || "",
+        utmMedium: params.get("utm_medium") || "",
+        utmCampaign: params.get("utm_campaign") || "",
+        utmContent: params.get("utm_content") || "",
+        utmTerm: params.get("utm_term") || "",
+      };
+    })();
+
     // =====================================================================
     // DOM REFS
     // =====================================================================
@@ -978,7 +999,7 @@
       }
       if (eventType === "quiz_start") {
         sectionStartTime = Date.now();
-        eventData = { ...eventData, device: deviceInfo };
+        eventData = { ...eventData, device: deviceInfo, referrer: referrerInfo };
       }
 
       const payload = {

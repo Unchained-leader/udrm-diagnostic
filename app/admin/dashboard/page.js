@@ -104,6 +104,7 @@ export default function Dashboard() {
     { id: "locations", label: "Locations" },
     { id: "health", label: "System Health" },
     { id: "pipeline", label: "Pipeline" },
+    { id: "referrers", label: "Referrers" },
     { id: "export", label: "Export" },
     { id: "clients", label: "Clients" },
   ];
@@ -164,6 +165,7 @@ export default function Dashboard() {
         {tab === "locations" && <LocationsView product={product} />}
         {tab === "health" && <HealthView />}
         {tab === "pipeline" && <PipelineView days={days} />}
+        {tab === "referrers" && <ReferrersView product={product} days={days} />}
         {tab === "export" && <ExportView product={product} days={days} />}
         {tab === "clients" && <ClientsView />}
       </div>
@@ -315,6 +317,11 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
               {browserItems.length > 0 && <div style={{ marginTop: 8 }}><BarChart items={browserItems} color="#00BCD4" /></div>}
             </div>
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
+        </TileWrap>
+
+        {/* Referrers — top sources */}
+        <TileWrap label="Top Traffic Sources" tabId="referrers">
+          <MiniReferrersTile product={product} days={days} />
         </TileWrap>
 
         {/* Cohort — week over week */}
@@ -527,6 +534,34 @@ function HealthMiniTile() {
           <span style={{ color: svc.status === "up" ? "#4CAF50" : svc.status === "degraded" ? "#FF9800" : "#f44336", fontWeight: 600 }}>
             {svc.status === "up" ? "●" : svc.status === "degraded" ? "◐" : "○"} {svc.status}
           </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MiniReferrersTile({ product, days }) {
+  const [refData, setRefData] = useState(null);
+  useEffect(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    fetch(`${API}?secret=${encodeURIComponent(s)}&view=referrers&product=${product}&days=${days}`)
+      .then(r => r.json()).then(setRefData).catch(() => {});
+  }, [product, days]);
+
+  if (!refData) return <div style={{ color: "#555", fontSize: 12 }}>Loading...</div>;
+  if (!refData.domains || refData.domains.length === 0) return <div style={{ color: "#555", fontSize: 12 }}>No referrer data yet</div>;
+
+  return (
+    <div style={{ fontSize: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ color: "#888", fontSize: 10 }}>{refData.referrerPct}% referred</span>
+        <span style={{ color: "#555", fontSize: 10 }}>{refData.withReferrer}/{refData.totalSessions} sessions</span>
+      </div>
+      {refData.domains.slice(0, 5).map((d, i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+          <span style={{ color: "#aaa", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>{d.label}</span>
+          <span style={{ color: "#c5a55a", fontWeight: 600 }}>{d.value}</span>
         </div>
       ))}
     </div>
@@ -1599,6 +1634,185 @@ function BarChart({ items, color, maxOverride }) {
 
 function Empty({ msg }) {
   return <div style={{ color: "#555", padding: 30, textAlign: "center", fontSize: 15 }}>{msg}</div>;
+}
+
+// ═══ REFERRERS ═══
+function ReferrersView({ product, days }) {
+  const [refData, setRefData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const s = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
+    if (!s) return;
+    setLoading(true);
+    fetch(`${API}?secret=${encodeURIComponent(s)}&view=referrers&product=${product}&days=${days}`)
+      .then(r => r.json())
+      .then(d => { setRefData(d); setLoading(false); })
+      .catch(e => { console.error(e); setLoading(false); });
+  }, [product, days]);
+
+  if (loading) return <div style={{ color: "#666", padding: 20 }}>Loading referrer data...</div>;
+  if (!refData || refData.totalSessions === 0) return <Empty msg="No referrer data yet. Data will appear once quiz visitors start arriving with referrer URLs or UTM parameters." />;
+
+  const { totalSessions, withReferrer, referrerPct, domains, utmSources, utmMediums, utmCampaigns, dailyTrend, conversions, recent } = refData;
+
+  return (
+    <div>
+      {/* Summary cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 20 }}>
+        <div style={S.card}>
+          <div style={{ ...S.cardValue, color: "#c5a55a", fontSize: 24 }}>{totalSessions}</div>
+          <div style={S.cardLabel}>Total Sessions</div>
+        </div>
+        <div style={S.card}>
+          <div style={{ ...S.cardValue, color: "#4CAF50", fontSize: 24 }}>{withReferrer}</div>
+          <div style={S.cardLabel}>With Referrer</div>
+        </div>
+        <div style={S.card}>
+          <div style={{ ...S.cardValue, color: "#2196F3", fontSize: 24 }}>{referrerPct}%</div>
+          <div style={S.cardLabel}>Referred Traffic</div>
+        </div>
+        <div style={S.card}>
+          <div style={{ ...S.cardValue, color: "#9C27B0", fontSize: 24 }}>{domains.length > 0 ? domains[0].label : "—"}</div>
+          <div style={S.cardLabel}>Top Source</div>
+        </div>
+      </div>
+
+      {/* Top Referrer Domains */}
+      <h2 style={S.sectionTitle}>Top Referrer Domains</h2>
+      {domains.length > 0 ? <BarChart items={domains.slice(0, 15)} color="#c5a55a" /> : <Empty msg="No referrer domains recorded yet." />}
+
+      {/* UTM Sources */}
+      {utmSources.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>UTM Sources</h2>
+          <BarChart items={utmSources.slice(0, 10)} color="#4CAF50" />
+        </div>
+      )}
+
+      {/* UTM Mediums */}
+      {utmMediums.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>UTM Mediums</h2>
+          <BarChart items={utmMediums.slice(0, 10)} color="#2196F3" />
+        </div>
+      )}
+
+      {/* Conversion by Source */}
+      {conversions.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>Conversion by Source</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>Source</th>
+                  <th style={S.th}>Sessions</th>
+                  <th style={S.th}>Completed</th>
+                  <th style={S.th}>Conv. Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {conversions.map((row, i) => (
+                  <tr key={i}>
+                    <td style={{ ...S.td, fontWeight: 500, color: "#c5a55a" }}>{row.source}</td>
+                    <td style={S.td}>{row.sessions}</td>
+                    <td style={S.td}>{row.completed}</td>
+                    <td style={{ ...S.td, fontWeight: 600, color: parseFloat(row.rate) >= 50 ? "#4CAF50" : parseFloat(row.rate) >= 20 ? "#FF9800" : "#f44336" }}>
+                      {row.rate}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* UTM Campaigns */}
+      {utmCampaigns.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>UTM Campaigns</h2>
+          <BarChart items={utmCampaigns.slice(0, 10)} color="#FF9800" />
+        </div>
+      )}
+
+      {/* Daily Referrer Trend */}
+      {dailyTrend.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>Daily Referrer Trend</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {dailyTrend.slice(-30).map((day, i) => {
+              const maxVal = Math.max(...dailyTrend.map(d => d.total), 1);
+              return (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 80, fontSize: 11, color: "#888", textAlign: "right", flexShrink: 0 }}>
+                    {new Date(day.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </span>
+                  <div style={{ flex: 1, height: 18, background: "#1a1a1a", borderRadius: 3, overflow: "hidden", position: "relative" }}>
+                    <div style={{ height: "100%", width: `${(day.total / maxVal) * 100}%`, background: "linear-gradient(90deg, #333, #555)", borderRadius: 3 }} />
+                    <div style={{ height: "100%", width: `${(day.withRef / maxVal) * 100}%`, background: "linear-gradient(90deg, #c5a55a, #9A7730)", borderRadius: 3, position: "absolute", top: 0, left: 0 }} />
+                  </div>
+                  <span style={{ width: 60, fontSize: 11, color: "#ccc", textAlign: "right" }}>
+                    {day.withRef}/{day.total}
+                  </span>
+                </div>
+              );
+            })}
+            <div style={{ display: "flex", gap: 16, marginTop: 6, paddingLeft: 86 }}>
+              <span style={{ fontSize: 10, color: "#c5a55a" }}>■ Referred</span>
+              <span style={{ fontSize: 10, color: "#555" }}>■ Total</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Referrers Table */}
+      {recent.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={S.sectionTitle}>Recent Referrers</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>Date</th>
+                  <th style={S.th}>Source</th>
+                  <th style={S.th}>UTM Source</th>
+                  <th style={S.th}>UTM Medium</th>
+                  <th style={S.th}>UTM Campaign</th>
+                  <th style={S.th}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((row, i) => (
+                  <tr key={i}>
+                    <td style={{ ...S.td, whiteSpace: "nowrap", fontSize: 11 }}>
+                      {new Date(row.date).toLocaleDateString()}{" "}
+                      <span style={{ color: "#555" }}>{new Date(row.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    </td>
+                    <td style={{ ...S.td, fontSize: 11, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={row.referrerUrl || "Direct"}>
+                      {row.referrerDomain}
+                    </td>
+                    <td style={{ ...S.td, color: row.utmSource ? "#4CAF50" : "#444" }}>{row.utmSource || "—"}</td>
+                    <td style={{ ...S.td, color: row.utmMedium ? "#2196F3" : "#444" }}>{row.utmMedium || "—"}</td>
+                    <td style={{ ...S.td, color: row.utmCampaign ? "#FF9800" : "#444" }}>{row.utmCampaign || "—"}</td>
+                    <td style={S.td}>
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 600,
+                        background: row.completed ? "rgba(76,175,80,0.15)" : "rgba(255,152,0,0.15)",
+                        color: row.completed ? "#4CAF50" : "#FF9800" }}>
+                        {row.completed ? "Completed" : "Started"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ═══ CLIENT LOOKUP ═══

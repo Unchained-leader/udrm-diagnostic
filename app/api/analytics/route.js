@@ -537,6 +537,124 @@ export async function GET(request) {
       }, { headers: CORS_HEADERS });
     }
 
+    } else if (view === "referrers") {
+      // Fetch all quiz_start event_data and parse referrer info client-side style
+      const raw = await sql`
+        SELECT event_data::text as raw, session_id, created_at
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+      `;
+
+      // Parse referrer data from JSONB
+      const domainCounts = {};
+      const sourceCounts = {};
+      const mediumCounts = {};
+      const campaignCounts = {};
+      const dailyCounts = {};
+      const recentReferrers = [];
+      let withReferrer = 0;
+      const sessionReferrers = {};
+
+      for (const row of raw) {
+        try {
+          const d = JSON.parse(row.raw);
+          const ref = d?.referrer || {};
+          const domain = ref.referrerDomain || "";
+          const source = ref.utmSource || "";
+          const medium = ref.utmMedium || "";
+          const campaign = ref.utmCampaign || "";
+          const hasReferrer = domain || source;
+
+          if (hasReferrer) withReferrer++;
+
+          // Track domain counts
+          const domainKey = domain || (source ? `utm:${source}` : "Direct");
+          domainCounts[domainKey] = (domainCounts[domainKey] || 0) + 1;
+
+          // UTM breakdowns
+          if (source) sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+          if (medium) mediumCounts[medium] = (mediumCounts[medium] || 0) + 1;
+          if (campaign) campaignCounts[campaign] = (campaignCounts[campaign] || 0) + 1;
+
+          // Daily trend
+          const dateKey = new Date(row.created_at).toISOString().split("T")[0];
+          if (!dailyCounts[dateKey]) dailyCounts[dateKey] = { total: 0, withRef: 0 };
+          dailyCounts[dateKey].total++;
+          if (hasReferrer) dailyCounts[dateKey].withRef++;
+
+          // Store session referrer for conversion lookup
+          sessionReferrers[row.session_id] = domainKey;
+
+          // Recent entries (collect all, slice later)
+          recentReferrers.push({
+            sessionId: row.session_id,
+            date: row.created_at,
+            referrerDomain: domain || "Direct",
+            referrerUrl: ref.referrerUrl || "",
+            utmSource: source,
+            utmMedium: medium,
+            utmCampaign: campaign,
+            utmContent: ref.utmContent || "",
+            utmTerm: ref.utmTerm || "",
+            landingPage: ref.landingPage || "",
+          });
+        } catch (e) {}
+      }
+
+      // Get completion sessions for conversion calculation
+      const completedSessions = await sql`
+        SELECT DISTINCT session_id
+        FROM analytics_events
+        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since}
+      `;
+      const completedSet = new Set(completedSessions.map(r => r.session_id));
+
+      // Calculate conversion by source
+      const sourceConversions = {};
+      for (const [sessionId, source] of Object.entries(sessionReferrers)) {
+        if (!sourceConversions[source]) sourceConversions[source] = { sessions: 0, completed: 0 };
+        sourceConversions[source].sessions++;
+        if (completedSet.has(sessionId)) sourceConversions[source].completed++;
+      }
+
+      // Mark recent referrers with completion status
+      const recentWithStatus = recentReferrers
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 50)
+        .map(r => ({ ...r, completed: completedSet.has(r.sessionId) }));
+
+      // Sort and format results
+      const toSorted = (obj) => Object.entries(obj)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+
+      const dailyTrend = Object.entries(dailyCounts)
+        .map(([date, counts]) => ({ date, ...counts }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const conversionTable = Object.entries(sourceConversions)
+        .map(([source, data]) => ({
+          source,
+          sessions: data.sessions,
+          completed: data.completed,
+          rate: data.sessions > 0 ? ((data.completed / data.sessions) * 100).toFixed(1) : "0",
+        }))
+        .sort((a, b) => b.sessions - a.sessions);
+
+      return Response.json({
+        totalSessions: raw.length,
+        withReferrer,
+        referrerPct: raw.length > 0 ? ((withReferrer / raw.length) * 100).toFixed(1) : "0",
+        domains: toSorted(domainCounts).slice(0, 30),
+        utmSources: toSorted(sourceCounts).slice(0, 20),
+        utmMediums: toSorted(mediumCounts).slice(0, 20),
+        utmCampaigns: toSorted(campaignCounts).slice(0, 20),
+        dailyTrend,
+        conversions: conversionTable.slice(0, 30),
+        recent: recentWithStatus,
+      }, { headers: CORS_HEADERS });
+    }
+
     return Response.json({ error: "Invalid view" }, { status: 400, headers: CORS_HEADERS });
   } catch (error) {
     console.error("Analytics query error:", error);
