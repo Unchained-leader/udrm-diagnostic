@@ -16,7 +16,7 @@ export default function ScoreRadar({ analysis }) {
 
   return (
     <ResponsiveContainer width="100%" height={360}>
-      <RadarChart data={data} cx="50%" cy="50%" outerRadius="75%">
+      <RadarChart data={data} cx="50%" cy="50%" outerRadius="65%">
         <PolarGrid stroke="#2a2a2a" />
         <PolarAngleAxis dataKey="dim" tick={{ fill: "#fff", fontSize: 12, fontWeight: 600 }} />
         <Radar name="Score" dataKey="pct" stroke={GOLD} fill={GOLD} fillOpacity={0.2} strokeWidth={2} />
