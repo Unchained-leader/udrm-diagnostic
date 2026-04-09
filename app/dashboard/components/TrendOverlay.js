@@ -132,15 +132,15 @@ export default function TrendOverlay({ reports }) {
       <div style={{ display: "grid", gap: 6 }}>
         {reports.map((r, i) => (
           <div key={i} style={{
-            display: "grid", gridTemplateColumns: "100px 1fr 1fr 1fr", gap: 8,
+            display: "grid", gridTemplateColumns: "80px 1fr 1fr 1fr", gap: 8,
             padding: "10px 14px", background: "#1a1a1a", borderRadius: 6,
             fontSize: 12, alignItems: "center",
             borderLeft: i === reports.length - 1 ? `3px solid ${GOLD}` : "3px solid #333",
           }}>
             <span style={{ color: "#888" }}>{formatDate(r.generatedAt)}</span>
-            <span style={{ color: "#ccc" }}>{r.arousalTemplateType || "—"}</span>
-            <span style={{ color: "#ccc" }}>{r.neuropathway || "—"}</span>
-            <span style={{ color: "#ccc" }}>{r.attachmentStyle || "—"}</span>
+            <span style={{ color: "#ccc", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.arousalTemplateType || "—"}</span>
+            <span style={{ color: "#ccc", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.neuropathway || "—"}</span>
+            <span style={{ color: "#ccc", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.attachmentStyle || "—"}</span>
           </div>
         ))}
       </div>

@@ -8,6 +8,7 @@ const ResultCard = forwardRef(function ResultCard({ title, subtitle, children, g
       background: CARD_BG,
       borderRadius: 12,
       padding: "24px",
+      overflow: "hidden",
       border: gold ? `1px solid ${GOLD}33` : "1px solid #1f1f1f",
       ...style,
     }}>
