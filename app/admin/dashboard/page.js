@@ -1793,7 +1793,7 @@ function PipelineView({ days }) {
   const vel = data.velocity || {};
   const capColor = cap.pctUsed > 80 ? "#f44336" : cap.pctUsed > 50 ? "#FF9800" : "#4CAF50";
   const costDollars = (c.totalCostCents / 100).toFixed(2);
-  const avgCostCents = c.reportsComplete > 0 ? (c.totalCostCents / c.reportsComplete).toFixed(2) : "0";
+  const avgCostDollars = c.reportsComplete > 0 ? (c.totalCostCents / c.reportsComplete / 100).toFixed(2) : "0.00";
   const avgDurationSec = (c.avgDurationMs / 1000).toFixed(1);
 
   return (
@@ -1814,7 +1814,7 @@ function PipelineView({ days }) {
         <PipelineCard label="Rate Limited" value={c.rateLimited} color={c.rateLimited > 0 ? "#FF9800" : "#4CAF50"} />
         <PipelineCard label="Total Cost" value={`$${costDollars}`} color="#c5a55a" />
         <PipelineCard label="Avg Duration" value={`${avgDurationSec}s`} color="#2196F3" />
-        <PipelineCard label="Avg Cost/Report" value={`${avgCostCents}¢`} color="#c5a55a" />
+        <PipelineCard label="Avg Cost/Report" value={`$${avgCostDollars}`} color="#c5a55a" />
         <PipelineCard label="Emails Sent Today" value={data.emailsToday} color="#2196F3" />
       </div>
 
