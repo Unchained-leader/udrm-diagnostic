@@ -96,10 +96,11 @@ export async function GET(request) {
       if (srcIds.length === 0) srcIds = ["__no_match__"];
     }
 
-    // Get available sources for the dropdown (always returned with summary)
+    // Get available sources for the dropdown — only explicit ?source= values (udrm-*), not domain fallbacks
     const availableSources = await sql`
       SELECT DISTINCT traffic_source FROM completed_diagnostics
       WHERE traffic_source IS NOT NULL AND traffic_source != '' AND traffic_source != 'direct'
+        AND traffic_source NOT LIKE '%.%'
       ORDER BY traffic_source
     `;
 
