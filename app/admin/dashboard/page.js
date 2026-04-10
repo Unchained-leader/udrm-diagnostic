@@ -1807,6 +1807,10 @@ function PipelineView({ days }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
         <PipelineCard label="Reports Generated" value={c.reportsComplete} color="#4CAF50" />
         <PipelineCard label="Failed" value={c.reportsFailed} color={c.reportsFailed > 0 ? "#f44336" : "#4CAF50"} />
+        <PipelineCard label="Recovered" value={`${data.recovery?.recoveredEmails || 0}/${data.recovery?.totalFailedEmails || 0}`}
+          color={parseFloat(data.recovery?.recoveryPct || 100) >= 90 ? "#4CAF50" : parseFloat(data.recovery?.recoveryPct || 100) >= 50 ? "#FF9800" : "#f44336"} />
+        <PipelineCard label="Recovery Rate" value={`${data.recovery?.recoveryPct || "100"}%`}
+          color={parseFloat(data.recovery?.recoveryPct || 100) >= 90 ? "#4CAF50" : parseFloat(data.recovery?.recoveryPct || 100) >= 50 ? "#FF9800" : "#f44336"} />
         <PipelineCard label="Rate Limited" value={c.rateLimited} color={c.rateLimited > 0 ? "#FF9800" : "#4CAF50"} />
         <PipelineCard label="Total Cost" value={`$${costDollars}`} color="#c5a55a" />
         <PipelineCard label="Avg Duration" value={`${avgDurationSec}s`} color="#2196F3" />
@@ -1900,6 +1904,46 @@ function PipelineView({ days }) {
               <span style={{ color: "#f44336" }}>{e.error_message}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Recovery details */}
+      {data.recovery && data.recovery.totalFailedEmails > 0 && (
+        <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ color: "#4CAF50", fontSize: 12, letterSpacing: 1, textTransform: "uppercase" }}>
+              Recovery Details
+            </div>
+            <div style={{ fontSize: 12 }}>
+              <span style={{ color: "#4CAF50", fontWeight: 600 }}>{data.recovery.recoveredEmails} recovered</span>
+              {data.recovery.unrecoveredEmails > 0 && (
+                <span style={{ color: "#f44336", fontWeight: 600, marginLeft: 12 }}>{data.recovery.unrecoveredEmails} unrecovered</span>
+              )}
+            </div>
+          </div>
+
+          {/* Recovery rate bar */}
+          <div style={{ width: "100%", height: 8, background: "#1a1a1a", borderRadius: 4, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{ height: "100%", borderRadius: 4, background: parseFloat(data.recovery.recoveryPct) >= 90 ? "#4CAF50" : parseFloat(data.recovery.recoveryPct) >= 50 ? "#FF9800" : "#f44336", width: `${data.recovery.recoveryPct}%` }} />
+          </div>
+
+          {/* Recently recovered reports */}
+          {data.recoveredRecent && data.recoveredRecent.length > 0 && (
+            <>
+              <div style={{ color: "#666", fontSize: 11, marginBottom: 8, letterSpacing: 1 }}>RECENTLY RECOVERED</div>
+              {data.recoveredRecent.slice(0, 10).map((r, i) => {
+                const recoverySec = parseInt(r.recovery_seconds) || 0;
+                const recoveryLabel = recoverySec < 60 ? `${recoverySec}s` : recoverySec < 3600 ? `${Math.round(recoverySec / 60)}m` : `${(recoverySec / 3600).toFixed(1)}h`;
+                return (
+                  <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12, alignItems: "center" }}>
+                    <span style={{ color: "#666", minWidth: 140 }}>{new Date(r.recovered_at).toLocaleString()}</span>
+                    <span style={{ color: "#999", flex: 1 }}>{r.email}</span>
+                    <span style={{ color: "#4CAF50", fontWeight: 600, fontSize: 11 }}>Recovered in {recoveryLabel}</span>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
     </div>

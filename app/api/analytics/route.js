@@ -532,6 +532,26 @@ export async function GET(request) {
       const failureEvents = await sql`SELECT created_at, email, error_message FROM pipeline_metrics
         WHERE event_type = 'report_failed' AND created_at >= ${pipeSince} ORDER BY created_at DESC LIMIT 20`;
 
+      // Recovery stats: emails that failed but eventually completed
+      const [recoveryStats] = await sql`
+        SELECT
+          COUNT(DISTINCT f.email) as total_failed_emails,
+          COUNT(DISTINCT CASE WHEN c.email IS NOT NULL THEN f.email END) as recovered_emails
+        FROM (SELECT DISTINCT email FROM pipeline_metrics WHERE event_type = 'report_failed' AND email IS NOT NULL AND created_at >= ${pipeSince}) f
+        LEFT JOIN (SELECT DISTINCT email FROM pipeline_metrics WHERE event_type = 'report_complete' AND email IS NOT NULL AND created_at >= ${pipeSince}) c
+        ON f.email = c.email
+      `;
+
+      // Recent recovered reports (failed then completed)
+      const recoveredRecent = await sql`
+        SELECT f.email, f.created_at as failed_at, c.created_at as recovered_at,
+          ROUND(EXTRACT(EPOCH FROM (c.created_at - f.created_at))::numeric, 0) as recovery_seconds
+        FROM (SELECT email, MAX(created_at) as created_at FROM pipeline_metrics WHERE event_type = 'report_failed' AND email IS NOT NULL AND created_at >= ${pipeSince} GROUP BY email) f
+        INNER JOIN (SELECT email, MIN(created_at) as created_at FROM pipeline_metrics WHERE event_type = 'report_complete' AND email IS NOT NULL AND created_at >= ${pipeSince} GROUP BY email) c
+        ON f.email = c.email AND c.created_at > f.created_at
+        ORDER BY c.created_at DESC LIMIT 20
+      `;
+
       return Response.json({
         counts: {
           reportsComplete: parseInt(counts.reports_complete),
@@ -551,6 +571,15 @@ export async function GET(request) {
         emailsToday: parseInt(emailToday.c),
         rateLimitEvents,
         failureEvents,
+        recovery: {
+          totalFailedEmails: parseInt(recoveryStats?.total_failed_emails || 0),
+          recoveredEmails: parseInt(recoveryStats?.recovered_emails || 0),
+          recoveryPct: parseInt(recoveryStats?.total_failed_emails || 0) > 0
+            ? ((parseInt(recoveryStats.recovered_emails) / parseInt(recoveryStats.total_failed_emails)) * 100).toFixed(1)
+            : "100",
+          unrecoveredEmails: parseInt(recoveryStats?.total_failed_emails || 0) - parseInt(recoveryStats?.recovered_emails || 0),
+        },
+        recoveredRecent,
       }, { headers: CORS_HEADERS });
 
     } else if (view === "referrers") {
