@@ -11,7 +11,7 @@
  * Send diagnostic data to GHL via webhook.
  * GHL workflow handles: contact creation, tagging, notes, etc.
  */
-export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl, dashboardUrl }) {
+export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
   const webhookUrl = process.env.GHL_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn("GHL_WEBHOOK_URL not configured — skipping CRM sync");
@@ -30,12 +30,18 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       report_url: reportUrl || "",
       reportUrl: reportUrl || "",
       impersonation_access: dashboardUrl || "",
+      traffic_source: trafficSource || "",
+      source_url: embedParentUrl || "",
     },
     tags: tags || [],
     reportUrl: reportUrl || null,
     report_url: reportUrl || null,
     dashboardUrl: dashboardUrl || null,
     dashboard_url: dashboardUrl || null,
+    trafficSource: trafficSource || "",
+    traffic_source: trafficSource || "",
+    sourceUrl: embedParentUrl || "",
+    source_url: embedParentUrl || "",
   };
 
   // Add analysis data if present
@@ -85,20 +91,22 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
 /**
  * Convenience: Send contact creation event
  */
-export async function ghlContactCreated({ email, name, phone }) {
+export async function ghlContactCreated({ email, name, phone, trafficSource, embedParentUrl }) {
   return sendToGHL({
     event: "contact_created",
     email,
     name,
     phone,
     tags: ["Diagnostic Started", "Root Genre Diagnostic"],
+    trafficSource,
+    embedParentUrl,
   });
 }
 
 /**
  * Convenience: Send diagnostic complete event with full data
  */
-export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis, reportUrl, dashboardUrl }) {
+export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
   return sendToGHL({
     event: "diagnostic_complete",
     email,
@@ -113,6 +121,8 @@ export async function ghlDiagnosticComplete({ email, name, phone, messages, anal
     analysis,
     reportUrl,
     dashboardUrl,
+    trafficSource,
+    embedParentUrl,
   });
 }
 
@@ -211,7 +221,7 @@ function buildDiagnosticNote(analysis, reportUrl, messages) {
  * Send report data to the Reports | Root Diagnostic workflow
  * Uses a separate webhook URL (GHL_REPORT_WEBHOOK_URL)
  */
-export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl, dashboardUrl }) {
+export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
   const webhookUrl = process.env.GHL_REPORT_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn("GHL_REPORT_WEBHOOK_URL not configured — skipping report delivery");
@@ -232,6 +242,8 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
       report_url: reportUrl || "",
       reportUrl: reportUrl || "",
       impersonation_access: dashboardUrl || "",
+      traffic_source: trafficSource || "",
+      source_url: embedParentUrl || "",
     },
     tags: [
       "Diagnostic Complete",
@@ -242,6 +254,10 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
     report_url: reportUrl || null,
     dashboardUrl: dashboardUrl || null,
     dashboard_url: dashboardUrl || null,
+    trafficSource: trafficSource || "",
+    traffic_source: trafficSource || "",
+    sourceUrl: embedParentUrl || "",
+    source_url: embedParentUrl || "",
     note,
   };
 

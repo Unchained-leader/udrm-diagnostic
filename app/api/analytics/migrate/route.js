@@ -86,6 +86,9 @@ export async function POST(request) {
     await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lat DOUBLE PRECISION`;
     await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS geo_lon DOUBLE PRECISION`;
 
+    // Traffic source tracking
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS traffic_source VARCHAR(255)`;
+
     // Pipeline metrics — tracks API usage, costs, rate limits, failures
     await sql`
       CREATE TABLE IF NOT EXISTS pipeline_metrics (

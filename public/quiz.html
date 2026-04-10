@@ -926,10 +926,36 @@
           referrerDomain = new URL(document.referrer).hostname;
         }
       } catch (e) {}
+
+      // Detect parent page URL when quiz is embedded in an iframe
+      let embedParentUrl = "";
+      try {
+        if (window.self !== window.top && document.referrer) {
+          embedParentUrl = document.referrer;
+        }
+      } catch (e) {}
+
+      // Derive traffic source label from parent URL tail or UTM source
+      const landingUrl = embedParentUrl || window.location.href;
+      let trafficSource = "direct";
+      try {
+        const pathname = new URL(landingUrl).pathname.toLowerCase();
+        const lastSegment = pathname.split("/").filter(Boolean).pop() || "";
+        if (params.get("utm_source")) {
+          trafficSource = params.get("utm_source");
+        } else if (lastSegment && lastSegment !== "quiz.html" && lastSegment !== "quiz") {
+          trafficSource = lastSegment;
+        } else if (referrerDomain) {
+          trafficSource = referrerDomain;
+        }
+      } catch (e) {}
+
       return {
         referrerUrl: document.referrer || "",
         referrerDomain: referrerDomain,
         landingPage: window.location.href,
+        embedParentUrl: embedParentUrl,
+        trafficSource: trafficSource,
         utmSource: params.get("utm_source") || "",
         utmMedium: params.get("utm_medium") || "",
         utmCampaign: params.get("utm_campaign") || "",
@@ -1523,7 +1549,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ email, name, phone, pin }),
+          body: JSON.stringify({ email, name, phone, pin, trafficSource: referrerInfo.trafficSource, embedParentUrl: referrerInfo.embedParentUrl }),
         });
 
         const data = await res.json();
@@ -1699,6 +1725,8 @@
             diagnosticData: messages,
             gender,
             ageRange,
+            trafficSource: referrerInfo.trafficSource,
+            embedParentUrl: referrerInfo.embedParentUrl,
           }),
         });
         if (!res.ok) {

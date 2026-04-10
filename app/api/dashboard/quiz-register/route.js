@@ -13,7 +13,7 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { email, name, phone, pin } = await request.json();
+    const { email, name, phone, pin, trafficSource, embedParentUrl } = await request.json();
     const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
@@ -73,6 +73,8 @@ export async function POST(request) {
       diagnosticCompletedAt: new Date().toISOString(),
       dashboardPin: hashedPin,
       geo,
+      trafficSource: trafficSource || "",
+      embedParentUrl: embedParentUrl || "",
     };
     await redis.set(userKey, userData);
 
@@ -81,6 +83,8 @@ export async function POST(request) {
       email: normalizedEmail,
       name: trimmedName,
       phone: phone || "",
+      trafficSource: trafficSource || "",
+      embedParentUrl: embedParentUrl || "",
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     const token = await createDashboardToken(normalizedEmail, trimmedName);

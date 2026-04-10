@@ -955,6 +955,7 @@ function SubmissionsView({ product, days }) {
                 <th style={S.th}>Date</th>
                 <th style={S.th}>Name</th>
                 <th style={S.th}>Email</th>
+                <th style={S.th}>Source</th>
                 <th style={S.th}>Location</th>
                 <th style={S.th}>IP</th>
                 <th style={S.th}>Type</th>
@@ -970,6 +971,9 @@ function SubmissionsView({ product, days }) {
                   </td>
                   <td style={{ ...S.td, fontWeight: 500 }}>{row.name || "—"}</td>
                   <td style={{ ...S.td, fontSize: 11, color: "#999" }}>{row.email || row.session_id}</td>
+                  <td style={{ ...S.td, fontSize: 11, color: row.traffic_source && row.traffic_source !== "direct" ? "#4CAF50" : "#555", fontWeight: 500 }}>
+                    {row.traffic_source || "direct"}
+                  </td>
                   <td style={S.td}>
                     <span style={{ color: formatLocation(row) !== "Unknown" ? "#c5a55a" : "#555" }}>
                       {formatLocation(row)}

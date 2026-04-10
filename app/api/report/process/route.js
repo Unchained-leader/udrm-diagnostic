@@ -139,7 +139,7 @@ export async function POST(request) {
   }
 
   // ── Step 2: Parse payload ──
-  const { email: normalizedEmail, name: userName, messages, gender, ageRange, geo } = JSON.parse(rawBody);
+  const { email: normalizedEmail, name: userName, messages, gender, ageRange, geo, trafficSource, embedParentUrl } = JSON.parse(rawBody);
   const firstName = (userName || "Brother").split(" ")[0];
 
   console.log(`[QStash] Processing report for ${normalizedEmail}`);
@@ -300,6 +300,8 @@ export async function POST(request) {
       analysis,
       reportUrl,
       dashboardUrl,
+      trafficSource,
+      embedParentUrl,
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     // Send report data to Reports | Root Diagnostic workflow (separate webhook)
@@ -310,6 +312,8 @@ export async function POST(request) {
       analysis,
       reportUrl,
       dashboardUrl,
+      trafficSource,
+      embedParentUrl,
     }).catch((e) => console.error("GHL report webhook error:", e.message));
 
     // Record analytics: report generated + completed diagnostic
@@ -323,7 +327,7 @@ export async function POST(request) {
         session_id, email, product, name, arousal_template_type, neuropathway, attachment_style,
         codependency_score, enmeshment_score, relational_void_score, leadership_burden_score,
         escalation_present, strategies_count, years_fighting, report_url, report_generated_at,
-        ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon
+        ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon, traffic_source
       ) VALUES (
         ${normalizedEmail}, ${normalizedEmail}, 'udrm', ${userName},
         ${analysis.arousalTemplateType || null}, ${analysis.neuropathway || null}, ${analysis.attachmentStyle || null},
@@ -331,7 +335,7 @@ export async function POST(request) {
         ${parseInt(analysis.relationalVoidScore) || 0}, ${parseInt(analysis.leadershipBurdenScore) || 0},
         ${analysis.escalationPresent || false}, ${parseInt(analysis.strategiesCount) || 0},
         ${analysis.yearsFighting || null}, ${reportUrl}, NOW(),
-        ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon}
+        ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon}, ${trafficSource || "direct"}
       )`;
     } catch(e) { console.error("Analytics write error (non-fatal):", e.message); }
 

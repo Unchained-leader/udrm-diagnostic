@@ -290,7 +290,7 @@ export async function GET(request) {
         SELECT
           id, session_id, email, name, arousal_template_type, attachment_style, neuropathway,
           ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon,
-          report_url, created_at
+          report_url, traffic_source, created_at
         FROM completed_diagnostics
         WHERE product = ${product} AND created_at >= ${since} AND created_at <= ${until}
         ORDER BY created_at DESC

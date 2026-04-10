@@ -18,7 +18,7 @@ export async function OPTIONS() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, name, diagnosticData, gender, ageRange } = body;
+    const { email, name, diagnosticData, gender, ageRange, trafficSource, embedParentUrl } = body;
 
     // Extract geo data from Vercel headers
     const headers = request.headers;
@@ -86,6 +86,8 @@ export async function POST(request) {
         gender,
         ageRange,
         geo,
+        trafficSource: trafficSource || "",
+        embedParentUrl: embedParentUrl || "",
       },
       retries: 5,
       failureCallback: failureUrl,
