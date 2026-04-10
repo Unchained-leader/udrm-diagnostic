@@ -60,15 +60,6 @@ async function sendPipelineAlert(alertKey, message) {
 async function checkPipelineLimits(email) {
   try {
     const sql = getDb();
-    const tpmLimit = parseInt(process.env.ANTHROPIC_OUTPUT_TPM_LIMIT || "8000", 10);
-
-    // Check output tokens in last 60 seconds
-    const [tpmRow] = await sql`SELECT COALESCE(SUM(tokens_output), 0) as total FROM pipeline_metrics
-      WHERE service = 'anthropic' AND event_type = 'report_complete' AND created_at > NOW() - INTERVAL '60 seconds'`;
-    const currentTPM = parseInt(tpmRow?.total || 0);
-    if (currentTPM > tpmLimit * 0.7) {
-      await sendPipelineAlert("capacity", `:warning: *Pipeline capacity alert* <!channel>\nOutput tokens: ${currentTPM.toLocaleString()}/${tpmLimit.toLocaleString()} TPM (${Math.round(currentTPM / tpmLimit * 100)}%) in the last 60 seconds\nAction: Consider upgrading Anthropic API tier`);
-    }
 
     // Check today's email count (free tier = 100/day)
     const emailLimit = parseInt(process.env.RESEND_DAILY_LIMIT || "100", 10);
