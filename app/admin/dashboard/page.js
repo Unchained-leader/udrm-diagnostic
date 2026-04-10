@@ -232,30 +232,31 @@ function Card({ label, value, color }) {
   );
 }
 
+// Dashboard tile wrapper — defined outside DashboardHomeView so React keeps a stable reference
+const TILE_STYLE = {
+  background: "#111", border: "1px solid #222", borderRadius: 12,
+  padding: 16, cursor: "pointer", overflow: "hidden", position: "relative",
+  transition: "border-color 0.2s",
+};
+const TILE_TITLE_STYLE = {
+  fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
+  fontWeight: 600, marginBottom: 10,
+};
+function TileWrap({ label, tabId, children, style, span2, onNavigate }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div style={{ ...TILE_STYLE, ...(hovered ? { borderColor: "#C5A55A" } : {}), ...style, ...(span2 ? { gridColumn: "span 2" } : {}) }}
+      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      onClick={() => onNavigate(tabId)}>
+      <div style={TILE_TITLE_STYLE}>{label}</div>
+      <div style={{ pointerEvents: "none" }}>{children}</div>
+      <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
+    </div>
+  );
+}
+
 // ═══ DASHBOARD HOME ═══
 function DashboardHomeView({ data, summary, product, days, setTab }) {
-  const tileStyle = {
-    background: "#111", border: "1px solid #222", borderRadius: 12,
-    padding: 16, cursor: "pointer", overflow: "hidden", position: "relative",
-    transition: "border-color 0.2s",
-  };
-  const tileHover = { borderColor: "#C5A55A" };
-  const tileTitle = {
-    fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
-    fontWeight: 600, marginBottom: 10,
-  };
-  const TileWrap = ({ label, tabId, children, style, span2 }) => {
-    const [hovered, setHovered] = useState(false);
-    return (
-      <div style={{ ...tileStyle, ...(hovered ? tileHover : {}), ...style, ...(span2 ? { gridColumn: "span 2" } : {}) }}
-        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-        onClick={() => setTab(tabId)}>
-        <div style={tileTitle}>{label}</div>
-        <div style={{ pointerEvents: "none" }}>{children}</div>
-        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
-      </div>
-    );
-  };
 
   // Build funnel bar chart inline
   const funnelOrder = ["quiz_start","section_1_complete","section_2_complete","section_3_complete","section_4_complete","section_5_complete","section_6_complete","section_7_complete","reveal_shown","contact_capture_shown","contact_capture_complete","report_generated","report_emailed"];
@@ -291,9 +292,9 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
   return (
     <div>
       {/* Globe — full width at top */}
-      <div style={{ ...tileStyle, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
+      <div style={{ ...TILE_STYLE, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
         onClick={() => setTab("locations")}>
-        <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
+        <div style={{ ...TILE_TITLE_STYLE, padding: "16px 16px 0" }}>Global Submissions</div>
         <div style={{ height: 400, position: "relative" }}>
           <MiniGlobe product={product} height={400} />
           <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
@@ -307,7 +308,7 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
 
         {/* Funnel — full chart */}
-        <TileWrap label="Conversion Funnel" tabId="funnel" span2>
+        <TileWrap onNavigate={setTab} label="Conversion Funnel" tabId="funnel" span2>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {funnelOrder.map((key, i) => {
               const val = fMap[key] || 0;
@@ -325,25 +326,25 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
         </TileWrap>
 
         {/* Trends — line chart */}
-        <TileWrap label="Performance Trends" tabId="trends" span2>
+        <TileWrap onNavigate={setTab} label="Performance Trends" tabId="trends" span2>
           <MiniTrendsChart product={product} days={days} />
         </TileWrap>
 
         {/* Research — bar charts */}
-        <TileWrap label="Arousal Templates" tabId="research">
+        <TileWrap onNavigate={setTab} label="Arousal Templates" tabId="research">
           {diagnostics.length > 0 ? (
             <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "?", value: parseInt(d.count) }))} color="#c5a55a" />
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        <TileWrap label="Attachment Styles" tabId="research">
+        <TileWrap onNavigate={setTab} label="Attachment Styles" tabId="research">
           {attachments.length > 0 ? (
             <BarChart items={attachments.map(a => ({ label: a.attachment_style || "?", value: parseInt(a.count) }))} color="#2196F3" />
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
         {/* Drop-off — retention table */}
-        <TileWrap label="Section Retention" tabId="dropoff">
+        <TileWrap onNavigate={setTab} label="Section Retention" tabId="dropoff">
           {dropItems.length > 0 ? (
             <div style={{ fontSize: 11 }}>
               {dropItems.map((item, i) => (
@@ -360,7 +361,7 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
         </TileWrap>
 
         {/* Devices — bar charts */}
-        <TileWrap label="Devices & Browsers" tabId="devices">
+        <TileWrap onNavigate={setTab} label="Devices & Browsers" tabId="devices">
           {deviceItems.length > 0 ? (
             <div>
               <BarChart items={deviceItems} color="#9C27B0" />
@@ -370,12 +371,12 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
         </TileWrap>
 
         {/* Referrers — top sources */}
-        <TileWrap label="Top Traffic Sources" tabId="referrers">
+        <TileWrap onNavigate={setTab} label="Top Traffic Sources" tabId="referrers">
           <MiniReferrersTile product={product} days={days} />
         </TileWrap>
 
         {/* Cohort — week over week */}
-        <TileWrap label="This Week vs Last Week" tabId="cohort">
+        <TileWrap onNavigate={setTab} label="This Week vs Last Week" tabId="cohort">
           <table style={{ ...S.table, fontSize: 11 }}>
             <thead><tr><th style={{ ...S.th, fontSize: 9 }}>Metric</th><th style={{ ...S.th, fontSize: 9 }}>This Wk</th><th style={{ ...S.th, fontSize: 9 }}>Last Wk</th><th style={{ ...S.th, fontSize: 9 }}>Δ</th></tr></thead>
             <tbody>{cohortMetrics.map((m, i) => {
@@ -396,7 +397,7 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
         </TileWrap>
 
         {/* System Health */}
-        <TileWrap label="System Health" tabId="health">
+        <TileWrap onNavigate={setTab} label="System Health" tabId="health">
           <HealthMiniTile />
         </TileWrap>
 
