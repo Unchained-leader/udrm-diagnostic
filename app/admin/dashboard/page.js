@@ -797,8 +797,114 @@ function TrendsView({ product, days }) {
 // ═══ RESEARCH ═══
 function ResearchView({ data }) {
   const { distributions, diagnostics, attachments, neuropathways, relational } = data;
+
+  // Map option IDs to human-readable labels and group by question category
+  const labelMap = {
+    // Demographics
+    male: "Male", female: "Female",
+    age_18_24: "18-24", age_25_34: "25-34", age_35_44: "35-44", age_45_54: "45-54",
+    age_55_64: "55-64", age_65_74: "65-74", age_75_84: "75-84", age_85_plus: "85+",
+    // Sexual behaviors
+    viewing_porn: "Viewing Porn", scrolling_social: "Scrolling Social Media", fantasy_daydream: "Fantasy/Daydream",
+    compulsive_mb: "Compulsive MB", sexting: "Sexting", physical_acting: "Physical Acting Out", massage_parlors: "Massage Parlors",
+    // Other vices
+    vice_alcohol: "Alcohol", vice_thc: "THC/Cannabis", vice_substances: "Substances", vice_overeating: "Overeating",
+    vice_gambling: "Gambling", vice_gaming: "Gaming", vice_spending: "Spending", vice_social_media: "Social Media",
+    vice_work: "Workaholism", vice_nicotine: "Nicotine", vice_none: "None",
+    // Frequency
+    daily: "Daily", several_week: "Several/Week", weekly: "Weekly", few_month: "Few/Month", binge_purge: "Binge/Purge",
+    // Escalation
+    need_more_extreme: "Need More Extreme", crossed_lines: "Crossed Lines", added_behaviors: "Added Behaviors", stayed_same: "Stayed Same",
+    // Content themes
+    val_desired: "Feeling Desired", val_amateur: "Amateur/Real", pow_dominance: "Dominance", pow_degradation: "Degradation",
+    sur_someone_control: "Someone In Control", sur_dominated: "Being Dominated", tab_wrong: "Taboo/Wrong",
+    tab_secrecy: "Secrecy", tab_incest: "Incest Themes", voy_watching: "Voyeurism", voy_partner: "Partner Watching",
+    ten_emotional: "Emotional/Tender", nov_new: "Novelty/New", nov_search: "Searching for New", nov_anime: "Anime/Hentai",
+    conf_race: "Racial Themes", conf_samesex: "Same-Sex", conf_trans: "Trans", conf_pain: "Pain/BDSM",
+    conf_crossdressing: "Crossdressing", cat_lesbian: "Lesbian", cat_milf: "MILF", cat_youth: "Youthful",
+    cat_group: "Group", cat_bodytype: "Body Type", cat_solo: "Solo", cat_pov: "POV",
+    // Emotional function
+    calm_stress: "Calm Stress", feel_less_alone: "Feel Less Alone", feel_powerful: "Feel Powerful",
+    numb_checkout: "Numb/Checkout", feel_wanted: "Feel Wanted", escape_reality: "Escape Reality",
+    manage_anger: "Manage Anger", feel_something: "Feel Something", after_conflict: "After Conflict",
+    after_serving: "After Serving Others", distant_god: "Distant from God", spiritual_growth: "Spiritual Struggle",
+    // Life stress
+    life_romantic_abundance: "Romance: Abundance", life_romantic_lack: "Romance: Lack",
+    life_health_abundance: "Health: Abundance", life_health_lack: "Health: Lack",
+    life_financial_abundance: "Finances: Abundance", life_financial_lack: "Finances: Lack",
+    life_work_abundance: "Work: Abundance", life_work_lack: "Work: Lack",
+    life_god_abundance: "God: Abundance", life_god_lack: "God: Lack",
+    // First exposure
+    under_8: "Under 8", age_8_11: "8-11", age_12_14: "12-14", age_15_plus: "15+",
+    // Exposure method
+    found_own: "Found on Own", peer_showed: "Peer Showed", older_showed: "Older Person Showed",
+    abused: "Abused/Exposed", parent_collection: "Parent's Collection", witnessed: "Witnessed", dont_remember: "Don't Remember",
+    // Home environment
+    home_warm: "Warm & Safe", home_cold: "Cold/Distant", home_unpredictable: "Unpredictable",
+    home_conflict: "High Conflict", home_controlled: "Controlling", home_conditional: "Conditional Love", home_no_emotions: "No Emotions Allowed",
+    // Father
+    dad_close: "Close/Connected", dad_distant: "Distant/Absent", dad_critical: "Critical/Harsh",
+    dad_approval: "Approval-Based", dad_sexual: "Had Sexual Issues",
+    // Mother
+    mom_close: "Close/Connected", mom_enmeshed: "Enmeshed/Overinvolved", mom_distant: "Distant/Absent",
+    mom_critical: "Critical/Controlling", mom_responsible: "Felt Responsible For",
+    // Church
+    church_shameful: "Sex = Shameful", church_purity: "Purity Culture", church_thoughts_sin: "Thoughts = Sin",
+    church_good_kid: "Had to Be Good", church_conditional: "Conditional Acceptance",
+    // Attachment
+    anx_leave: "Fear of Leaving", anx_reassurance: "Need Reassurance", anx_conflict_end: "Fear Conflict = End",
+    avoid_pull_away: "Pull Away When Close", avoid_sexual_easy: "Sexual > Emotional", avoid_withdraw: "Withdraw Under Stress",
+    fear_crave_push: "Crave Then Push", fear_both: "Want Both/Neither", fear_swing: "Swing Between Extremes",
+    sec_comfortable: "Comfortable Close", sec_conflict_ok: "Conflict Doesn't Threaten", sec_trust: "Trust Partner",
+    god_disappointed: "God Disappointed", god_avoid: "Avoid God After Acting Out",
+    god_grace_cant_feel: "Know Grace, Can't Feel", god_like_father: "God Like Father", god_performance: "Performance-Based Faith",
+    // Relational patterns
+    cod_needs: "Ignore Own Needs", cod_responsible: "Responsible for Others' Feelings", cod_worth: "Worth = Usefulness",
+    enm_parent_emotions: "Managed Parent's Emotions", enm_therapist: "Therapist in Relationships", enm_boundaries: "Weak Boundaries",
+    void_no_one: "No One Really Knows Me", void_perform: "Perform to Connect", void_never_told: "Never Told Anyone",
+    lead_disqualified: "Feel Disqualified", lead_no_one_serves: "No One Serves Me", lead_lose_position: "Fear Losing Position",
+    // Strategies
+    strat_filters: "Content Filters", strat_accountability: "Accountability Partner", strat_prayer: "Prayer/Fasting",
+    strat_willpower: "Willpower/White-knuckling", strat_therapy: "Therapy/Counseling", strat_group: "Support Group",
+    strat_rehab: "Rehab/Intensive", strat_program: "Online Program", strat_confession: "Confession",
+    strat_books: "Books/Podcasts", strat_cold_turkey: "Cold Turkey", strat_medication: "Medication",
+    strat_deliverance: "Deliverance Ministry", strat_environment: "Changed Environment", strat_dating: "Started Dating/Marriage", strat_nothing: "Nothing Yet",
+    // Years fighting
+    years_under2: "Under 2 Years", years_2_5: "2-5 Years", years_5_10: "5-10 Years", years_10_20: "10-20 Years", years_20_plus: "20+ Years",
+  };
+
+  // Define question categories with their option IDs grouped
+  const categories = [
+    { title: "Gender", color: "#9C27B0", ids: ["male", "female"] },
+    { title: "Age Range", color: "#673AB7", ids: ["age_18_24","age_25_34","age_35_44","age_45_54","age_55_64","age_65_74","age_75_84","age_85_plus"] },
+    { title: "Sexual Behaviors", color: "#f44336", ids: ["viewing_porn","scrolling_social","fantasy_daydream","compulsive_mb","sexting","physical_acting","massage_parlors"] },
+    { title: "Other Vices / Coping", color: "#E91E63", ids: ["vice_alcohol","vice_thc","vice_substances","vice_overeating","vice_gambling","vice_gaming","vice_spending","vice_social_media","vice_work","vice_nicotine","vice_none"] },
+    { title: "Frequency", color: "#FF5722", ids: ["daily","several_week","weekly","few_month","binge_purge"] },
+    { title: "Escalation Pattern", color: "#FF9800", ids: ["need_more_extreme","crossed_lines","added_behaviors","stayed_same"] },
+    { title: "Content Themes (Pornography Types)", color: "#c5a55a", ids: ["val_desired","val_amateur","pow_dominance","pow_degradation","sur_someone_control","sur_dominated","tab_wrong","tab_secrecy","tab_incest","voy_watching","voy_partner","ten_emotional","nov_new","nov_search","nov_anime","conf_race","conf_samesex","conf_trans","conf_pain","conf_crossdressing","cat_lesbian","cat_milf","cat_youth","cat_group","cat_bodytype","cat_solo","cat_pov"] },
+    { title: "Emotional Function", color: "#00BCD4", ids: ["calm_stress","feel_less_alone","feel_powerful","numb_checkout","feel_wanted","escape_reality","manage_anger","feel_something","after_conflict","after_serving","distant_god","spiritual_growth"] },
+    { title: "Life Stress Areas", color: "#8BC34A", ids: ["life_romantic_abundance","life_romantic_lack","life_health_abundance","life_health_lack","life_financial_abundance","life_financial_lack","life_work_abundance","life_work_lack","life_god_abundance","life_god_lack"] },
+    { title: "Age of First Exposure", color: "#f44336", ids: ["under_8","age_8_11","age_12_14","age_15_plus"] },
+    { title: "How First Exposure Happened", color: "#E91E63", ids: ["found_own","peer_showed","older_showed","abused","parent_collection","witnessed","dont_remember"] },
+    { title: "Home Environment", color: "#795548", ids: ["home_warm","home_cold","home_unpredictable","home_conflict","home_controlled","home_conditional","home_no_emotions"] },
+    { title: "Father Relationship", color: "#607D8B", ids: ["dad_close","dad_distant","dad_critical","dad_approval","dad_sexual"] },
+    { title: "Mother Relationship", color: "#9E9E9E", ids: ["mom_close","mom_enmeshed","mom_distant","mom_critical","mom_responsible"] },
+    { title: "Church / Faith Background", color: "#FF9800", ids: ["church_shameful","church_purity","church_thoughts_sin","church_good_kid","church_conditional"] },
+    { title: "Attachment Patterns", color: "#2196F3", ids: ["anx_leave","anx_reassurance","anx_conflict_end","avoid_pull_away","avoid_sexual_easy","avoid_withdraw","fear_crave_push","fear_both","fear_swing","sec_comfortable","sec_conflict_ok","sec_trust","god_disappointed","god_avoid","god_grace_cant_feel","god_like_father","god_performance"] },
+    { title: "Relational Patterns", color: "#3F51B5", ids: ["cod_needs","cod_responsible","cod_worth","enm_parent_emotions","enm_therapist","enm_boundaries","void_no_one","void_perform","void_never_told","lead_disqualified","lead_no_one_serves","lead_lose_position"] },
+    { title: "Strategies Tried", color: "#4CAF50", ids: ["strat_filters","strat_accountability","strat_prayer","strat_willpower","strat_therapy","strat_group","strat_rehab","strat_program","strat_confession","strat_books","strat_cold_turkey","strat_medication","strat_deliverance","strat_environment","strat_dating","strat_nothing"] },
+    { title: "Years Fighting", color: "#009688", ids: ["years_under2","years_2_5","years_5_10","years_10_20","years_20_plus"] },
+  ];
+
+  // Build a lookup from selection ID → count
+  const selectionCounts = {};
+  (distributions || []).forEach(d => {
+    selectionCounts[d.selection] = (selectionCounts[d.selection] || 0) + parseInt(d.count);
+  });
+
   return (
     <div>
+      {/* Diagnostic results (from completed reports) */}
       {diagnostics?.length > 0 && (<><h2 style={S.sectionTitle}>Arousal Template Types</h2>
         <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "Unknown", value: parseInt(d.count) }))} color="#c5a55a" /></>)}
       {attachments?.length > 0 && (<><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Attachment Styles</h2>
@@ -812,10 +918,29 @@ function ResearchView({ data }) {
           { label: "Relational Void", value: parseFloat(relational[0].avg_relational_void) || 0 },
           { label: "Leadership Burden", value: parseFloat(relational[0].avg_leadership_burden) || 0 },
         ]} color="#FF9800" maxOverride={3} /></>)}
-      {distributions?.length > 0 && (<><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Top Answer Selections</h2>
-        <table style={S.table}><thead><tr><th style={S.th}>Section</th><th style={S.th}>Selection</th><th style={S.th}>Count</th></tr></thead>
-        <tbody>{distributions.slice(0, 30).map((d, i) => (<tr key={i}><td style={S.td}>{d.section_num}</td><td style={S.td}>{d.selection}</td><td style={S.td}>{d.count}</td></tr>))}</tbody></table></>)}
-      {(!diagnostics || diagnostics.length === 0) && <Empty msg="No research data yet." />}
+
+      {/* Quiz response breakdowns by category */}
+      {distributions?.length > 0 && (<>
+        <div style={{ marginTop: 32, marginBottom: 8, borderTop: "1px solid #222", paddingTop: 24 }}>
+          <h2 style={S.sectionTitle}>Quiz Response Breakdowns</h2>
+          <p style={{ color: "#555", fontSize: 12, margin: "0 0 16px" }}>Every selection from all quiz sections, organized by category</p>
+        </div>
+        {categories.map((cat, ci) => {
+          const items = cat.ids
+            .map(id => ({ label: labelMap[id] || id, value: selectionCounts[id] || 0 }))
+            .filter(item => item.value > 0)
+            .sort((a, b) => b.value - a.value);
+          if (items.length === 0) return null;
+          return (
+            <div key={ci} style={{ marginTop: ci > 0 ? 20 : 0 }}>
+              <h3 style={{ fontSize: 13, color: cat.color, fontWeight: 600, margin: "0 0 8px", letterSpacing: 0.5 }}>{cat.title}</h3>
+              <BarChart items={items} color={cat.color} />
+            </div>
+          );
+        })}
+      </>)}
+
+      {(!diagnostics || diagnostics.length === 0) && (!distributions || distributions.length === 0) && <Empty msg="No research data yet." />}
     </div>
   );
 }
