@@ -837,26 +837,27 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
       el.style.maxWidth = "500px";
       el.style.padding = "20px 16px";
 
-      // Show the print title header for the PDF
+      // Show the print title header, hide the export button
       const printTitle = el.querySelector(".research-print-title");
       if (printTitle) printTitle.style.display = "block";
-      // Hide the export button from capture
       if (btn) btn.style.display = "none";
 
       // Wait for layout reflow at new width
       await new Promise(r => setTimeout(r, 500));
 
-      // Capture each chart section separately for intelligent page breaks
+      // Measure section positions WHILE at 500px width (before capture)
       const sections = el.querySelectorAll(".research-chart-section, .research-diagnostic-section, .research-header, .research-quiz-header");
-      const PAGE_W = 612; // letter width pts
-      const PAGE_H = 792; // letter height pts
-      const MARGIN = 30;
-      const CONTENT_W = PAGE_W - MARGIN * 2;
-      const CONTENT_H = PAGE_H - MARGIN * 2;
+      const elRect = el.getBoundingClientRect();
+      const sectionBounds = [];
+      sections.forEach(s => {
+        const r = s.getBoundingClientRect();
+        sectionBounds.push({ top: r.top - elRect.top, bottom: r.bottom - elRect.top });
+      });
 
       // Capture the entire element as one canvas
+      const SCALE = 2;
       const fullCanvas = await html2canvas(el, {
-        scale: 2,
+        scale: SCALE,
         useCORS: false,
         allowTaint: true,
         backgroundColor: "#0a0a0a",
@@ -872,51 +873,70 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
       el.style.maxWidth = origMaxWidth;
       el.style.padding = origPadding;
 
-      // Split into pages
+      // Full bleed letter page (no margins — content fills edge to edge)
+      const PAGE_W = 612;
+      const PAGE_H = 792;
+      const PAD = 20; // small inner padding in pts
+      const CONTENT_W = PAGE_W - PAD * 2;
+      const CONTENT_H = PAGE_H - PAD * 2;
+
       const imgW = fullCanvas.width;
       const imgH = fullCanvas.height;
-      const scale = CONTENT_W / imgW;
-      const scaledH = imgH * scale;
-      const pxPerPage = CONTENT_H / scale; // pixels of source per PDF page
+      const pxScale = CONTENT_W / imgW; // canvas px → PDF pts
+      const pxPerPage = CONTENT_H / pxScale; // canvas px that fit on one page
 
-      // Find page break points by measuring section positions
-      const sectionTops = [];
-      sections.forEach(s => {
-        const rect = s.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        const top = (rect.top - elRect.top) * 2; // multiply by scale factor (2)
-        sectionTops.push(top);
-      });
-      sectionTops.sort((a, b) => a - b);
+      // Scale section bounds to canvas pixels (multiply by html2canvas scale)
+      const scaledSections = sectionBounds.map(s => ({
+        top: s.top * SCALE,
+        bottom: s.bottom * SCALE,
+      }));
 
-      // Build page break positions — avoid cutting through sections
+      // Build intelligent page breaks at section boundaries
       const breakPoints = [0];
-      let nextBreak = pxPerPage;
-      while (nextBreak < imgH) {
-        // Find the closest section boundary before the natural page break
-        let bestBreak = nextBreak;
-        for (let i = sectionTops.length - 1; i >= 0; i--) {
-          if (sectionTops[i] <= nextBreak && sectionTops[i] > nextBreak - pxPerPage * 0.4) {
-            bestBreak = sectionTops[i];
+      let cursor = 0;
+      while (cursor + pxPerPage < imgH) {
+        let idealBreak = cursor + pxPerPage;
+        let bestBreak = idealBreak;
+
+        // Walk backward from the ideal break to find a section boundary
+        // that doesn't split a section in half
+        for (let i = scaledSections.length - 1; i >= 0; i--) {
+          const sec = scaledSections[i];
+          // If this section starts before the ideal break and ends after it,
+          // break BEFORE this section starts
+          if (sec.top < idealBreak && sec.bottom > idealBreak) {
+            bestBreak = sec.top;
+            break;
+          }
+          // If this section ends cleanly before the ideal break, break after it
+          if (sec.bottom <= idealBreak && sec.bottom > cursor + pxPerPage * 0.3) {
+            bestBreak = sec.bottom;
             break;
           }
         }
+
+        // Don't allow a break that makes zero progress
+        if (bestBreak <= cursor) bestBreak = idealBreak;
         breakPoints.push(bestBreak);
-        nextBreak = bestBreak + pxPerPage;
+        cursor = bestBreak;
       }
       breakPoints.push(imgH);
 
-      // Create multi-page PDF
+      // Create multi-page PDF with full bleed background
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
 
       for (let i = 0; i < breakPoints.length - 1; i++) {
         if (i > 0) pdf.addPage();
 
-        const srcY = breakPoints[i];
-        const srcH = breakPoints[i + 1] - srcY;
+        // Full bleed background
+        pdf.setFillColor(10, 10, 10);
+        pdf.rect(0, 0, PAGE_W, PAGE_H, "F");
+
+        const srcY = Math.round(breakPoints[i]);
+        const srcH = Math.round(breakPoints[i + 1] - srcY);
         if (srcH <= 0) continue;
 
-        // Create a slice canvas for this page
+        // Slice the captured canvas for this page
         const pageCanvas = document.createElement("canvas");
         pageCanvas.width = imgW;
         pageCanvas.height = srcH;
@@ -924,8 +944,8 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
         ctx.drawImage(fullCanvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
 
         const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.95);
-        const drawH = srcH * scale;
-        pdf.addImage(pageImgData, "JPEG", MARGIN, MARGIN, CONTENT_W, drawH);
+        const drawH = srcH * pxScale;
+        pdf.addImage(pageImgData, "JPEG", PAD, PAD, CONTENT_W, drawH);
       }
 
       const date = new Date().toISOString().split("T")[0];
