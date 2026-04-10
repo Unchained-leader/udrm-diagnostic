@@ -4,6 +4,8 @@ import { corsHeaders, optionsResponse } from "../../lib/cors";
 
 const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
+export const maxDuration = 120; // Allow up to 2 minutes for Opus + multiple tool calls
+
 export async function OPTIONS() {
   return optionsResponse("POST, OPTIONS");
 }
@@ -143,14 +145,22 @@ Section 9 (Strategies & Duration):
 
 You are a senior data analyst. When the admin asks a question:
 1. Think about which tables and columns contain the answer
-2. Write precise SQL to query the data
+2. Write ONE precise SQL query to get the data (combine joins, subqueries, and aggregations into a single query when possible)
 3. Use the run_sql_query tool to execute it
 4. Interpret the results in plain English with actionable insights
-5. If asked for an export/CSV, use generate_csv to create a downloadable file
-6. You may run multiple queries to answer complex questions
-7. Always show the key numbers and percentages
-8. When showing trends, calculate period-over-period changes
-9. Be concise but thorough — this is a business dashboard, not a classroom
+5. If asked for an export/CSV, run the SQL query FIRST, then IMMEDIATELY call generate_csv with the results — do both in sequence, no extra queries needed
+6. Always show the key numbers and percentages
+7. When showing trends, calculate period-over-period changes
+8. Be concise but thorough — this is a business dashboard, not a classroom
+
+## CRITICAL EFFICIENCY RULES
+- NEVER run more than 3 tool calls total for a single question
+- For CSV exports: 1 SQL query + 1 generate_csv call = 2 tool calls maximum
+- Combine multiple questions into a single SQL query using CTEs (WITH clauses) or subqueries
+- Do NOT run exploratory queries to "check the schema" — the full schema is above
+- Do NOT run a count query first and then a separate data query — just get the data
+- Always include LIMIT 500 on data exports unless the user specifically asks for all rows
+- If a query returns an error, fix the SQL and retry ONCE — do not keep retrying
 `;
 
 const tools = [
@@ -215,18 +225,21 @@ function isSafeQuery(query) {
 // Execute a tool call
 async function executeTool(toolName, toolInput) {
   if (toolName === "run_sql_query") {
-    const { query } = toolInput;
+    const { query, description } = toolInput;
+    console.log(`[AI Chat] SQL: ${description || "query"} — ${query.substring(0, 200)}`);
     if (!isSafeQuery(query)) {
       return { error: "Query rejected: only read-only SELECT queries are allowed." };
     }
     try {
       const sql = getDb();
-      // neon() supports being called as sql(queryString, params) for raw queries
-      const result = await sql(query);
-      const rows = result.slice(0, 500);
-      return { rowCount: result.length, rows, truncated: result.length > 500 };
+      // neon serverless driver: call as function with query string
+      const result = await sql(query, []);
+      const rows = Array.isArray(result) ? result.slice(0, 500) : [];
+      console.log(`[AI Chat] Result: ${rows.length} rows`);
+      return { rowCount: rows.length, rows, truncated: (Array.isArray(result) && result.length > 500) };
     } catch (e) {
-      return { error: `SQL error: ${e.message}` };
+      console.error(`[AI Chat] SQL error:`, e.message);
+      return { error: `SQL error: ${e.message}. Fix the query and try again.` };
     }
   }
 
@@ -275,10 +288,12 @@ export async function POST(request) {
 
     let csvDownload = null;
     let iterations = 0;
-    const MAX_ITERATIONS = 10;
+    const MAX_ITERATIONS = 6;
+    let lastError = null;
 
     while (iterations < MAX_ITERATIONS) {
       iterations++;
+      console.log(`[AI Chat] Iteration ${iterations}/${MAX_ITERATIONS}`);
 
       const response = await client.messages.create({
         model: "claude-opus-4-6",
