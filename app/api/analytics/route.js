@@ -334,13 +334,14 @@ export async function GET(request) {
 
     } else if (view === "locations") {
       // Aggregated location data for globe visualization
-      const startDate = searchParams.get("startDate");
-      const endDate = searchParams.get("endDate");
+      // Uses the global since/until from top of handler; also supports custom date range
+      const locStartDate = searchParams.get("startDate");
+      const locEndDate = searchParams.get("endDate");
       let dateSince = since;
       let dateUntil = null;
-      if (startDate && endDate) {
-        dateSince = new Date(startDate).toISOString();
-        dateUntil = new Date(endDate + "T23:59:59").toISOString();
+      if (locStartDate && locEndDate) {
+        dateSince = new Date(locStartDate).toISOString();
+        dateUntil = new Date(locEndDate + "T23:59:59").toISOString();
       }
 
       const locationQuery = dateUntil
@@ -485,7 +486,7 @@ export async function GET(request) {
       return Response.json({ current, previous, multiCurrent, multiPrevious, days, metric }, { headers: CORS_HEADERS });
 
     } else if (view === "pipeline") {
-      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const pipeSince = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
       const tpmLimit = parseInt(process.env.ANTHROPIC_OUTPUT_TPM_LIMIT || "8000", 10);
 
       // Summary counts
@@ -500,7 +501,7 @@ export async function GET(request) {
         COALESCE(AVG(duration_ms) FILTER (WHERE event_type = 'report_complete'), 0) as avg_duration_ms,
         COALESCE(AVG(tokens_input) FILTER (WHERE event_type = 'report_complete'), 0) as avg_input_tokens,
         COALESCE(AVG(tokens_output) FILTER (WHERE event_type = 'report_complete'), 0) as avg_output_tokens
-        FROM pipeline_metrics WHERE created_at >= ${since}`;
+        FROM pipeline_metrics WHERE created_at >= ${pipeSince}`;
 
       // Hourly breakdown (last 24h)
       const hourly = await sql`SELECT
@@ -525,11 +526,11 @@ export async function GET(request) {
 
       // Recent rate limit events
       const rateLimitEvents = await sql`SELECT created_at, email, error_message FROM pipeline_metrics
-        WHERE event_type = 'rate_limited' AND created_at >= ${since} ORDER BY created_at DESC LIMIT 20`;
+        WHERE event_type = 'rate_limited' AND created_at >= ${pipeSince} ORDER BY created_at DESC LIMIT 20`;
 
       // Recent failures
       const failureEvents = await sql`SELECT created_at, email, error_message FROM pipeline_metrics
-        WHERE event_type = 'report_failed' AND created_at >= ${since} ORDER BY created_at DESC LIMIT 20`;
+        WHERE event_type = 'report_failed' AND created_at >= ${pipeSince} ORDER BY created_at DESC LIMIT 20`;
 
       return Response.json({
         counts: {
