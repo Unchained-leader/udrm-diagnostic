@@ -116,6 +116,7 @@ export default function Dashboard() {
     { id: "health", label: "System Health" },
     { id: "pipeline", label: "Pipeline" },
     { id: "referrers", label: "Referrers" },
+    { id: "chat", label: "AI Analyst" },
     { id: "export", label: "Export" },
     { id: "clients", label: "Clients" },
   ];
@@ -201,6 +202,7 @@ export default function Dashboard() {
         {tab === "health" && <HealthView />}
         {tab === "pipeline" && <PipelineView days={days} />}
         {tab === "referrers" && <ReferrersView product={product} days={days} />}
+        {tab === "chat" && <ChatView />}
         {tab === "export" && <ExportView product={product} days={days} />}
         {tab === "clients" && <ClientsView />}
       </div>
@@ -1975,6 +1977,154 @@ function PipelineCard({ label, value, color }) {
     <div style={{ background: "#111", borderRadius: 8, padding: "14px 16px", border: "1px solid #222" }}>
       <div style={{ color: "#666", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
       <div style={{ color: color || "#fff", fontSize: 22, fontWeight: 700 }}>{value}</div>
+    </div>
+  );
+}
+
+// ═══ EXPORT ═══
+// ═══ AI ANALYST CHAT ═══
+function ChatView() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => { scrollToBottom(); }, [messages]);
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const newMessages = [...messages, { role: "user", content: text }];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const secret = sessionStorage.getItem("admin_secret") || "";
+      const res = await fetch("/api/admin/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret,
+          messages: newMessages.map(m => ({ role: m.role, content: typeof m.content === "string" ? m.content : m.content.text || "" })),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.response,
+        csvDownload: data.csvDownload || null,
+        usage: data.usage || null,
+      }]);
+    } catch (e) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `Error: ${e.message}`,
+      }]);
+    }
+    setLoading(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const chatStyles = {
+    wrap: { display: "flex", flexDirection: "column", height: "calc(100vh - 280px)", minHeight: 400 },
+    messageArea: { flex: 1, overflowY: "auto", padding: "16px 0", display: "flex", flexDirection: "column", gap: 12 },
+    userMsg: { alignSelf: "flex-end", background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", padding: "10px 16px", borderRadius: "16px 16px 4px 16px", maxWidth: "80%", fontSize: 14, lineHeight: 1.5, fontWeight: 500 },
+    assistantMsg: { alignSelf: "flex-start", background: "#1a1a1a", border: "1px solid #2a2a2a", color: "#ccc", padding: "14px 18px", borderRadius: "16px 16px 16px 4px", maxWidth: "90%", fontSize: 14, lineHeight: 1.7 },
+    inputWrap: { display: "flex", gap: 8, padding: "12px 0 0", borderTop: "1px solid #222" },
+    input: { flex: 1, background: "#1a1a1a", color: "#ccc", border: "1px solid #333", borderRadius: 12, padding: "12px 16px", fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none", minHeight: 48, maxHeight: 120 },
+    sendBtn: { background: "linear-gradient(135deg, #DFC468, #9A7730)", color: "#000", border: "none", borderRadius: 12, padding: "0 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: loading ? 0.5 : 1 },
+    csv: { display: "inline-block", background: "#1a1a1a", border: "1px solid #4CAF50", color: "#4CAF50", borderRadius: 8, padding: "8px 14px", fontSize: 12, textDecoration: "none", fontWeight: 600, marginTop: 8 },
+    usage: { fontSize: 10, color: "#444", marginTop: 6 },
+    empty: { color: "#444", textAlign: "center", padding: 60, fontSize: 14, lineHeight: 2 },
+  };
+
+  return (
+    <div style={chatStyles.wrap}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div>
+          <h2 style={S.sectionTitle}>AI Analyst</h2>
+          <p style={{ color: "#555", fontSize: 11, margin: 0 }}>Powered by Claude Opus — ask anything about your data</p>
+        </div>
+        {messages.length > 0 && (
+          <button onClick={() => setMessages([])} style={{ ...S.select, cursor: "pointer", fontSize: 11 }}>Clear Chat</button>
+        )}
+      </div>
+
+      <div style={chatStyles.messageArea}>
+        {messages.length === 0 && (
+          <div style={chatStyles.empty}>
+            <div style={{ fontSize: 24, marginBottom: 12, opacity: 0.3 }}>Ask me anything about your data</div>
+            <div>Examples:</div>
+            <div style={{ color: "#666" }}>"How many people completed the quiz this week?"</div>
+            <div style={{ color: "#666" }}>"Export a CSV of every man who said they have a healthy financial life"</div>
+            <div style={{ color: "#666" }}>"What's the most common content theme for men aged 25-34?"</div>
+            <div style={{ color: "#666" }}>"Show conversion rate by traffic source"</div>
+            <div style={{ color: "#666" }}>"What percentage of users who selected viewing_porn also selected vice_alcohol?"</div>
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i}>
+            <div style={msg.role === "user" ? chatStyles.userMsg : chatStyles.assistantMsg}>
+              {msg.role === "assistant" ? (
+                <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+              ) : (
+                msg.content
+              )}
+            </div>
+            {msg.csvDownload && (
+              <a href={msg.csvDownload.dataUri} download={msg.csvDownload.filename} style={chatStyles.csv}>
+                Download {msg.csvDownload.filename} ({msg.csvDownload.rowCount} rows)
+              </a>
+            )}
+            {msg.usage && (
+              <div style={chatStyles.usage}>{msg.usage.inputTokens?.toLocaleString()} in / {msg.usage.outputTokens?.toLocaleString()} out tokens</div>
+            )}
+          </div>
+        ))}
+        {loading && (
+          <div style={{ ...chatStyles.assistantMsg, opacity: 0.6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="spinner" style={{ width: 16, height: 16, border: "2px solid #333", borderTop: "2px solid #c5a55a", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              <span style={{ color: "#888", fontSize: 13 }}>Analyzing your data...</span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div style={chatStyles.inputWrap}>
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Ask about your quiz data, trends, exports..."
+          style={chatStyles.input}
+          rows={1}
+        />
+        <button onClick={sendMessage} disabled={loading || !input.trim()} style={chatStyles.sendBtn}>
+          {loading ? "..." : "Send"}
+        </button>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
     </div>
   );
 }
