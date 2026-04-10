@@ -930,21 +930,34 @@
       // Detect parent page URL when quiz is embedded in an iframe
       let embedParentUrl = "";
       try {
+        // Method 1: document.referrer (works when Referrer-Policy allows it)
         if (window.self !== window.top && document.referrer) {
           embedParentUrl = document.referrer;
         }
       } catch (e) {}
+      try {
+        // Method 2: check for a source param on the iframe src (e.g. ?source=udrm-email)
+        if (!embedParentUrl && params.get("source")) {
+          embedParentUrl = params.get("source");
+        }
+      } catch (e) {}
 
-      // Derive traffic source label from parent URL tail or UTM source
-      const landingUrl = embedParentUrl || window.location.href;
+      // Derive traffic source from the full URL path (everything after domain)
       let trafficSource = "direct";
       try {
-        const pathname = new URL(landingUrl).pathname.toLowerCase();
-        const lastSegment = pathname.split("/").filter(Boolean).pop() || "";
         if (params.get("utm_source")) {
           trafficSource = params.get("utm_source");
-        } else if (lastSegment && lastSegment !== "quiz.html" && lastSegment !== "quiz") {
-          trafficSource = lastSegment;
+        } else if (params.get("source")) {
+          // Explicit source param on iframe — use as-is (e.g. "udrm-email")
+          trafficSource = params.get("source");
+        } else if (embedParentUrl) {
+          // Extract full path from parent URL (e.g. /udrm-email → udrm-email)
+          const parentPath = new URL(embedParentUrl).pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+          if (parentPath && parentPath !== "quiz.html" && parentPath !== "quiz") {
+            trafficSource = parentPath;
+          } else if (referrerDomain) {
+            trafficSource = referrerDomain;
+          }
         } else if (referrerDomain) {
           trafficSource = referrerDomain;
         }
