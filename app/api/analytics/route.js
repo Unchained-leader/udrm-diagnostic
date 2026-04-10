@@ -86,23 +86,28 @@ export async function GET(request) {
     // Precompute session IDs matching the source filter
     let srcIds = [];
     if (sourceFilter) {
-      const srcRows = await sql`
-        SELECT DISTINCT session_id FROM analytics_events
-        WHERE event_type = 'quiz_start'
-        AND event_data->'referrer'->>'trafficSource' = ${sourceFilter}
-        AND created_at >= ${since} AND created_at <= ${until} AND (${sourceFilter} = '' OR session_id = ANY(${srcIds}))
-      `;
-      srcIds = srcRows.map(r => r.session_id);
-      if (srcIds.length === 0) srcIds = ["__no_match__"];
+      try {
+        const srcRows = await sql`
+          SELECT DISTINCT session_id FROM analytics_events
+          WHERE event_type = 'quiz_start'
+          AND event_data->'referrer'->>'trafficSource' = ${sourceFilter}
+          AND created_at >= ${since} AND created_at <= ${until}
+        `;
+        srcIds = srcRows.map(r => r.session_id);
+        if (srcIds.length === 0) srcIds = ["__no_match__"];
+      } catch (e) { console.error("Source filter query failed:", e.message); }
     }
 
     // Get available sources for the dropdown — only explicit ?source= values (udrm-*), not domain fallbacks
-    const availableSources = await sql`
-      SELECT DISTINCT traffic_source FROM completed_diagnostics
-      WHERE traffic_source IS NOT NULL AND traffic_source != '' AND traffic_source != 'direct'
-        AND traffic_source NOT LIKE '%.%'
-      ORDER BY traffic_source
-    `;
+    let availableSources = [];
+    try {
+      availableSources = await sql`
+        SELECT DISTINCT traffic_source FROM completed_diagnostics
+        WHERE traffic_source IS NOT NULL AND traffic_source != '' AND traffic_source != 'direct'
+          AND traffic_source NOT LIKE '%.%'
+        ORDER BY traffic_source
+      `;
+    } catch (e) { /* non-fatal — column may not exist yet */ }
 
     if (view === "funnel") {
       // Funnel conversion data
