@@ -535,7 +535,6 @@ export async function GET(request) {
         rateLimitEvents,
         failureEvents,
       }, { headers: CORS_HEADERS });
-    }
 
     } else if (view === "referrers") {
       // Fetch all quiz_start event_data and parse referrer info client-side style
