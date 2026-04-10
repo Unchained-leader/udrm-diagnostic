@@ -1039,7 +1039,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     { title: "Other Vices / Coping", color: "#E91E63", ids: ["vice_alcohol","vice_thc","vice_substances","vice_overeating","vice_gambling","vice_gaming","vice_spending","vice_social_media","vice_work","vice_nicotine","vice_none"] },
     { title: "Frequency", color: "#FF5722", ids: ["daily","several_week","weekly","few_month","binge_purge"] },
     { title: "Escalation Pattern", color: "#FF9800", ids: ["need_more_extreme","crossed_lines","added_behaviors","stayed_same"] },
-    { title: "Content Themes (Pornography Types)", color: "#c5a55a", ids: ["val_desired","val_amateur","pow_dominance","pow_degradation","sur_someone_control","sur_dominated","tab_wrong","tab_secrecy","tab_incest","voy_watching","voy_partner","ten_emotional","nov_new","nov_search","nov_anime","conf_race","conf_samesex","conf_trans","conf_pain","conf_crossdressing","cat_lesbian","cat_milf","cat_youth","cat_group","cat_bodytype","cat_solo","cat_pov"] },
+    { title: "Content Themes (Pornography Types)", color: "#c5a55a", compact: true, ids: ["val_desired","val_amateur","pow_dominance","pow_degradation","sur_someone_control","sur_dominated","tab_wrong","tab_secrecy","tab_incest","voy_watching","voy_partner","ten_emotional","nov_new","nov_search","nov_anime","conf_race","conf_samesex","conf_trans","conf_pain","conf_crossdressing","cat_lesbian","cat_milf","cat_youth","cat_group","cat_bodytype","cat_solo","cat_pov"] },
     { title: "Emotional Function", color: "#00BCD4", ids: ["calm_stress","feel_less_alone","feel_powerful","numb_checkout","feel_wanted","escape_reality","manage_anger","feel_something","after_conflict","after_serving","distant_god","spiritual_growth"] },
     { title: "Life Stress Areas", color: "#8BC34A", ids: ["life_romantic_abundance","life_romantic_lack","life_health_abundance","life_health_lack","life_financial_abundance","life_financial_lack","life_work_abundance","life_work_lack","life_god_abundance","life_god_lack"] },
     { title: "Age of First Exposure", color: "#f44336", ids: ["under_8","age_8_11","age_12_14","age_15_plus"] },
@@ -1105,7 +1105,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
           return (
             <div key={ci} className="research-chart-section" style={{ marginTop: ci > 0 ? 20 : 0 }}>
               <h3 style={{ fontSize: 13, color: cat.color, fontWeight: 600, margin: "0 0 8px", letterSpacing: 0.5 }}>{cat.title}</h3>
-              <BarChart items={items} color={cat.color} />
+              <BarChart items={items} color={cat.color} compact={cat.compact} />
             </div>
           );
         })}
@@ -1996,8 +1996,31 @@ function ExportView({ product, days }) {
 }
 
 // ═══ COMPONENTS ═══
-function BarChart({ items, color, maxOverride }) {
+function BarChart({ items, color, maxOverride, compact }) {
   const max = maxOverride || Math.max(...items.map(i => i.value), 1);
+  if (compact) {
+    // Two-column compact layout for large datasets
+    const mid = Math.ceil(items.length / 2);
+    const col1 = items.slice(0, mid);
+    const col2 = items.slice(mid);
+    const compactRow = { display: "flex", alignItems: "center", gap: 4, marginBottom: 2 };
+    const compactLabel = { width: 110, fontSize: 9, color: "#aaa", textAlign: "right", flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+    const compactBg = { flex: 1, height: 12, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" };
+    const compactVal = { width: 28, fontSize: 10, fontWeight: 600, color: "#fff", textAlign: "right" };
+    const renderCol = (col) => col.map((item, i) => (
+      <div key={i} style={compactRow}>
+        <div style={compactLabel}>{item.label}</div>
+        <div style={compactBg}><div style={{ height: "100%", width: `${(item.value / max) * 100}%`, background: color, borderRadius: 2 }} /></div>
+        <div style={compactVal}>{item.value}</div>
+      </div>
+    ));
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 6 }}>
+        <div>{renderCol(col1)}</div>
+        <div>{renderCol(col2)}</div>
+      </div>
+    );
+  }
   return (
     <div style={{ marginTop: 8 }}>
       {items.map((item, i) => (
