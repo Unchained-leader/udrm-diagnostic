@@ -812,13 +812,118 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
   })();
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const el = researchRef.current;
     if (!el) return;
-    // Add print-mode class, trigger browser print, then remove
-    el.classList.add("research-print");
-    window.print();
-    setTimeout(() => el.classList.remove("research-print"), 500);
+
+    const btn = el.querySelector(".research-export-btn");
+    if (btn) { btn.textContent = "Generating PDF..."; btn.disabled = true; }
+
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+
+      // Capture at current width — full color, dark theme
+      const origOverflow = el.style.overflow;
+      const origHeight = el.style.height;
+      el.style.overflow = "visible";
+      el.style.height = "auto";
+
+      // Show the print title header for the PDF
+      const printTitle = el.querySelector(".research-print-title");
+      if (printTitle) printTitle.style.display = "block";
+      // Hide the export button from capture
+      if (btn) btn.style.display = "none";
+
+      await new Promise(r => setTimeout(r, 200));
+
+      // Capture each chart section separately for intelligent page breaks
+      const sections = el.querySelectorAll(".research-chart-section, .research-diagnostic-section, .research-header, .research-quiz-header");
+      const PAGE_W = 612; // letter width pts
+      const PAGE_H = 792; // letter height pts
+      const MARGIN = 30;
+      const CONTENT_W = PAGE_W - MARGIN * 2;
+      const CONTENT_H = PAGE_H - MARGIN * 2;
+
+      // Capture the entire element as one canvas
+      const fullCanvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: false,
+        allowTaint: true,
+        backgroundColor: "#0a0a0a",
+        logging: false,
+      });
+
+      // Restore DOM
+      if (printTitle) printTitle.style.display = "none";
+      if (btn) { btn.style.display = ""; btn.textContent = "Export PDF"; btn.disabled = false; }
+      el.style.overflow = origOverflow;
+      el.style.height = origHeight;
+
+      // Split into pages
+      const imgW = fullCanvas.width;
+      const imgH = fullCanvas.height;
+      const scale = CONTENT_W / imgW;
+      const scaledH = imgH * scale;
+      const pxPerPage = CONTENT_H / scale; // pixels of source per PDF page
+
+      // Find page break points by measuring section positions
+      const sectionTops = [];
+      sections.forEach(s => {
+        const rect = s.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const top = (rect.top - elRect.top) * 2; // multiply by scale factor (2)
+        sectionTops.push(top);
+      });
+      sectionTops.sort((a, b) => a - b);
+
+      // Build page break positions — avoid cutting through sections
+      const breakPoints = [0];
+      let nextBreak = pxPerPage;
+      while (nextBreak < imgH) {
+        // Find the closest section boundary before the natural page break
+        let bestBreak = nextBreak;
+        for (let i = sectionTops.length - 1; i >= 0; i--) {
+          if (sectionTops[i] <= nextBreak && sectionTops[i] > nextBreak - pxPerPage * 0.4) {
+            bestBreak = sectionTops[i];
+            break;
+          }
+        }
+        breakPoints.push(bestBreak);
+        nextBreak = bestBreak + pxPerPage;
+      }
+      breakPoints.push(imgH);
+
+      // Create multi-page PDF
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+
+      for (let i = 0; i < breakPoints.length - 1; i++) {
+        if (i > 0) pdf.addPage();
+
+        const srcY = breakPoints[i];
+        const srcH = breakPoints[i + 1] - srcY;
+        if (srcH <= 0) continue;
+
+        // Create a slice canvas for this page
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = imgW;
+        pageCanvas.height = srcH;
+        const ctx = pageCanvas.getContext("2d");
+        ctx.drawImage(fullCanvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
+
+        const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.95);
+        const drawH = srcH * scale;
+        pdf.addImage(pageImgData, "JPEG", MARGIN, MARGIN, CONTENT_W, drawH);
+      }
+
+      const date = new Date().toISOString().split("T")[0];
+      pdf.save(`Unchained_Research_Report_${date}.pdf`);
+    } catch (e) {
+      console.error("PDF export error:", e);
+      if (btn) { btn.textContent = "Export PDF"; btn.disabled = false; }
+    }
   };
 
   // Map option IDs to human-readable labels and group by question category
@@ -927,50 +1032,6 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
 
   return (
     <div ref={researchRef}>
-      {/* Print styles for PDF export */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          /* Hide everything except the research content */
-          body > * { display: none !important; }
-          body > div:first-child { display: block !important; }
-          body > div:first-child > * { display: none !important; }
-
-          /* Show the research ref container */
-          .research-print,
-          .research-print * { display: revert !important; }
-          .research-print {
-            position: fixed !important; top: 0; left: 0; right: 0;
-            z-index: 99999 !important;
-            background: #fff !important; color: #111 !important;
-            padding: 20px 30px !important; font-family: 'Montserrat', sans-serif !important;
-            width: 100% !important; max-width: 100% !important;
-            overflow: visible !important;
-          }
-
-          /* White background, dark text for all print elements */
-          .research-print h2, .research-print h3, .research-print div, .research-print span, .research-print p, .research-print td, .research-print th {
-            color: #111 !important; background: transparent !important; border-color: #ddd !important;
-          }
-          .research-print h2 { color: #9A7730 !important; font-size: 14px !important; margin-top: 16px !important; }
-          .research-print h3 { font-size: 12px !important; margin-top: 12px !important; }
-
-          /* Show the print title, hide the export button */
-          .research-print .research-print-title { display: block !important; margin-bottom: 8px; }
-          .research-print .research-no-print { display: none !important; }
-
-          /* Page breaks */
-          .research-chart-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px; }
-          .research-diagnostic-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 12px; }
-          .research-quiz-header { page-break-after: avoid; break-after: avoid; }
-
-          /* Bar sizing for print */
-          .research-print [style*="height: 20px"] { height: 14px !important; }
-          .research-print [style*="width: 140px"] { width: 110px !important; }
-
-          @page { margin: 0.5in 0.4in; size: letter portrait; }
-        }
-      ` }} />
-
       {/* PDF header — visible on screen as a toolbar, expanded in print */}
       <div className="research-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
@@ -981,7 +1042,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
           <div style={{ fontSize: 13, color: "#888" }}>Date Range: <span style={{ color: "#ccc", fontWeight: 500 }}>{dateLabel}</span></div>
           <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>Generated {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
         </div>
-        <button onClick={exportPDF} className="research-no-print" style={{ ...S.refreshBtn, fontSize: 13, padding: "8px 18px" }}>Export PDF</button>
+        <button onClick={exportPDF} className="research-export-btn" style={{ ...S.refreshBtn, fontSize: 13, padding: "8px 18px" }}>Export PDF</button>
       </div>
 
       {/* Diagnostic results (from completed reports) */}
