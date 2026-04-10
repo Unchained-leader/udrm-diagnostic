@@ -192,7 +192,7 @@ export default function Dashboard() {
         {tab === "dashboard" && <DashboardHomeView data={data} summary={summary} product={product} days={days} setTab={setTab} />}
         {tab === "funnel" && data && <FunnelView data={data} />}
         {tab === "trends" && <TrendsView product={product} days={days} />}
-        {tab === "research" && data && <ResearchView data={data} />}
+        {tab === "research" && data && <ResearchView data={data} days={days} dateMode={dateMode} startDate={startDate} endDate={endDate} />}
         {tab === "dropoff" && data && <DropoffView data={data} />}
         {tab === "devices" && data && <DevicesView data={data} />}
         {tab === "cohort" && data && <CohortView data={data} />}
@@ -795,8 +795,31 @@ function TrendsView({ product, days }) {
 }
 
 // ═══ RESEARCH ═══
-function ResearchView({ data }) {
+function ResearchView({ data, days, dateMode, startDate, endDate }) {
   const { distributions, diagnostics, attachments, neuropathways, relational } = data;
+  const researchRef = useRef(null);
+
+  // Date range label
+  const dateLabel = (() => {
+    if (dateMode === "custom" && startDate) {
+      const s = new Date(startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const e = endDate ? new Date(endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Present";
+      return `${s} – ${e}`;
+    }
+    if (days === 0) return "Today";
+    const end = new Date();
+    const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+  })();
+
+  const exportPDF = () => {
+    const el = researchRef.current;
+    if (!el) return;
+    // Add print-mode class, trigger browser print, then remove
+    el.classList.add("research-print");
+    window.print();
+    setTimeout(() => el.classList.remove("research-print"), 500);
+  };
 
   // Map option IDs to human-readable labels and group by question category
   const labelMap = {
@@ -903,25 +926,82 @@ function ResearchView({ data }) {
   });
 
   return (
-    <div>
+    <div ref={researchRef}>
+      {/* Print styles for PDF export */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          /* Hide everything except the research content */
+          body > * { display: none !important; }
+          body > div:first-child { display: block !important; }
+          body > div:first-child > * { display: none !important; }
+
+          /* Show the research ref container */
+          .research-print,
+          .research-print * { display: revert !important; }
+          .research-print {
+            position: fixed !important; top: 0; left: 0; right: 0;
+            z-index: 99999 !important;
+            background: #fff !important; color: #111 !important;
+            padding: 20px 30px !important; font-family: 'Montserrat', sans-serif !important;
+            width: 100% !important; max-width: 100% !important;
+            overflow: visible !important;
+          }
+
+          /* White background, dark text for all print elements */
+          .research-print h2, .research-print h3, .research-print div, .research-print span, .research-print p, .research-print td, .research-print th {
+            color: #111 !important; background: transparent !important; border-color: #ddd !important;
+          }
+          .research-print h2 { color: #9A7730 !important; font-size: 14px !important; margin-top: 16px !important; }
+          .research-print h3 { font-size: 12px !important; margin-top: 12px !important; }
+
+          /* Show the print title, hide the export button */
+          .research-print .research-print-title { display: block !important; margin-bottom: 8px; }
+          .research-print .research-no-print { display: none !important; }
+
+          /* Page breaks */
+          .research-chart-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px; }
+          .research-diagnostic-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 12px; }
+          .research-quiz-header { page-break-after: avoid; break-after: avoid; }
+
+          /* Bar sizing for print */
+          .research-print [style*="height: 20px"] { height: 14px !important; }
+          .research-print [style*="width: 140px"] { width: 110px !important; }
+
+          @page { margin: 0.5in 0.4in; size: letter portrait; }
+        }
+      ` }} />
+
+      {/* PDF header — visible on screen as a toolbar, expanded in print */}
+      <div className="research-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <div>
+          <div className="research-print-title" style={{ display: "none" }}>
+            <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 28, marginBottom: 6 }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#c5a55a", letterSpacing: 2 }}>UNCHAINED ANALYTICS — RESEARCH REPORT</div>
+          </div>
+          <div style={{ fontSize: 13, color: "#888" }}>Date Range: <span style={{ color: "#ccc", fontWeight: 500 }}>{dateLabel}</span></div>
+          <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>Generated {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+        </div>
+        <button onClick={exportPDF} className="research-no-print" style={{ ...S.refreshBtn, fontSize: 13, padding: "8px 18px" }}>Export PDF</button>
+      </div>
+
       {/* Diagnostic results (from completed reports) */}
-      {diagnostics?.length > 0 && (<><h2 style={S.sectionTitle}>Arousal Template Types</h2>
-        <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "Unknown", value: parseInt(d.count) }))} color="#c5a55a" /></>)}
-      {attachments?.length > 0 && (<><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Attachment Styles</h2>
-        <BarChart items={attachments.map(a => ({ label: a.attachment_style || "Unknown", value: parseInt(a.count) }))} color="#2196F3" /></>)}
-      {neuropathways?.length > 0 && (<><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Neuropathways</h2>
-        <BarChart items={neuropathways.map(n => ({ label: n.neuropathway || "Unknown", value: parseInt(n.count) }))} color="#4CAF50" /></>)}
-      {relational?.[0]?.total > 0 && (<><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Relational Averages (n={relational[0].total})</h2>
+      {diagnostics?.length > 0 && (<div className="research-diagnostic-section"><h2 style={S.sectionTitle}>Arousal Template Types</h2>
+        <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "Unknown", value: parseInt(d.count) }))} color="#c5a55a" /></div>)}
+      {attachments?.length > 0 && (<div className="research-diagnostic-section"><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Attachment Styles</h2>
+        <BarChart items={attachments.map(a => ({ label: a.attachment_style || "Unknown", value: parseInt(a.count) }))} color="#2196F3" /></div>)}
+      {neuropathways?.length > 0 && (<div className="research-diagnostic-section"><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Neuropathways</h2>
+        <BarChart items={neuropathways.map(n => ({ label: n.neuropathway || "Unknown", value: parseInt(n.count) }))} color="#4CAF50" /></div>)}
+      {relational?.[0]?.total > 0 && (<div className="research-diagnostic-section"><h2 style={{ ...S.sectionTitle, marginTop: 24 }}>Relational Averages (n={relational[0].total})</h2>
         <BarChart items={[
           { label: "Codependency", value: parseFloat(relational[0].avg_codependency) || 0 },
           { label: "Enmeshment", value: parseFloat(relational[0].avg_enmeshment) || 0 },
           { label: "Relational Void", value: parseFloat(relational[0].avg_relational_void) || 0 },
           { label: "Leadership Burden", value: parseFloat(relational[0].avg_leadership_burden) || 0 },
-        ]} color="#FF9800" maxOverride={3} /></>)}
+        ]} color="#FF9800" maxOverride={3} /></div>)}
 
       {/* Quiz response breakdowns by category */}
       {distributions?.length > 0 && (<>
-        <div style={{ marginTop: 32, marginBottom: 8, borderTop: "1px solid #222", paddingTop: 24 }}>
+        <div className="research-quiz-header" style={{ marginTop: 32, marginBottom: 8, borderTop: "1px solid #222", paddingTop: 24 }}>
           <h2 style={S.sectionTitle}>Quiz Response Breakdowns</h2>
           <p style={{ color: "#555", fontSize: 12, margin: "0 0 16px" }}>Every selection from all quiz sections, organized by category</p>
         </div>
@@ -932,7 +1012,7 @@ function ResearchView({ data }) {
             .sort((a, b) => b.value - a.value);
           if (items.length === 0) return null;
           return (
-            <div key={ci} style={{ marginTop: ci > 0 ? 20 : 0 }}>
+            <div key={ci} className="research-chart-section" style={{ marginTop: ci > 0 ? 20 : 0 }}>
               <h3 style={{ fontSize: 13, color: cat.color, fontWeight: 600, margin: "0 0 8px", letterSpacing: 0.5 }}>{cat.title}</h3>
               <BarChart items={items} color={cat.color} />
             </div>
