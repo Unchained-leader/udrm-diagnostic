@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [dateMode, setDateMode] = useState("preset"); // "preset" or "custom"
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [source, setSource] = useState(""); // "" = all sources
+  const [availableSources, setAvailableSources] = useState([]);
   const [data, setData] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -41,6 +43,7 @@ export default function Dashboard() {
         const today = new Date().toISOString().split("T")[0];
         base += `&startDate=${today}`;
       }
+      if (source) base += `&source=${encodeURIComponent(source)}`;
       if (tab === "dashboard") {
         // Dashboard home needs data from multiple views
         const [sumRes, funnelRes, researchRes, dropoffRes, devicesRes, cohortRes] = await Promise.all([
@@ -52,7 +55,9 @@ export default function Dashboard() {
           fetch(`${base}&view=cohort`),
         ]);
         if (sumRes.status === 401) { setAuthed(false); return; }
-        setSummary(await sumRes.json());
+        const sumData = await sumRes.json();
+        setSummary(sumData);
+        if (sumData.sources) setAvailableSources(sumData.sources);
         const [funnel, research, dropoff, devices, cohort] = await Promise.all([
           funnelRes.json(), researchRes.json(), dropoffRes.json(), devicesRes.json(), cohortRes.json(),
         ]);
@@ -64,13 +69,15 @@ export default function Dashboard() {
           fetch(`${base}&view=${tab}`),
         ]);
         if (sumRes.status === 401) { setAuthed(false); return; }
-        setSummary(await sumRes.json());
+        const sumData2 = await sumRes.json();
+        setSummary(sumData2);
+        if (sumData2.sources) setAvailableSources(sumData2.sources);
         setData(await viewRes.json());
       }
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
     setLoading(false);
-  }, [tab, product, days, dateMode, startDate, endDate]);
+  }, [tab, product, days, dateMode, startDate, endDate, source]);
 
   useEffect(() => {
     if (authed || (typeof window !== "undefined" && sessionStorage.getItem("admin_secret"))) {
@@ -129,6 +136,12 @@ export default function Dashboard() {
           <h1 style={S.title}>UNCHAINED ANALYTICS</h1>
         </div>
         <div style={S.controls}>
+          <select value={source} onChange={e => setSource(e.target.value)} style={{ ...S.select, borderColor: source ? "#c5a55a" : "#333", color: source ? "#c5a55a" : "#ccc" }}>
+            <option value="">All Sources</option>
+            {availableSources.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
           <select value={product} onChange={e => setProduct(e.target.value)} style={S.select}>
             <option value="udrm">UDRM Quiz</option>
             <option value="all">All Products</option>
