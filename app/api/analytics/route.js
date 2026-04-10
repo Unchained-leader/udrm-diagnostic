@@ -4,6 +4,17 @@ import { parseRedis } from "../lib/utils";
 
 const CORS_HEADERS = corsHeaders("POST, GET, OPTIONS");
 
+// Auto-migrate: add traffic_source column if missing (runs once per cold start)
+let _migrated = false;
+async function ensureSchema() {
+  if (_migrated) return;
+  try {
+    const sql = getDb();
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS traffic_source VARCHAR(255)`;
+    _migrated = true;
+  } catch (e) { /* non-fatal */ }
+}
+
 export async function OPTIONS() {
   return optionsResponse("POST, GET, OPTIONS");
 }
@@ -59,6 +70,8 @@ export async function GET(request) {
     if (secret !== process.env.ADMIN_PASSWORD) {
       return Response.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
     }
+
+    await ensureSchema();
 
     const view = searchParams.get("view") || "funnel";
     const product = searchParams.get("product") || "udrm";
