@@ -150,7 +150,7 @@ export async function POST(request) {
   }
 
   // ── Step 2: Parse payload ──
-  const { email: normalizedEmail, name: userName, messages, gender, ageRange, geo, trafficSource, embedParentUrl } = JSON.parse(rawBody);
+  const { email: normalizedEmail, name: userName, messages, gender, ageRange, geo, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = JSON.parse(rawBody);
   const firstName = (userName || "Brother").split(" ")[0];
 
   console.log(`[QStash] Processing report for ${normalizedEmail}`);
@@ -313,6 +313,10 @@ export async function POST(request) {
       dashboardUrl,
       trafficSource,
       embedParentUrl,
+      referrerUrl,
+      utmSource,
+      utmMedium,
+      utmCampaign,
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     // Send report data to Reports | Root Diagnostic workflow (separate webhook)
@@ -325,6 +329,10 @@ export async function POST(request) {
       dashboardUrl,
       trafficSource,
       embedParentUrl,
+      referrerUrl,
+      utmSource,
+      utmMedium,
+      utmCampaign,
     }).catch((e) => console.error("GHL report webhook error:", e.message));
 
     // Record analytics: report generated + completed diagnostic

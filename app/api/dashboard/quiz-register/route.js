@@ -13,7 +13,7 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { email, name, phone, pin, trafficSource, embedParentUrl } = await request.json();
+    const { email, name, phone, pin, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = await request.json();
     const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
@@ -85,6 +85,10 @@ export async function POST(request) {
       phone: phone || "",
       trafficSource: trafficSource || "",
       embedParentUrl: embedParentUrl || "",
+      referrerUrl: referrerUrl || "",
+      utmSource: utmSource || "",
+      utmMedium: utmMedium || "",
+      utmCampaign: utmCampaign || "",
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     const token = await createDashboardToken(normalizedEmail, trimmedName);

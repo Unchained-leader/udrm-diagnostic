@@ -11,7 +11,7 @@
  * Send diagnostic data to GHL via webhook.
  * GHL workflow handles: contact creation, tagging, notes, etc.
  */
-export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
+export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   const webhookUrl = process.env.GHL_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn("GHL_WEBHOOK_URL not configured — skipping CRM sync");
@@ -32,6 +32,10 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       impersonation_access: dashboardUrl || "",
       traffic_source: trafficSource || "",
       source_url: embedParentUrl || "",
+      referrer_url: referrerUrl || "",
+      utm_source: utmSource || "",
+      utm_medium: utmMedium || "",
+      utm_campaign: utmCampaign || "",
     },
     tags: tags || [],
     reportUrl: reportUrl || null,
@@ -42,6 +46,14 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
     traffic_source: trafficSource || "",
     sourceUrl: embedParentUrl || "",
     source_url: embedParentUrl || "",
+    referrerUrl: referrerUrl || "",
+    referrer_url: referrerUrl || "",
+    utmSource: utmSource || "",
+    utm_source: utmSource || "",
+    utmMedium: utmMedium || "",
+    utm_medium: utmMedium || "",
+    utmCampaign: utmCampaign || "",
+    utm_campaign: utmCampaign || "",
   };
 
   // Add analysis data if present
@@ -91,7 +103,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
 /**
  * Convenience: Send contact creation event
  */
-export async function ghlContactCreated({ email, name, phone, trafficSource, embedParentUrl }) {
+export async function ghlContactCreated({ email, name, phone, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   return sendToGHL({
     event: "contact_created",
     email,
@@ -100,13 +112,17 @@ export async function ghlContactCreated({ email, name, phone, trafficSource, emb
     tags: ["Diagnostic Started", "Root Genre Diagnostic"],
     trafficSource,
     embedParentUrl,
+    referrerUrl,
+    utmSource,
+    utmMedium,
+    utmCampaign,
   });
 }
 
 /**
  * Convenience: Send diagnostic complete event with full data
  */
-export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
+export async function ghlDiagnosticComplete({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   return sendToGHL({
     event: "diagnostic_complete",
     email,
@@ -123,6 +139,10 @@ export async function ghlDiagnosticComplete({ email, name, phone, messages, anal
     dashboardUrl,
     trafficSource,
     embedParentUrl,
+    referrerUrl,
+    utmSource,
+    utmMedium,
+    utmCampaign,
   });
 }
 
@@ -221,7 +241,7 @@ function buildDiagnosticNote(analysis, reportUrl, messages) {
  * Send report data to the Reports | Root Diagnostic workflow
  * Uses a separate webhook URL (GHL_REPORT_WEBHOOK_URL)
  */
-export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl }) {
+export async function ghlSendReportData({ email, name, phone, messages, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   const webhookUrl = process.env.GHL_REPORT_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn("GHL_REPORT_WEBHOOK_URL not configured — skipping report delivery");
@@ -244,6 +264,10 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
       impersonation_access: dashboardUrl || "",
       traffic_source: trafficSource || "",
       source_url: embedParentUrl || "",
+      referrer_url: referrerUrl || "",
+      utm_source: utmSource || "",
+      utm_medium: utmMedium || "",
+      utm_campaign: utmCampaign || "",
     },
     tags: [
       "Diagnostic Complete",
@@ -258,6 +282,14 @@ export async function ghlSendReportData({ email, name, phone, messages, analysis
     traffic_source: trafficSource || "",
     sourceUrl: embedParentUrl || "",
     source_url: embedParentUrl || "",
+    referrerUrl: referrerUrl || "",
+    referrer_url: referrerUrl || "",
+    utmSource: utmSource || "",
+    utm_source: utmSource || "",
+    utmMedium: utmMedium || "",
+    utm_medium: utmMedium || "",
+    utmCampaign: utmCampaign || "",
+    utm_campaign: utmCampaign || "",
     note,
   };
 

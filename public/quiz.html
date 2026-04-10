@@ -1554,7 +1554,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ email, name, phone, pin, trafficSource: referrerInfo.trafficSource, embedParentUrl: referrerInfo.embedParentUrl }),
+          body: JSON.stringify({ email, name, phone, pin, trafficSource: referrerInfo.trafficSource, embedParentUrl: referrerInfo.embedParentUrl, referrerUrl: referrerInfo.referrerUrl, utmSource: referrerInfo.utmSource, utmMedium: referrerInfo.utmMedium, utmCampaign: referrerInfo.utmCampaign }),
         });
 
         const data = await res.json();
@@ -1732,6 +1732,10 @@
             ageRange,
             trafficSource: referrerInfo.trafficSource,
             embedParentUrl: referrerInfo.embedParentUrl,
+            referrerUrl: referrerInfo.referrerUrl,
+            utmSource: referrerInfo.utmSource,
+            utmMedium: referrerInfo.utmMedium,
+            utmCampaign: referrerInfo.utmCampaign,
           }),
         });
         if (!res.ok) {
