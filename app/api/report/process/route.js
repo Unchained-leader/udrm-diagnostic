@@ -13,6 +13,17 @@ import { MARKETING_BIBLE_REPORT_GUIDE } from "../../lib/marketing-bible";
 
 export const maxDuration = 300;
 
+// Auto-migrate: ensure traffic_source column exists (runs once per cold start)
+let _schemaDone = false;
+async function ensureTrafficSourceColumn() {
+  if (_schemaDone) return;
+  try {
+    const sql = getDb();
+    await sql`ALTER TABLE completed_diagnostics ADD COLUMN IF NOT EXISTS traffic_source VARCHAR(255)`;
+    _schemaDone = true;
+  } catch (e) { /* non-fatal */ }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Pipeline metrics — non-blocking writes to Postgres
 // ═══════════════════════════════════════════════════════════════
@@ -318,6 +329,7 @@ export async function POST(request) {
 
     // Record analytics: report generated + completed diagnostic
     try {
+      await ensureTrafficSourceColumn();
       const sql = getDb();
       await sql`INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
         VALUES (${normalizedEmail}, 'udrm', 'report_generated', ${JSON.stringify({ reportUrl, analysisTime: `${((Date.now() - analysisStart) / 1000).toFixed(1)}s` })}, ${geo.ip}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.lat}, ${geo.lon})`;
