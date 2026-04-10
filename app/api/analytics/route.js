@@ -63,7 +63,10 @@ export async function GET(request) {
     const view = searchParams.get("view") || "funnel";
     const product = searchParams.get("product") || "udrm";
     const days = parseInt(searchParams.get("days")) || 30;
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const since = startDate ? new Date(startDate).toISOString() : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const until = endDate ? new Date(endDate + "T23:59:59").toISOString() : null;
     const sql = getDb();
 
     if (view === "funnel") {
@@ -71,7 +74,7 @@ export async function GET(request) {
       const funnel = await sql`
         SELECT event_type, COUNT(DISTINCT session_id) as unique_sessions
         FROM analytics_events
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY event_type
         ORDER BY unique_sessions DESC
       `;
@@ -80,7 +83,7 @@ export async function GET(request) {
       const daily = await sql`
         SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as completions
         FROM analytics_events
-        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY DATE(created_at)
         ORDER BY date
       `;
@@ -92,7 +95,7 @@ export async function GET(request) {
       const distributions = await sql`
         SELECT section_num, unnest(selections) as selection, COUNT(*) as count
         FROM quiz_responses
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY section_num, selection
         ORDER BY section_num, count DESC
       `;
@@ -102,7 +105,7 @@ export async function GET(request) {
         SELECT
           arousal_template_type, COUNT(*) as count
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY arousal_template_type
         ORDER BY count DESC
       `;
@@ -110,7 +113,7 @@ export async function GET(request) {
       const attachments = await sql`
         SELECT attachment_style, COUNT(*) as count
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY attachment_style
         ORDER BY count DESC
       `;
@@ -118,7 +121,7 @@ export async function GET(request) {
       const neuropathways = await sql`
         SELECT neuropathway, COUNT(*) as count
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY neuropathway
         ORDER BY count DESC
       `;
@@ -132,7 +135,7 @@ export async function GET(request) {
           ROUND(AVG(leadership_burden_score)::numeric, 1) as avg_leadership_burden,
           COUNT(*) as total
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
 
       return Response.json({ distributions, diagnostics, attachments, neuropathways, relational }, { headers: CORS_HEADERS });
@@ -144,7 +147,7 @@ export async function GET(request) {
         FROM analytics_events
         WHERE product = ${product}
           AND event_type LIKE 'section_%'
-          AND created_at >= ${since}
+          AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         GROUP BY event_type
         ORDER BY event_type
       `;
@@ -160,7 +163,7 @@ export async function GET(request) {
         WHERE a1.product = ${product}
           AND a1.event_type = 'quiz_start'
           AND a2.event_type = 'contact_capture_complete'
-          AND a1.created_at >= ${since}
+          AND a1.created_at >= ${since} AND (${until} IS NULL OR a1.created_at <= ${until})
         GROUP BY a1.event_type, a2.event_type
       `;
 
@@ -169,15 +172,15 @@ export async function GET(request) {
     } else if (view === "summary") {
       const total = await sql`
         SELECT COUNT(DISTINCT session_id) as total FROM analytics_events
-        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
       const completed = await sql`
         SELECT COUNT(DISTINCT session_id) as total FROM analytics_events
-        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
       const reports = await sql`
         SELECT COUNT(DISTINCT session_id) as total FROM analytics_events
-        WHERE product = ${product} AND event_type = 'report_generated' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'report_generated' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
 
       return Response.json({
@@ -194,7 +197,7 @@ export async function GET(request) {
           event_data->>'device'->>'type' as device_type,
           COUNT(DISTINCT session_id) as users
         FROM analytics_events
-        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
           AND event_data->'device' IS NOT NULL
         GROUP BY event_data->>'device'->>'type'
       `.catch(() => []);
@@ -203,7 +206,7 @@ export async function GET(request) {
       const deviceRaw = await sql`
         SELECT event_data::text as raw, session_id
         FROM analytics_events
-        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
       const deviceCounts = { mobile: 0, desktop: 0, tablet: 0, unknown: 0 };
       for (const row of deviceRaw) {
@@ -289,21 +292,21 @@ export async function GET(request) {
           ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon,
           report_url, created_at
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
         ORDER BY created_at DESC
         LIMIT ${limit}
       `;
 
       const totalSubmissions = await sql`
         SELECT COUNT(*) as total FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
 
       // Location breakdown
       const locationBreakdown = await sql`
         SELECT geo_country, geo_region, geo_city, COUNT(*) as count
         FROM completed_diagnostics
-        WHERE product = ${product} AND created_at >= ${since}
+        WHERE product = ${product} AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
           AND geo_country IS NOT NULL
         GROUP BY geo_country, geo_region, geo_city
         ORDER BY count DESC
@@ -541,7 +544,7 @@ export async function GET(request) {
       const raw = await sql`
         SELECT event_data::text as raw, session_id, created_at
         FROM analytics_events
-        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'quiz_start' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
 
       // Parse referrer data from JSONB
@@ -604,7 +607,7 @@ export async function GET(request) {
       const completedSessions = await sql`
         SELECT DISTINCT session_id
         FROM analytics_events
-        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since}
+        WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since} AND (${until} IS NULL OR created_at <= ${until})
       `;
       const completedSet = new Set(completedSessions.map(r => r.session_id));
 

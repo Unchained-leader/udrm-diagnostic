@@ -10,6 +10,9 @@ export default function Dashboard() {
   const [tab, setTab] = useState("dashboard");
   const [product, setProduct] = useState("udrm");
   const [days, setDays] = useState(30);
+  const [dateMode, setDateMode] = useState("preset"); // "preset" or "custom"
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [data, setData] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,7 +32,15 @@ export default function Dashboard() {
     if (!s) return;
     setLoading(true);
     try {
-      const base = `${API}?secret=${encodeURIComponent(s)}&product=${product}&days=${days}`;
+      let base = `${API}?secret=${encodeURIComponent(s)}&product=${product}&days=${days}`;
+      if (dateMode === "custom" && startDate) {
+        base += `&startDate=${startDate}`;
+        if (endDate) base += `&endDate=${endDate}`;
+      } else if (days === 0) {
+        // "Today" — from midnight today
+        const today = new Date().toISOString().split("T")[0];
+        base += `&startDate=${today}`;
+      }
       if (tab === "dashboard") {
         // Dashboard home needs data from multiple views
         const [sumRes, funnelRes, researchRes, dropoffRes, devicesRes, cohortRes] = await Promise.all([
@@ -59,7 +70,7 @@ export default function Dashboard() {
       setLastRefresh(new Date());
     } catch (e) { console.error(e); }
     setLoading(false);
-  }, [tab, product, days]);
+  }, [tab, product, days, dateMode, startDate, endDate]);
 
   useEffect(() => {
     if (authed || (typeof window !== "undefined" && sessionStorage.getItem("admin_secret"))) {
@@ -121,12 +132,36 @@ export default function Dashboard() {
             <option value="udrm">UDRM Quiz</option>
             <option value="all">All Products</option>
           </select>
-          <select value={days} onChange={e => setDays(parseInt(e.target.value))} style={S.select}>
+          <select value={dateMode === "custom" ? "custom" : days} onChange={e => {
+            const v = e.target.value;
+            if (v === "custom") {
+              setDateMode("custom");
+              if (!startDate) {
+                const today = new Date().toISOString().split("T")[0];
+                setStartDate(today);
+                setEndDate(today);
+              }
+            } else {
+              setDateMode("preset");
+              setDays(parseInt(v));
+            }
+          }} style={S.select}>
+            <option value={0}>Today</option>
             <option value={7}>7 days</option>
             <option value={30}>30 days</option>
             <option value={90}>90 days</option>
             <option value={365}>1 year</option>
+            <option value="custom">Custom Range</option>
           </select>
+          {dateMode === "custom" && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                style={{ ...S.select, width: 130 }} />
+              <span style={{ color: "#555", fontSize: 11 }}>to</span>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                style={{ ...S.select, width: 130 }} />
+            </span>
+          )}
           <label style={S.autoLabel}>
             <input type="checkbox" checked={autoRefresh} onChange={e => setAutoRefresh(e.target.checked)} />
             Auto-refresh
