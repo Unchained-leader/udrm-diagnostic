@@ -232,8 +232,8 @@ async function executeTool(toolName, toolInput) {
     }
     try {
       const sql = getDb();
-      // neon serverless driver: call as function with query string
-      const result = await sql(query, []);
+      // neon v1.0.2 requires sql.query() for raw string queries (not tagged templates)
+      const result = await sql.query(query, []);
       const rows = Array.isArray(result) ? result.slice(0, 500) : [];
       console.log(`[AI Chat] Result: ${rows.length} rows`);
       return { rowCount: rows.length, rows, truncated: (Array.isArray(result) && result.length > 500) };
