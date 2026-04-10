@@ -2035,6 +2035,32 @@ function ChatView() {
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const toggleVoice = () => {
+    if (listening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert("Speech recognition not supported in this browser. Try Chrome."); return; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.onstart = () => setListening(true);
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join("");
+      setInput(transcript);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -2110,13 +2136,24 @@ function ChatView() {
       </div>
 
       <div style={chatStyles.inputWrap}>
+        <button onClick={toggleVoice} title={listening ? "Stop listening" : "Voice input"} style={{
+          background: listening ? "#f44336" : "#222", border: listening ? "2px solid #f44336" : "1px solid #333",
+          borderRadius: 12, width: 48, height: 48, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          animation: listening ? "pulse 1.5s ease-in-out infinite" : "none",
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={listening ? "#fff" : "#888"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
         <textarea
           ref={inputRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about your quiz data, trends, exports..."
-          style={chatStyles.input}
+          placeholder={listening ? "Listening..." : "Ask about your quiz data, trends, exports..."}
+          style={{ ...chatStyles.input, borderColor: listening ? "#f44336" : "#333" }}
           rows={1}
         />
         <button onClick={sendMessage} disabled={loading || !input.trim()} style={chatStyles.sendBtn}>
@@ -2124,7 +2161,7 @@ function ChatView() {
         </button>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(244,67,54,0.4); } 50% { box-shadow: 0 0 0 10px rgba(244,67,54,0); } }` }} />
     </div>
   );
 }
