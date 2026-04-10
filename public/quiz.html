@@ -1376,8 +1376,13 @@
           showScreen(screenSection);
           window.scrollTo(0, 0);
         } else {
-          // All sections done — call AI for the personalized reveal
-          sendToAIForReveal();
+          // All sections done — skip reveal, go straight to contact capture
+          diagnosticComplete = true;
+          updateProgress(100);
+          trackEvent("report_prompt_shown", { progress: 100 });
+          if (typeof fbq === "function") fbq("track", "ViewContent");
+          saveState();
+          if (currentUser) { handleAutoReport(); } else { showScreen(screenContact); }
         }
       };
 
@@ -1794,54 +1799,10 @@
         updateProgress(state.currentProgress);
       }
 
-      // If quiz is complete (all screens done), check for reveal
+      // If quiz is complete (all screens done), go to contact capture
       if (currentScreenIndex >= QUIZ_SCREENS.length || diagnosticComplete) {
-        const lastAssistant = [...messages].reverse().find(m => m.role === "assistant");
-        if (lastAssistant) {
-          const lastContent = lastAssistant.content;
-          const hasContactCapture = lastContent.includes("[CONTACT_CAPTURE]");
-          const cleanText = lastContent
-            .replace(/\[STAT:\w+\].*?\[\/STAT\]/g, "")
-            .replace(/\[PROGRESS:\d+\]/g, "").replace(/\[CONTACT_CAPTURE\]/g, "")
-            .replace(/\[CRISIS_DETECTED\]/g, "").replace(/\[BOOKING_CTA\]/g, "")
-            .replace(/\[MULTI_SELECT\][\s\S]*?\[\/MULTI_SELECT\]/g, "")
-            .replace(/\[SINGLE_SELECT\][\s\S]*?\[\/SINGLE_SELECT\]/g, "")
-            .replace(/\[TEXT_INPUT\][\s\S]*?\[\/TEXT_INPUT\]/g, "").trim();
-
-          if (hasContactCapture && cleanText.length > 50) {
-            // Parse stats for restored state
-            const rStats = [];
-            const rStatRegex = /\[STAT:(\w+)\](.*?)\[\/STAT\]/g;
-            let rMatch;
-            while ((rMatch = rStatRegex.exec(lastContent)) !== null) {
-              rStats.push({ key: rMatch[1], value: rMatch[2].trim() });
-            }
-            const rStatsContainer = document.getElementById("revealStats");
-            if (rStats.length > 0) {
-              const rLabelMap = { pattern_name: "Pattern Identified", root_depth: "Root Depth", childhood_wound: "Childhood Wound Score", confusing_patterns: "Confusing Patterns" };
-              rStatsContainer.style.display = "grid";
-              rStatsContainer.style.gridTemplateColumns = "1fr 1fr";
-              rStatsContainer.style.gap = "10px";
-              rStatsContainer.innerHTML = rStats.map(s => {
-                const label = rLabelMap[s.key] || s.key.replace(/_/g, " ");
-                const isHigh = /high|deep|[3-9]\+?\s*detected/i.test(s.value);
-                const accentColor = isHigh ? "#fc5454" : "#C5A55A";
-                const barWidth = isHigh ? "85" : (/moderate|medium/i.test(s.value) ? "55" : "35");
-                return '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:4px;padding:14px 16px;text-align:left;"><div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">' + label + '</div><div style="font-size:14px;font-weight:600;color:' + accentColor + ';margin-bottom:8px;">' + s.value + '</div><div style="height:2px;background:#1a1a1a;border-radius:1px;"><div style="height:100%;width:' + barWidth + '%;background:' + accentColor + ';border-radius:1px;"></div></div></div>';
-              }).join("");
-            }
-            const rParagraphs = cleanText.split(/\n\n+/).filter(p => p.trim());
-            revealText.innerHTML = rParagraphs.map(p => '<p style="margin:0 0 14px;color:#ccc;font-size:15px;line-height:1.7;">' + p.trim() + '</p>').join("");
-            showScreen(screenReveal);
-          setupRevealScrollGate();
-            return true;
-          } else if (hasContactCapture) {
-            if (currentUser) { handleAutoReport(); } else { showScreen(screenContact); }
-            return true;
-          }
-        }
-        // Need to call AI for reveal
-        sendToAIForReveal();
+        updateProgress(100);
+        if (currentUser) { handleAutoReport(); } else { showScreen(screenContact); }
         return true;
       }
 
