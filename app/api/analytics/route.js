@@ -84,7 +84,8 @@ export async function GET(request) {
     const sql = getDb();
 
     // Precompute session IDs matching the source filter
-    let srcIds = [];
+    // Always keep at least one element so neon can infer the array type for ANY()
+    let srcIds = ["__bypass__"];
     if (sourceFilter) {
       try {
         const srcRows = await sql`
