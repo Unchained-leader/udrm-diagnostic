@@ -825,11 +825,17 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
         import("jspdf"),
       ]);
 
-      // Capture at current width — full color, dark theme
+      // Narrow to mobile width so bars and text fill the page
       const origOverflow = el.style.overflow;
       const origHeight = el.style.height;
+      const origWidth = el.style.width;
+      const origMaxWidth = el.style.maxWidth;
+      const origPadding = el.style.padding;
       el.style.overflow = "visible";
       el.style.height = "auto";
+      el.style.width = "500px";
+      el.style.maxWidth = "500px";
+      el.style.padding = "20px 16px";
 
       // Show the print title header for the PDF
       const printTitle = el.querySelector(".research-print-title");
@@ -837,7 +843,8 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
       // Hide the export button from capture
       if (btn) btn.style.display = "none";
 
-      await new Promise(r => setTimeout(r, 200));
+      // Wait for layout reflow at new width
+      await new Promise(r => setTimeout(r, 500));
 
       // Capture each chart section separately for intelligent page breaks
       const sections = el.querySelectorAll(".research-chart-section, .research-diagnostic-section, .research-header, .research-quiz-header");
@@ -861,6 +868,9 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
       if (btn) { btn.style.display = ""; btn.textContent = "Export PDF"; btn.disabled = false; }
       el.style.overflow = origOverflow;
       el.style.height = origHeight;
+      el.style.width = origWidth;
+      el.style.maxWidth = origMaxWidth;
+      el.style.padding = origPadding;
 
       // Split into pages
       const imgW = fullCanvas.width;
