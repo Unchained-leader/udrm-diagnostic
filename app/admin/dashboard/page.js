@@ -1409,6 +1409,7 @@ function LocationsView({ product }) {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showCities, setShowCities] = useState(true);
   const [webglFailed, setWebglFailed] = useState(false);
+  const [webglFailed, setWebglFailed] = useState(false);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
   const allLabelsRef = useRef([]);
@@ -1445,6 +1446,7 @@ function LocationsView({ product }) {
       // Pre-check WebGL support
       if (!isWebGLAvailable()) {
         console.warn("WebGL not available \u2014 globe will show 2D fallback");
+        if (!cancelled) setWebglFailed(true);
         return;
       }
 
@@ -1632,6 +1634,7 @@ function LocationsView({ product }) {
         globeInstanceRef.current = globe;
       } catch (e) {
         console.warn("Globe init failed:", e);
+        if (!cancelled) setWebglFailed(true);
         if (!cancelled) setWebglFailed(true);
       }
     };
