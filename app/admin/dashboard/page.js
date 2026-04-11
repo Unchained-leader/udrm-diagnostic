@@ -1377,16 +1377,62 @@ function LocationsView({ product }) {
         if (cancelled || !globeContainerRef.current) return;
         container.innerHTML = "";
 
+        // Deep space background on container (SVGs don't support CSS gradients natively)
+        Object.assign(container.style, { background: "radial-gradient(ellipse at center, #0d0d18 0%, #060610 40%, #020208 100%)", borderRadius: "8px", border: "1px solid #222" });
+
         const svg = d3.select(container).append("svg").attr("width", w).attr("height", h)
-          .style("background", "#0a0a0a").style("border-radius", "8px").style("border", "1px solid #222").style("display", "block");
+          .style("display", "block").style("border-radius", "8px");
 
         const baseScale = Math.min(w, h) / 2.3;
         const projection = d3.geoOrthographic().scale(baseScale).translate([w / 2, h / 2]).clipAngle(90);
         const path = d3.geoPath(projection);
         let currentZoom = 1;
 
-        // Atmosphere glow
+        // ── Starfield ──
         const defs = svg.append("defs");
+
+        // Inject twinkle keyframes once
+        if (!document.getElementById("globe-twinkle-style")) {
+          const style = document.createElement("style");
+          style.id = "globe-twinkle-style";
+          style.textContent = `
+            @keyframes globe-twinkle {
+              0%, 100% { opacity: var(--star-min); }
+              50% { opacity: var(--star-max); }
+            }
+          `;
+          document.head.appendChild(style);
+        }
+
+        const starGroup = svg.append("g");
+        const starCount = 200;
+        const globeR = projection.scale();
+        const cx = w / 2, cy = h / 2;
+        for (let i = 0; i < starCount; i++) {
+          // Place stars randomly but avoid the globe area
+          let sx, sy;
+          do {
+            sx = Math.random() * w;
+            sy = Math.random() * h;
+          } while (Math.hypot(sx - cx, sy - cy) < globeR * 1.22);
+
+          const size = Math.random() < 0.08 ? (1.2 + Math.random() * 1.0) : (0.3 + Math.random() * 0.9);
+          const minOpacity = 0.1 + Math.random() * 0.2;
+          const maxOpacity = 0.5 + Math.random() * 0.5;
+          const duration = 2 + Math.random() * 4;
+          const delay = Math.random() * 5;
+          const color = Math.random() < 0.7 ? "#ffffff" :
+                        Math.random() < 0.5 ? "#C5A55A" : "#aabbff";
+
+          starGroup.append("circle")
+            .attr("cx", sx).attr("cy", sy).attr("r", size)
+            .attr("fill", color)
+            .style("--star-min", minOpacity)
+            .style("--star-max", maxOpacity)
+            .style("animation", `globe-twinkle ${duration}s ease-in-out ${delay}s infinite`);
+        }
+
+        // Atmosphere glow
         const grad = defs.append("radialGradient").attr("id", "lv-atmo");
         grad.append("stop").attr("offset", "75%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.12);
         grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
