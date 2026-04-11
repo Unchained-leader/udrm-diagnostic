@@ -1593,32 +1593,34 @@ function LocationsView({ product }) {
         </div>
       </div>
 
-      {/* Top locations list — full width below globe */}
+      {/* Top locations bar chart — full width below globe */}
       <div style={{ marginTop: 16 }}>
-        <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500, margin: "0 0 8px" }}>Top Locations</h3>
-        {topLocations.length > 0 ? (
-          <table style={{ ...S.table, fontSize: 12 }}>
-            <thead>
-              <tr>
-                <th style={{ ...S.th, fontSize: 9 }}>#</th>
-                <th style={{ ...S.th, fontSize: 9 }}>Location</th>
-                <th style={{ ...S.th, fontSize: 9, textAlign: "right" }}>Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topLocations.map((loc, i) => {
-                const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).join(", ");
+        <h3 style={{ fontSize: 13, color: "#888", marginBottom: 12, fontWeight: 500, margin: "0 0 12px" }}>Top Locations</h3>
+        {topLocations.length > 0 ? (() => {
+          const maxCount = Math.max(...topLocations.map(l => l.count));
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {topLocations.slice(0, 20).map((loc, i) => {
+                const label = [loc.geo_city, loc.geo_region, loc.geo_country].filter(Boolean).map(s => { try { return decodeURIComponent(s); } catch { return s; } }).join(", ");
+                const pct = maxCount > 0 ? (loc.count / maxCount) * 100 : 0;
                 return (
-                  <tr key={i}>
-                    <td style={{ ...S.td, color: "#555", fontSize: 11, width: 24 }}>{i + 1}</td>
-                    <td style={{ ...S.td, color: "#ccc", fontSize: 11 }}>{label || "Unknown"}</td>
-                    <td style={{ ...S.td, color: "#C5A55A", fontWeight: 600, textAlign: "right", fontSize: 12 }}>{loc.count}</td>
-                  </tr>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: "#555", fontSize: 10, width: 18, textAlign: "right", flexShrink: 0 }}>{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                        <span style={{ color: "#ccc", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label || "Unknown"}</span>
+                        <span style={{ color: "#C5A55A", fontSize: 11, fontWeight: 600, flexShrink: 0, marginLeft: 8 }}>{loc.count}</span>
+                      </div>
+                      <div style={{ height: 6, background: "#1a1a1a", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #C5A55A, #E8D48B)", borderRadius: 3, transition: "width 0.4s ease" }} />
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        ) : (
+            </div>
+          );
+        })() : (
           <div style={{ color: "#555", fontSize: 12, padding: 16, textAlign: "center" }}>
             {loading ? "Loading..." : "No location data in this period."}
           </div>
