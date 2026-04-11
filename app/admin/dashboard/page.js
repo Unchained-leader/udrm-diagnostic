@@ -1376,18 +1376,20 @@ function LocationsView({ product }) {
         const svg = d3.select(container).append("svg").attr("width", w).attr("height", h)
           .style("background", "#0a0a0a").style("border-radius", "8px").style("border", "1px solid #222").style("display", "block");
 
-        const projection = d3.geoOrthographic().scale(Math.min(w, h) / 2.3).translate([w / 2, h / 2]).clipAngle(90);
+        const baseScale = Math.min(w, h) / 2.3;
+        const projection = d3.geoOrthographic().scale(baseScale).translate([w / 2, h / 2]).clipAngle(90);
         const path = d3.geoPath(projection);
+        let currentZoom = 1;
 
         // Atmosphere glow
         const defs = svg.append("defs");
         const grad = defs.append("radialGradient").attr("id", "lv-atmo");
         grad.append("stop").attr("offset", "80%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.06);
         grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
-        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", "url(#lv-atmo)");
+        const atmoCircle = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", "url(#lv-atmo)");
 
         // Globe sphere
-        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.5).attr("stroke-opacity", 0.5);
+        const globeSphere = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.5).attr("stroke-opacity", 0.5);
 
         // Graticule (grid lines)
         const graticule = d3.geoGraticule10();
@@ -1415,16 +1417,23 @@ function LocationsView({ product }) {
 
         const updatePositions = () => {
           const rot = projection.rotate();
+          const s = projection.scale();
+          // Update globe and atmosphere to match zoom
+          globeSphere.attr("r", s);
+          atmoCircle.attr("r", s * 1.18);
           countryPaths.attr("d", path);
           svg.selectAll("path[d*='M']").filter(function() { return this !== countryPaths.node(); }).attr("d", path);
           // Re-render graticule
           svg.select(".graticule-path").attr("d", path(graticule));
 
+          // Scale dots down as we zoom in so they don't overlap
+          const dotScale = 1 / Math.sqrt(currentZoom);
           pointCircles.each(function(d) {
             const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
             const p = projection(d.coords);
             const visible = dist < Math.PI / 2 && p;
-            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("display", visible ? null : "none");
+            const r = Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)) * dotScale;
+            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("r", r).attr("display", visible ? null : "none");
           });
 
         };
@@ -1452,7 +1461,7 @@ function LocationsView({ product }) {
           });
 
 
-        // Drag to rotate
+        // Drag to rotate + zoom
         let currentRotation = [0, -15];
         let isDragging = false;
         let dragStartCoords = [0, 0];
@@ -1460,22 +1469,46 @@ function LocationsView({ product }) {
         projection.rotate(currentRotation);
         updatePositions();
 
-        svg.call(d3.drag()
-          .on("start", function(event) { isDragging = true; dragStartCoords = [event.x, event.y]; dragStartRotation = [...currentRotation]; })
-          .on("drag", function(event) {
-            if (!isDragging) return;
-            const dx = event.x - dragStartCoords[0];
-            const dy = event.y - dragStartCoords[1];
-            currentRotation = [dragStartRotation[0] + dx * 0.4, Math.max(-60, Math.min(60, dragStartRotation[1] - dy * 0.4))];
-            projection.rotate(currentRotation);
+        const zoomBehavior = d3.zoom()
+          .scaleExtent([0.5, 8])
+          .filter(event => {
+            // Allow wheel/pinch for zoom, let drag events through too
+            return true;
+          })
+          .on("start", function(event) {
+            if (event.sourceEvent && (event.sourceEvent.type === "mousedown" || event.sourceEvent.type === "touchstart")) {
+              isDragging = true;
+              const pt = d3.pointer(event.sourceEvent, this);
+              dragStartCoords = pt;
+              dragStartRotation = [...currentRotation];
+            }
+          })
+          .on("zoom", function(event) {
+            // Handle zoom (scroll wheel / pinch)
+            currentZoom = event.transform.k;
+            projection.scale(baseScale * currentZoom);
+
+            // Handle drag rotation
+            if (isDragging && event.sourceEvent && (event.sourceEvent.type === "mousemove" || event.sourceEvent.type === "touchmove")) {
+              const pt = d3.pointer(event.sourceEvent, this);
+              const dx = pt[0] - dragStartCoords[0];
+              const dy = pt[1] - dragStartCoords[1];
+              const sensitivity = 0.4 / currentZoom;
+              currentRotation = [dragStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, dragStartRotation[1] - dy * sensitivity))];
+              projection.rotate(currentRotation);
+            }
+
             updatePositions();
           })
-          .on("end", () => { isDragging = false; })
-        );
+          .on("end", () => { isDragging = false; });
+
+        svg.call(zoomBehavior);
+        // Prevent default page scroll when interacting with globe
+        svg.on("wheel.zoom", function(event) { event.preventDefault(); }, { passive: false });
 
         // Auto-rotate
         const spin = () => {
-          if (!isDragging) {
+          if (!isDragging && currentZoom <= 1) {
             currentRotation[0] = (currentRotation[0] + 0.15) % 360;
             projection.rotate(currentRotation);
             updatePositions();
