@@ -1463,6 +1463,7 @@ function LocationsView({ product }) {
 
         // Drag to rotate + zoom
         let currentRotation = [0, -15];
+        let isEngaged = false;
         let isDragging = false;
         let dragStartCoords = [0, 0];
         let dragStartRotation = [0, 0];
@@ -1506,9 +1507,16 @@ function LocationsView({ product }) {
         // Prevent default page scroll when interacting with globe
         svg.on("wheel.zoom", function(event) { event.preventDefault(); }, { passive: false });
 
+        // Pause spin on hover (desktop) or touch (mobile)
+        svg.on("mouseenter", () => { isEngaged = true; })
+           .on("mouseleave", () => { isEngaged = false; })
+           .on("touchstart", () => { isEngaged = true; }, { passive: true })
+           .on("touchend", () => { isEngaged = false; }, { passive: true })
+           .on("touchcancel", () => { isEngaged = false; }, { passive: true });
+
         // Auto-rotate
         const spin = () => {
-          if (!isDragging && currentZoom <= 1) {
+          if (!isEngaged && !isDragging && currentZoom <= 1) {
             currentRotation[0] = (currentRotation[0] + 0.15) % 360;
             projection.rotate(currentRotation);
             updatePositions();
