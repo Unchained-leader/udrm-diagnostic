@@ -1313,7 +1313,6 @@ function LocationsView({ product }) {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [selectedPoint, setSelectedPoint] = useState(null);
-  const [showCities, setShowCities] = useState(true);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
   const allLabelsRef = useRef([]);
@@ -1406,8 +1405,6 @@ function LocationsView({ product }) {
           .attr("r", d => Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)))
           .attr("fill", "#C5A55A").attr("opacity", 0.75).attr("cursor", "pointer");
 
-        // City labels group
-        const labelGroup = svg.append("g");
 
         // Tooltip
         const tooltip = d3.select(container).append("div")
@@ -1430,14 +1427,6 @@ function LocationsView({ product }) {
             d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("display", visible ? null : "none");
           });
 
-          if (showCities) {
-            labelGroup.selectAll("text").each(function(d) {
-              const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
-              const p = projection(d.coords);
-              const visible = dist < Math.PI / 2 && p;
-              d3.select(this).attr("x", p ? p[0] : 0).attr("y", p ? p[1] - 8 : 0).attr("display", visible ? null : "none");
-            });
-          }
         };
 
         // Hover events
@@ -1462,16 +1451,6 @@ function LocationsView({ product }) {
             tooltip.style("display", "none");
           });
 
-        // City labels
-        const updateLabels = () => {
-          labelGroup.selectAll("text").remove();
-          if (!showCities) return;
-          labelGroup.selectAll("text").data(points.filter(p => p.count >= 2)).join("text")
-            .attr("text-anchor", "middle").attr("font-size", "9px").attr("fill", "#C5A55A").attr("opacity", 0.7)
-            .attr("pointer-events", "none").text(d => d.city);
-          updatePositions();
-        };
-        updateLabels();
 
         // Drag to rotate
         let currentRotation = [0, -15];
@@ -1517,7 +1496,7 @@ function LocationsView({ product }) {
       globeInstanceRef.current = null;
       if (globeContainerRef.current) globeContainerRef.current.innerHTML = "";
     };
-  }, [locData, showCities]);
+  }, [locData]);
 
   const filterPresets = [
     { label: "7 Days", value: "7" },
@@ -1567,15 +1546,6 @@ function LocationsView({ product }) {
               style={{ ...pillStyle(true), opacity: (!customStart || !customEnd) ? 0.5 : 1 }}>Apply</button>
           </div>
         )}
-        {/* City labels toggle */}
-        <button onClick={() => setShowCities(!showCities)} style={{
-          ...pillStyle(showCities),
-          marginLeft: "auto",
-          display: "flex", alignItems: "center", gap: 5, fontSize: 11,
-        }}>
-          <span style={{ fontSize: 14 }}>{showCities ? "🏙️" : "🔵"}</span>
-          {showCities ? "Cities On" : "Cities Off"}
-        </button>
       </div>
 
       {/* Summary stats bar */}
