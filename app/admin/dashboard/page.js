@@ -39,7 +39,7 @@ export default function Dashboard() {
         base += `&startDate=${startDate}`;
         if (endDate) base += `&endDate=${endDate}`;
       } else if (days === 0) {
-        // "Today" â from midnight today
+        // "Today" — from midnight today
         const today = new Date().toISOString().split("T")[0];
         base += `&startDate=${today}`;
       }
@@ -95,7 +95,7 @@ export default function Dashboard() {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [autoRefresh, authed, fetchData]);
 
-  // âââ LOGIN âââ
+  // ═══ LOGIN ═══
   if (!authed) {
     return (
       <div style={S.loginWrap}>
@@ -232,31 +232,30 @@ function Card({ label, value, color }) {
   );
 }
 
-// Dashboard tile wrapper â defined outside DashboardHomeView so React keeps a stable reference
-const TILE_STYLE = {
-  background: "#111", border: "1px solid #222", borderRadius: 12,
-  padding: 16, cursor: "pointer", overflow: "hidden", position: "relative",
-  transition: "border-color 0.2s",
-};
-const TILE_TITLE_STYLE = {
-  fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
-  fontWeight: 600, marginBottom: 10,
-};
-function TileWrap({ label, tabId, children, style, span2, onNavigate }) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div style={{ ...TILE_STYLE, ...(hovered ? { borderColor: "#C5A55A" } : {}), ...style, ...(span2 ? { gridColumn: "span 2" } : {}) }}
-      onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      onClick={() => onNavigate(tabId)}>
-      <div style={TILE_TITLE_STYLE}>{label}</div>
-      <div style={{ pointerEvents: "none" }}>{children}</div>
-      <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand â</div>
-    </div>
-  );
-}
-
-// âââ DASHBOARD HOME âââ
+// ═══ DASHBOARD HOME ═══
 function DashboardHomeView({ data, summary, product, days, setTab }) {
+  const tileStyle = {
+    background: "#111", border: "1px solid #222", borderRadius: 12,
+    padding: 16, cursor: "pointer", overflow: "hidden", position: "relative",
+    transition: "border-color 0.2s",
+  };
+  const tileHover = { borderColor: "#C5A55A" };
+  const tileTitle = {
+    fontSize: 11, color: "#C5A55A", textTransform: "uppercase", letterSpacing: 2,
+    fontWeight: 600, marginBottom: 10,
+  };
+  const TileWrap = ({ label, tabId, children, style, span2 }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+      <div style={{ ...tileStyle, ...(hovered ? tileHover : {}), ...style, ...(span2 ? { gridColumn: "span 2" } : {}) }}
+        onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        onClick={() => setTab(tabId)}>
+        <div style={tileTitle}>{label}</div>
+        <div style={{ pointerEvents: "none" }}>{children}</div>
+        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
+      </div>
+    );
+  };
 
   // Build funnel bar chart inline
   const funnelOrder = ["quiz_start","section_1_complete","section_2_complete","section_3_complete","section_4_complete","section_5_complete","section_6_complete","section_7_complete","reveal_shown","contact_capture_shown","contact_capture_complete","report_generated","report_emailed"];
@@ -291,24 +290,24 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
 
   return (
     <div>
-      {/* Globe â full width at top */}
-      <div style={{ ...TILE_STYLE, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
+      {/* Globe — full width at top */}
+      <div style={{ ...tileStyle, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
         onClick={() => setTab("locations")}>
-        <div style={{ ...TILE_TITLE_STYLE, padding: "16px 16px 0" }}>Global Submissions</div>
+        <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
         <div style={{ height: 400, position: "relative" }}>
           <MiniGlobe product={product} height={400} />
           <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
             <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: "rgba(197,165,90,0.5)", textTransform: "uppercase", fontFamily: "Montserrat, sans-serif" }}>#UnchainTheWorld</span>
           </div>
         </div>
-        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand â</div>
+        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
       </div>
 
-      {/* Tile grid â 2 columns */}
+      {/* Tile grid — 2 columns */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
 
-        {/* Funnel â full chart */}
-        <TileWrap onNavigate={setTab} label="Conversion Funnel" tabId="funnel" span2>
+        {/* Funnel — full chart */}
+        <TileWrap label="Conversion Funnel" tabId="funnel" span2>
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {funnelOrder.map((key, i) => {
               const val = fMap[key] || 0;
@@ -325,26 +324,26 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
           </div>
         </TileWrap>
 
-        {/* Trends â line chart */}
-        <TileWrap onNavigate={setTab} label="Performance Trends" tabId="trends" span2>
+        {/* Trends — line chart */}
+        <TileWrap label="Performance Trends" tabId="trends" span2>
           <MiniTrendsChart product={product} days={days} />
         </TileWrap>
 
-        {/* Research â bar charts */}
-        <TileWrap onNavigate={setTab} label="Arousal Templates" tabId="research">
+        {/* Research — bar charts */}
+        <TileWrap label="Arousal Templates" tabId="research">
           {diagnostics.length > 0 ? (
             <BarChart items={diagnostics.map(d => ({ label: d.arousal_template_type || "?", value: parseInt(d.count) }))} color="#c5a55a" />
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        <TileWrap onNavigate={setTab} label="Attachment Styles" tabId="research">
+        <TileWrap label="Attachment Styles" tabId="research">
           {attachments.length > 0 ? (
             <BarChart items={attachments.map(a => ({ label: a.attachment_style || "?", value: parseInt(a.count) }))} color="#2196F3" />
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Drop-off â retention table */}
-        <TileWrap onNavigate={setTab} label="Section Retention" tabId="dropoff">
+        {/* Drop-off — retention table */}
+        <TileWrap label="Section Retention" tabId="dropoff">
           {dropItems.length > 0 ? (
             <div style={{ fontSize: 11 }}>
               {dropItems.map((item, i) => (
@@ -360,8 +359,8 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Devices â bar charts */}
-        <TileWrap onNavigate={setTab} label="Devices & Browsers" tabId="devices">
+        {/* Devices — bar charts */}
+        <TileWrap label="Devices & Browsers" tabId="devices">
           {deviceItems.length > 0 ? (
             <div>
               <BarChart items={deviceItems} color="#9C27B0" />
@@ -370,15 +369,15 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
           ) : <div style={{ color: "#555", fontSize: 12 }}>No data yet</div>}
         </TileWrap>
 
-        {/* Referrers â top sources */}
-        <TileWrap onNavigate={setTab} label="Top Traffic Sources" tabId="referrers">
+        {/* Referrers — top sources */}
+        <TileWrap label="Top Traffic Sources" tabId="referrers">
           <MiniReferrersTile product={product} days={days} />
         </TileWrap>
 
-        {/* Cohort â week over week */}
-        <TileWrap onNavigate={setTab} label="This Week vs Last Week" tabId="cohort">
+        {/* Cohort — week over week */}
+        <TileWrap label="This Week vs Last Week" tabId="cohort">
           <table style={{ ...S.table, fontSize: 11 }}>
-            <thead><tr><th style={{ ...S.th, fontSize: 9 }}>Metric</th><th style={{ ...S.th, fontSize: 9 }}>This Wk</th><th style={{ ...S.th, fontSize: 9 }}>Last Wk</th><th style={{ ...S.th, fontSize: 9 }}>Î</th></tr></thead>
+            <thead><tr><th style={{ ...S.th, fontSize: 9 }}>Metric</th><th style={{ ...S.th, fontSize: 9 }}>This Wk</th><th style={{ ...S.th, fontSize: 9 }}>Last Wk</th><th style={{ ...S.th, fontSize: 9 }}>Δ</th></tr></thead>
             <tbody>{cohortMetrics.map((m, i) => {
               const tw = thisWeek[m] || 0;
               const lw = lastWeek[m] || 0;
@@ -397,7 +396,7 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
         </TileWrap>
 
         {/* System Health */}
-        <TileWrap onNavigate={setTab} label="System Health" tabId="health">
+        <TileWrap label="System Health" tabId="health">
           <HealthMiniTile />
         </TileWrap>
 
@@ -458,199 +457,111 @@ function MiniTrendsChart({ product, days }) {
   );
 }
 
-// WebGL support check (cached)
-let _webglSupported = null;
-function isWebGLAvailable() {
-  if (_webglSupported !== null) return _webglSupported;
-  try {
-    const c = document.createElement("canvas");
-    _webglSupported = !!(c.getContext("webgl2") || c.getContext("webgl") || c.getContext("experimental-webgl"));
-  } catch (e) { _webglSupported = false; }
-  return _webglSupported;
-}
-
-// Shared topojson decoder (used by MiniGlobe and LocationsView)
-function decodeTopojson(topology, obj) {
-  const arcs = topology.arcs;
-  const decodeArc = (arcIdx) => {
-    const reverse = arcIdx < 0;
-    const arc = arcs[reverse ? ~arcIdx : arcIdx];
-    let x = 0, y = 0;
-    const coords = arc.map(([dx, dy]) => {
-      x += dx; y += dy;
-      return [
-        x * topology.transform.scale[0] + topology.transform.translate[0],
-        y * topology.transform.scale[1] + topology.transform.translate[1]
-      ];
-    });
-    if (reverse) coords.reverse();
-    return coords;
-  };
-  const decodeRing = (arcs) => {
-    let coords = [];
-    arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
-    return coords;
-  };
-  const decodeGeom = (geom) => {
-    if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
-    if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
-    return geom;
-  };
-  return { type: "FeatureCollection", features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) })) };
-}
-
-// Properly dispose a globe.gl instance (release WebGL context)
-function disposeGlobe(globeInstance, container) {
-  try {
-    if (globeInstance && typeof globeInstance._destructor === "function") {
-      globeInstance._destructor();
-    } else if (globeInstance) {
-      const renderer = globeInstance.renderer && globeInstance.renderer();
-      if (renderer && typeof renderer.dispose === "function") renderer.dispose();
-      const scene = globeInstance.scene && globeInstance.scene();
-      if (scene) {
-        scene.traverse(obj => {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) {
-            if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
-            else obj.material.dispose();
-          }
-        });
-      }
-    }
-  } catch (e) { /* ignore cleanup errors */ }
-  if (container) container.innerHTML = "";
-}
-
-// Load globe.gl script (pinned version, singleton)
-const GLOBE_GL_URL = "https://unpkg.com/globe.gl@2.35.2/dist/globe.gl.min.js";
-let _globeScriptPromise = null;
-function loadGlobeScript() {
-  if (window.Globe) return Promise.resolve();
-  if (_globeScriptPromise) return _globeScriptPromise;
-  _globeScriptPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = GLOBE_GL_URL;
-    script.onload = () => setTimeout(resolve, 50);
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-  return _globeScriptPromise;
-}
-
 // Mini globe for dashboard home (simplified, no interactions needed)
 function MiniGlobe({ product, height }) {
   const containerRef = useRef(null);
   const globeRef = useRef(null);
-  const [webglFailed, setWebglFailed] = useState(false);
-  const [points, setPoints] = useState([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    let cancelled = false;
-
-    // Pre-check WebGL support
-    if (!isWebGLAvailable()) { setWebglFailed(true); return; }
 
     const init = async () => {
-      try {
-        await loadGlobeScript();
-      } catch (e) { if (!cancelled) setWebglFailed(true); return; }
-      if (cancelled || !containerRef.current || !window.Globe) return;
-
-      if (globeRef.current) { disposeGlobe(globeRef.current, containerRef.current); globeRef.current = null; }
+      if (!window.Globe) return;
+      if (globeRef.current) { containerRef.current.innerHTML = ""; globeRef.current = null; }
 
       const container = containerRef.current;
       const width = container.clientWidth;
-      if (width === 0) return;
 
       // Fetch country borders
       let countries = { features: [] };
       try {
         const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
         const worldTopo = await geoRes.json();
-        if (cancelled) return;
-        countries = decodeTopojson(worldTopo, worldTopo.objects.countries);
+        const topoFeature = (topology, obj) => {
+          const arcs = topology.arcs;
+          const decodeArc = (arcIdx) => {
+            const reverse = arcIdx < 0;
+            const arc = arcs[reverse ? ~arcIdx : arcIdx];
+            let x = 0, y = 0;
+            const coords = arc.map(([dx, dy]) => {
+              x += dx; y += dy;
+              return [
+                x * topology.transform.scale[0] + topology.transform.translate[0],
+                y * topology.transform.scale[1] + topology.transform.translate[1]
+              ];
+            });
+            if (reverse) coords.reverse();
+            return coords;
+          };
+          const decodeRing = (arcs) => {
+            let coords = [];
+            arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
+            return coords;
+          };
+          const decodeGeom = (geom) => {
+            if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
+            if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
+            return geom;
+          };
+          return { type: "FeatureCollection", features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) })) };
+        };
+        countries = topoFeature(worldTopo, worldTopo.objects.countries);
       } catch (e) {}
-      if (cancelled || !containerRef.current) return;
 
       // Fetch location data
-      let fetchedPoints = [];
+      let points = [];
       try {
         const secret = sessionStorage.getItem("admin_secret") || "";
         const res = await fetch(`/api/analytics?view=locations&secret=${encodeURIComponent(secret)}&days=90`);
         const d = await res.json();
-        if (cancelled) return;
-        fetchedPoints = (d.locations || []).map(loc => ({
+        points = (d.locations || []).map(loc => ({
           lat: parseFloat(loc.geo_lat), lng: parseFloat(loc.geo_lon),
           size: Math.max(0.3, Math.min(2.5, Math.sqrt(parseInt(loc.count)) * 0.5)),
           color: "#C5A55A",
         }));
-        setPoints(fetchedPoints);
       } catch (e) {}
-      if (cancelled || !containerRef.current) return;
 
-      try {
-        const globe = window.Globe()
-          .backgroundColor("rgba(0,0,0,0)")
-          .showGlobe(true)
-          .showAtmosphere(true)
-          .atmosphereColor("#646464")
-          .atmosphereAltitude(0.1)
-          .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
-          .width(width)
-          .height(height)
-          .polygonsData(countries.features)
-          .polygonCapColor(() => "rgba(15,15,15,0.95)")
-          .polygonSideColor(() => "rgba(30,30,30,0.6)")
-          .polygonStrokeColor(() => "rgba(197,165,90,0.3)")
-          .polygonAltitude(0.005)
-          .pointsData(fetchedPoints)
-          .pointLat("lat")
-          .pointLng("lng")
-          .pointColor("color")
-          .pointAltitude(d => d.size * 0.05)
-          .pointRadius(d => d.size * 0.4)
-          (container);
+      const globe = window.Globe()
+        .backgroundColor("rgba(0,0,0,0)")
+        .showGlobe(true)
+        .showAtmosphere(true)
+        .atmosphereColor("rgba(100,100,100,0.2)")
+        .atmosphereAltitude(0.1)
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
+        .width(width)
+        .height(height)
+        .polygonsData(countries.features)
+        .polygonCapColor(() => "rgba(15,15,15,0.95)")
+        .polygonSideColor(() => "rgba(30,30,30,0.6)")
+        .polygonStrokeColor(() => "rgba(197,165,90,0.3)")
+        .polygonAltitude(0.005)
+        .pointsData(points)
+        .pointLat("lat")
+        .pointLng("lng")
+        .pointColor("color")
+        .pointAltitude(d => d.size * 0.05)
+        .pointRadius(d => d.size * 0.4)
+        (container);
 
-        globe.controls().autoRotate = true;
-        globe.controls().autoRotateSpeed = 0.4;
-        globe.controls().enableZoom = false;
-        globe.controls().enablePan = false;
-        globe.controls().enableRotate = false;
-        globeRef.current = globe;
-      } catch (e) {
-        console.warn("Globe init failed:", e);
-        if (!cancelled) setWebglFailed(true);
-      }
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.4;
+      globe.controls().enableZoom = false;
+      globe.controls().enablePan = false;
+      globe.controls().enableRotate = false;
+      globeRef.current = globe;
     };
 
-    init();
+    if (!window.Globe) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/globe.gl";
+      script.onload = () => setTimeout(init, 100);
+      document.head.appendChild(script);
+    } else {
+      init();
+    }
 
-    return () => {
-      cancelled = true;
-      if (globeRef.current) { disposeGlobe(globeRef.current, containerRef.current); globeRef.current = null; }
-    };
+    return () => { if (globeRef.current) { containerRef.current && (containerRef.current.innerHTML = ""); globeRef.current = null; } };
   }, []);
-
-  if (webglFailed) {
-    return (
-      <div style={{ width: "100%", height, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 100%)", borderRadius: 8, position: "relative", overflow: "hidden" }}>
-        <svg viewBox="-180 -90 360 180" style={{ width: "90%", maxHeight: height - 60, opacity: 0.7 }} preserveAspectRatio="xMidYMid meet">
-          <rect x="-180" y="-90" width="360" height="180" fill="none" />
-          <ellipse cx="0" cy="0" rx="170" ry="80" fill="none" stroke="rgba(197,165,90,0.15)" strokeWidth="0.5" />
-          <line x1="-170" y1="0" x2="170" y2="0" stroke="rgba(197,165,90,0.1)" strokeWidth="0.3" />
-          <line x1="0" y1="-80" x2="0" y2="80" stroke="rgba(197,165,90,0.1)" strokeWidth="0.3" />
-          {points.map((p, i) => (
-            <circle key={i} cx={p.lng} cy={-p.lat} r={Math.max(1.5, p.size * 1.5)} fill="#C5A55A" opacity={0.7} />
-          ))}
-        </svg>
-        <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, textAlign: "center" }}>
-          <span style={{ fontSize: 10, color: "#555" }}>3D globe requires WebGL \u2022 Showing 2D view</span>
-        </div>
-      </div>
-    );
-  }
 
   return <div ref={containerRef} style={{ width: "100%", height }} />;
 }
@@ -671,7 +582,7 @@ function HealthMiniTile() {
         <div key={name} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
           <span style={{ color: "#aaa" }}>{name}</span>
           <span style={{ color: svc.status === "up" ? "#4CAF50" : svc.status === "degraded" ? "#FF9800" : "#f44336", fontWeight: 600 }}>
-            {svc.status === "up" ? "â" : svc.status === "degraded" ? "â" : "â"} {svc.status}
+            {svc.status === "up" ? "●" : svc.status === "degraded" ? "◐" : "○"} {svc.status}
           </span>
         </div>
       ))}
@@ -707,7 +618,7 @@ function MiniReferrersTile({ product, days }) {
   );
 }
 
-// âââ FUNNEL âââ
+// ═══ FUNNEL ═══
 function FunnelView({ data }) {
   const { funnel, daily } = data;
   if (!funnel || funnel.length === 0) return <Empty msg="No funnel data yet." />;
@@ -726,7 +637,7 @@ function FunnelView({ data }) {
         {order.map((key, i) => {
           const val = fMap[key] || 0;
           const prev = i > 0 ? (fMap[order[i - 1]] || 0) : val;
-          const dropPct = prev > 0 ? ((val / prev) * 100).toFixed(0) : "â";
+          const dropPct = prev > 0 ? ((val / prev) * 100).toFixed(0) : "—";
           return (
             <div key={key} style={S.funnelRow}>
               <div style={S.funnelLabel}>{labels[i]}</div>
@@ -757,7 +668,7 @@ function FunnelView({ data }) {
   );
 }
 
-// âââ TRENDS (Period-over-Period Line Graph) âââ
+// ═══ TRENDS (Period-over-Period Line Graph) ═══
 function TrendsView({ product, days }) {
   const [trendData, setTrendData] = useState(null);
   const [metric, setMetric] = useState("quiz_start");
@@ -898,7 +809,7 @@ function TrendsView({ product, days }) {
   );
 }
 
-// âââ RESEARCH âââ
+// ═══ RESEARCH ═══
 function ResearchView({ data, days, dateMode, startDate, endDate }) {
   const { distributions, diagnostics, attachments, neuropathways, relational } = data;
   const researchRef = useRef(null);
@@ -908,12 +819,12 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     if (dateMode === "custom" && startDate) {
       const s = new Date(startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
       const e = endDate ? new Date(endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Present";
-      return `${s} â ${e}`;
+      return `${s} – ${e}`;
     }
     if (days === 0) return "Today";
     const end = new Date();
     const start = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} â ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
   })();
 
   const exportPDF = async () => {
@@ -977,7 +888,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
       el.style.maxWidth = origMaxWidth;
       el.style.padding = origPadding;
 
-      // Full bleed letter page (no margins â content fills edge to edge)
+      // Full bleed letter page (no margins — content fills edge to edge)
       const PAGE_W = 612;
       const PAGE_H = 792;
       const PAD = 20; // small inner padding in pts
@@ -986,7 +897,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
 
       const imgW = fullCanvas.width;
       const imgH = fullCanvas.height;
-      const pxScale = CONTENT_W / imgW; // canvas px â PDF pts
+      const pxScale = CONTENT_W / imgW; // canvas px → PDF pts
       const pxPerPage = CONTENT_H / pxScale; // canvas px that fit on one page
 
       // Scale section bounds to canvas pixels (multiply by html2canvas scale)
@@ -1158,7 +1069,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     { title: "Years Fighting", color: "#009688", ids: ["years_under2","years_2_5","years_5_10","years_10_20","years_20_plus"] },
   ];
 
-  // Build a lookup from selection ID â count
+  // Build a lookup from selection ID → count
   const selectionCounts = {};
   (distributions || []).forEach(d => {
     selectionCounts[d.selection] = (selectionCounts[d.selection] || 0) + parseInt(d.count);
@@ -1166,12 +1077,12 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
 
   return (
     <div ref={researchRef}>
-      {/* PDF header â visible on screen as a toolbar, expanded in print */}
+      {/* PDF header — visible on screen as a toolbar, expanded in print */}
       <div className="research-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
           <div className="research-print-title" style={{ display: "none" }}>
             <img src="/images/unchained-logo.png" alt="Unchained Leader" style={{ height: 28, marginBottom: 6 }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#c5a55a", letterSpacing: 2 }}>UNCHAINED ANALYTICS â RESEARCH REPORT</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#c5a55a", letterSpacing: 2 }}>UNCHAINED ANALYTICS — RESEARCH REPORT</div>
           </div>
           <div style={{ fontSize: 13, color: "#888" }}>Date Range: <span style={{ color: "#ccc", fontWeight: 500 }}>{dateLabel}</span></div>
           <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>Generated {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
@@ -1220,7 +1131,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
   );
 }
 
-// âââ DROPOFF âââ
+// ═══ DROPOFF ═══
 function DropoffView({ data }) {
   const { sections } = data;
   if (!sections?.length) return <Empty msg="No drop-off data yet." />;
@@ -1244,7 +1155,7 @@ function DropoffView({ data }) {
             <td style={S.td}>{item.label}</td>
             <td style={S.td}>{item.users}</td>
             <td style={{ ...S.td, color: parseFloat(item.convPct) >= 80 ? "#4CAF50" : parseFloat(item.convPct) >= 60 ? "#FF9800" : "#f44336", fontWeight: 600 }}>{item.convPct}%</td>
-            <td style={{ ...S.td, color: parseFloat(item.dropPct) > 20 ? "#f44336" : "#4CAF50" }}>{i > 0 ? `${item.dropPct}%` : "â"}</td>
+            <td style={{ ...S.td, color: parseFloat(item.dropPct) > 20 ? "#f44336" : "#4CAF50" }}>{i > 0 ? `${item.dropPct}%` : "—"}</td>
           </tr>
         ))}</tbody>
       </table>
@@ -1252,7 +1163,7 @@ function DropoffView({ data }) {
   );
 }
 
-// âââ DEVICES âââ
+// ═══ DEVICES ═══
 function DevicesView({ data }) {
   const { devices, browsers } = data || {};
   if (!devices) return <Empty msg="No device data yet." />;
@@ -1270,7 +1181,7 @@ function DevicesView({ data }) {
   );
 }
 
-// âââ COHORT âââ
+// ═══ COHORT ═══
 function CohortView({ data }) {
   const { thisWeek, lastWeek } = data || {};
   if (!thisWeek) return <Empty msg="No cohort data yet." />;
@@ -1302,7 +1213,7 @@ function CohortView({ data }) {
   );
 }
 
-// âââ SUBMISSIONS (Geo / Location) âââ
+// ═══ SUBMISSIONS (Geo / Location) ═══
 function SubmissionsView({ product, days }) {
   const [subData, setSubData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1369,7 +1280,7 @@ function SubmissionsView({ product, days }) {
                     {new Date(row.created_at).toLocaleDateString()}{" "}
                     <span style={{ color: "#555" }}>{new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   </td>
-                  <td style={{ ...S.td, fontWeight: 500 }}>{row.name || "â"}</td>
+                  <td style={{ ...S.td, fontWeight: 500 }}>{row.name || "—"}</td>
                   <td style={{ ...S.td, fontSize: 11, color: "#999" }}>{row.email || row.session_id}</td>
                   <td style={{ ...S.td, fontSize: 11, color: row.traffic_source && row.traffic_source !== "direct" ? "#4CAF50" : "#555", fontWeight: 500 }}>
                     {row.traffic_source || "direct"}
@@ -1384,9 +1295,9 @@ function SubmissionsView({ product, days }) {
                       </span>
                     )}
                   </td>
-                  <td style={{ ...S.td, fontSize: 11, color: "#666", fontFamily: "monospace" }}>{row.ip_address || "â"}</td>
-                  <td style={{ ...S.td, fontSize: 11 }}>{row.arousal_template_type || "â"}</td>
-                  <td style={{ ...S.td, fontSize: 11 }}>{row.attachment_style || "â"}</td>
+                  <td style={{ ...S.td, fontSize: 11, color: "#666", fontFamily: "monospace" }}>{row.ip_address || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 11 }}>{row.arousal_template_type || "—"}</td>
+                  <td style={{ ...S.td, fontSize: 11 }}>{row.attachment_style || "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -1399,7 +1310,7 @@ function SubmissionsView({ product, days }) {
   );
 }
 
-// âââ LOCATIONS (3D Globe) âââ
+// ═══ LOCATIONS (3D Globe) ═══
 function LocationsView({ product }) {
   const [locData, setLocData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1408,7 +1319,6 @@ function LocationsView({ product }) {
   const [customEnd, setCustomEnd] = useState("");
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showCities, setShowCities] = useState(true);
-  const [webglFailed, setWebglFailed] = useState(false);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
   const allLabelsRef = useRef([]);
@@ -1439,28 +1349,18 @@ function LocationsView({ product }) {
   // Load globe.gl and render
   useEffect(() => {
     if (!locData || !globeContainerRef.current) return;
-    let cancelled = false;
 
     const initGlobe = async () => {
-      // Pre-check WebGL support
-      if (!isWebGLAvailable()) {
-        console.warn("WebGL not available \u2014 globe will show 2D fallback");
-        if (!cancelled) setWebglFailed(true);
-        return;
-      }
-
-      try { await loadGlobeScript(); } catch (e) { return; }
-      if (cancelled || !globeContainerRef.current || !window.Globe) return;
+      if (!window.Globe) return;
 
       // Clear any existing globe
       if (globeInstanceRef.current) {
-        disposeGlobe(globeInstanceRef.current, globeContainerRef.current);
+        globeContainerRef.current.innerHTML = "";
         globeInstanceRef.current = null;
       }
 
       const container = globeContainerRef.current;
       const width = container.clientWidth;
-      if (width === 0) return;
       const height = Math.max(600, Math.min(width * 0.65, 800));
 
       const points = (locData.locations || []).map(loc => ({
@@ -1474,26 +1374,52 @@ function LocationsView({ product }) {
         color: "#C5A55A",
       }));
 
-      // Fetch country borders GeoJSON
-      let countries = { features: [] };
-      try {
-        const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-        const worldTopo = await geoRes.json();
-        if (cancelled) return;
-        countries = decodeTopojson(worldTopo, worldTopo.objects.countries);
-      } catch (e) {}
-      if (cancelled || !globeContainerRef.current) return;
+      // Fetch country borders GeoJSON (pre-converted, no topojson dependency needed)
+      const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+      const worldTopo = await geoRes.json();
+      // Inline topojson feature extraction (avoids dynamic import)
+      const topoFeature = (topology, obj) => {
+        const arcs = topology.arcs;
+        const decodeArc = (arcIdx) => {
+          const reverse = arcIdx < 0;
+          const arc = arcs[reverse ? ~arcIdx : arcIdx];
+          let x = 0, y = 0;
+          const coords = arc.map(([dx, dy]) => {
+            x += dx; y += dy;
+            return [
+              x * topology.transform.scale[0] + topology.transform.translate[0],
+              y * topology.transform.scale[1] + topology.transform.translate[1]
+            ];
+          });
+          if (reverse) coords.reverse();
+          return coords;
+        };
+        const decodeRing = (arcs) => {
+          let coords = [];
+          arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
+          return coords;
+        };
+        const decodeGeom = (geom) => {
+          if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
+          if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
+          return geom;
+        };
+        return {
+          type: "FeatureCollection",
+          features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) }))
+        };
+      };
+      const countries = topoFeature(worldTopo, worldTopo.objects.countries);
 
       // Fetch US state boundaries
       let usStates = { type: "FeatureCollection", features: [] };
       try {
         const statesRes = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
         const statesTopo = await statesRes.json();
-        if (cancelled) return;
-        usStates = decodeTopojson(statesTopo, statesTopo.objects.states);
+        usStates = topoFeature(statesTopo, statesTopo.objects.states);
       } catch (e) { console.warn("Could not load US states:", e); }
-      if (cancelled || !globeContainerRef.current) return;
 
+      // All 50 US state capitals + DC + key international cities
       const majorCities = [
         // US State Capitals
         { name: "Montgomery", lat: 32.38, lng: -86.30 }, { name: "Juneau", lat: 58.30, lng: -134.42 },
@@ -1525,7 +1451,7 @@ function LocationsView({ product }) {
         // International cities
         { name: "London", lat: 51.51, lng: -0.13 }, { name: "Paris", lat: 48.86, lng: 2.35 },
         { name: "Tokyo", lat: 35.68, lng: 139.69 }, { name: "Sydney", lat: -33.87, lng: 151.21 },
-        { name: "SÃ£o Paulo", lat: -23.55, lng: -46.63 }, { name: "Toronto", lat: 43.65, lng: -79.38 },
+        { name: "São Paulo", lat: -23.55, lng: -46.63 }, { name: "Toronto", lat: 43.65, lng: -79.38 },
         { name: "Berlin", lat: 52.52, lng: 13.41 }, { name: "Lagos", lat: 6.52, lng: 3.38 },
         { name: "Dubai", lat: 25.20, lng: 55.27 }, { name: "Singapore", lat: 1.35, lng: 103.82 },
         { name: "Mexico City", lat: 19.43, lng: -99.13 }, { name: "Mumbai", lat: 19.08, lng: 72.88 },
@@ -1545,105 +1471,107 @@ function LocationsView({ product }) {
       });
       allLabelsRef.current = allLabels;
 
-      try {
-        const globe = window.Globe()
-          .backgroundColor("#000000")
-          .showGlobe(true)
-          .showAtmosphere(true)
-          .atmosphereColor("#646464")
-          .atmosphereAltitude(0.12)
-          .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
-          .width(width)
-          .height(height)
-          // Country polygons with borders
-          .polygonsData([...countries.features, ...usStates.features])
-          .polygonCapColor((d) => {
-            const isUSState = usStates.features.includes(d);
-            return isUSState ? "rgba(20,20,20,0.7)" : "rgba(15,15,15,0.95)";
-          })
-          .polygonSideColor(() => "rgba(30,30,30,0.6)")
-          .polygonStrokeColor((d) => {
-            const isUSState = usStates.features.includes(d);
-            return isUSState ? "rgba(197,165,90,0.25)" : "rgba(197,165,90,0.35)";
-          })
-          .polygonAltitude((d) => {
-            const isUSState = usStates.features.includes(d);
-            return isUSState ? 0.006 : 0.005;
-          })
-          // City labels — size scales down as you zoom in
-          .labelsData(allLabels)
-          .labelLat("lat")
-          .labelLng("lng")
-          .labelText("name")
-          .labelSize(() => {
-            if (!globeInstanceRef.current) return 0.3;
-            const pov = globeInstanceRef.current.pointOfView();
-            const alt = pov ? pov.altitude : 2.5;
-            return Math.max(0.08, Math.min(0.5, alt * 0.2));
-          })
-          .labelDotRadius(() => {
-            if (!globeInstanceRef.current) return 0.1;
-            const pov = globeInstanceRef.current.pointOfView();
-            const alt = pov ? pov.altitude : 2.5;
-            return Math.max(0.02, Math.min(0.12, alt * 0.05));
-          })
-          .labelColor(() => "rgba(197,165,90,0.55)")
-          .labelResolution(2)
-          .labelAltitude(0.007)
-          // Data points
-          .pointsData(points)
-          .pointLat("lat")
-          .pointLng("lng")
-          .pointColor("color")
-          .pointAltitude(d => d.size * 0.05)
-          .pointRadius(d => d.size * 0.4)
-          .pointLabel(d => {
-            const parts = [d.city, d.region, d.country].filter(Boolean).join(", ");
-            return `<div style="background:rgba(0,0,0,0.9);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
-              <div style="font-weight:600;margin-bottom:2px;">${parts}</div>
-              <div style="color:#ccc;font-size:11px;">${d.count} submission${d.count !== 1 ? "s" : ""}</div>
-            </div>`;
-          })
-          .onPointClick(d => {
-            setSelectedPoint({
-              city: d.city,
-              region: d.region,
-              country: d.country,
-              count: d.count,
-              lat: d.lat,
-              lng: d.lng,
-            });
-          })
-          (container);
+      const globe = window.Globe()
+        .backgroundColor("#000000")
+        .showGlobe(true)
+        .showAtmosphere(true)
+        .atmosphereColor("rgba(100,100,100,0.3)")
+        .atmosphereAltitude(0.12)
+        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
+        .width(width)
+        .height(height)
+        // Country polygons with borders
+        .polygonsData([...countries.features, ...usStates.features])
+        .polygonCapColor((d) => {
+          // US states get slightly different shade so state lines are visible
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? "rgba(20,20,20,0.7)" : "rgba(15,15,15,0.95)";
+        })
+        .polygonSideColor(() => "rgba(30,30,30,0.6)")
+        .polygonStrokeColor((d) => {
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? "rgba(197,165,90,0.25)" : "rgba(197,165,90,0.35)";
+        })
+        .polygonAltitude((d) => {
+          const isUSState = usStates.features.includes(d);
+          return isUSState ? 0.006 : 0.005;
+        })
+        // City labels — size scales down as you zoom in
+        .labelsData(allLabels)
+        .labelLat("lat")
+        .labelLng("lng")
+        .labelText("name")
+        .labelSize(() => {
+          if (!globeInstanceRef.current) return 0.3;
+          const pov = globeInstanceRef.current.pointOfView();
+          const alt = pov ? pov.altitude : 2.5;
+          // Closer = smaller labels: ranges from 0.08 (zoomed in) to 0.5 (zoomed out)
+          return Math.max(0.08, Math.min(0.5, alt * 0.2));
+        })
+        .labelDotRadius(() => {
+          if (!globeInstanceRef.current) return 0.1;
+          const pov = globeInstanceRef.current.pointOfView();
+          const alt = pov ? pov.altitude : 2.5;
+          return Math.max(0.02, Math.min(0.12, alt * 0.05));
+        })
+        .labelColor(() => "rgba(197,165,90,0.55)")
+        .labelResolution(2)
+        .labelAltitude(0.007)
+        // Data points
+        .pointsData(points)
+        .pointLat("lat")
+        .pointLng("lng")
+        .pointColor("color")
+        .pointAltitude(d => d.size * 0.05)
+        .pointRadius(d => d.size * 0.4)
+        .pointLabel(d => {
+          const parts = [d.city, d.region, d.country].filter(Boolean).join(", ");
+          return `<div style="background:rgba(0,0,0,0.9);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
+            <div style="font-weight:600;margin-bottom:2px;">${parts}</div>
+            <div style="color:#ccc;font-size:11px;">${d.count} submission${d.count !== 1 ? "s" : ""}</div>
+          </div>`;
+        })
+        .onPointClick(d => {
+          setSelectedPoint({
+            city: d.city,
+            region: d.region,
+            country: d.country,
+            count: d.count,
+            lat: d.lat,
+            lng: d.lng,
+          });
+        })
+        (container);
 
-        // Auto-rotate
-        globe.controls().autoRotate = true;
-        globe.controls().autoRotateSpeed = 0.5;
-        globe.controls().enableZoom = true;
+      // Auto-rotate
+      globe.controls().autoRotate = true;
+      globe.controls().autoRotateSpeed = 0.5;
+      globe.controls().enableZoom = true;
 
-        // Re-render labels on zoom so size updates dynamically
-        globe.controls().addEventListener("change", () => {
-          globe.labelsData(globe.labelsData());
-        });
+      // Re-render labels on zoom so size updates dynamically
+      globe.controls().addEventListener("change", () => {
+        globe.labelsData(globe.labelsData());
+      });
 
-        // Pause rotation on hover for easier navigation
-        container.addEventListener("mouseenter", () => { globe.controls().autoRotate = false; });
-        container.addEventListener("mouseleave", () => { globe.controls().autoRotate = true; });
+      // Pause rotation on hover for easier navigation
+      container.addEventListener("mouseenter", () => { globe.controls().autoRotate = false; });
+      container.addEventListener("mouseleave", () => { globe.controls().autoRotate = true; });
 
-        globeInstanceRef.current = globe;
-      } catch (e) {
-        console.warn("Globe init failed:", e);
-        if (!cancelled) setWebglFailed(true);
-        if (!cancelled) setWebglFailed(true);
-      }
+      globeInstanceRef.current = globe;
     };
 
-    initGlobe();
+    if (!window.Globe) {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/globe.gl";
+      script.onload = () => setTimeout(initGlobe, 100);
+      document.head.appendChild(script);
+    } else {
+      initGlobe();
+    }
 
     return () => {
-      cancelled = true;
       if (globeInstanceRef.current) {
-        disposeGlobe(globeInstanceRef.current, globeContainerRef.current);
+        globeContainerRef.current && (globeContainerRef.current.innerHTML = "");
         globeInstanceRef.current = null;
       }
     };
@@ -1723,7 +1651,7 @@ function LocationsView({ product }) {
           marginLeft: "auto",
           display: "flex", alignItems: "center", gap: 5, fontSize: 11,
         }}>
-          <span style={{ fontSize: 14 }}>{showCities ? "ðï¸" : "ðµ"}</span>
+          <span style={{ fontSize: 14 }}>{showCities ? "🏙️" : "🔵"}</span>
           {showCities ? "Cities On" : "Cities Off"}
         </button>
       </div>
@@ -1749,42 +1677,9 @@ function LocationsView({ product }) {
         <div style={{ width: "100%" }}>
           <div ref={globeContainerRef}
             style={{ width: "100%", background: "#000", borderRadius: 12, border: "1px solid #222", overflow: "hidden", minHeight: 600 }}>
-            {loading && !webglFailed && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 600, color: "#555" }}>
+            {loading && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "#555" }}>
                 Loading globe...
-              </div>
-            )}
-            {webglFailed && locData && (
-              <div style={{ width: "100%", height: 600, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)", position: "relative", overflow: "hidden" }}>
-                <svg viewBox="-200 -100 400 200" style={{ width: "95%", maxHeight: 500, opacity: 0.85 }} preserveAspectRatio="xMidYMid meet">
-                  {[-60, -30, 0, 30, 60].map(lat => (
-                    <line key={"lat"+lat} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(197,165,90,0.08)" strokeWidth="0.3" />
-                  ))}
-                  {[-120, -60, 0, 60, 120].map(lng => (
-                    <line key={"lng"+lng} x1={lng} y1="-90" x2={lng} y2="90" stroke="rgba(197,165,90,0.08)" strokeWidth="0.3" />
-                  ))}
-                  <ellipse cx="-100" cy="-35" rx="30" ry="25" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  <ellipse cx="-70" cy="15" rx="18" ry="30" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  <ellipse cx="10" cy="-30" rx="40" ry="20" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  <ellipse cx="15" cy="10" rx="30" ry="25" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  <ellipse cx="80" cy="-15" rx="35" ry="30" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  <ellipse cx="140" cy="35" rx="20" ry="15" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
-                  {(locData.locations || []).map((loc, i) => {
-                    const lng = parseFloat(loc.geo_lon);
-                    const lat = parseFloat(loc.geo_lat);
-                    const count = parseInt(loc.count);
-                    const r = Math.max(1, Math.min(5, Math.sqrt(count) * 0.8));
-                    return (
-                      <g key={i}>
-                        <circle cx={lng} cy={-lat} r={r} fill="#C5A55A" opacity={0.7} />
-                        <circle cx={lng} cy={-lat} r={r * 2} fill="#C5A55A" opacity={0.15} />
-                      </g>
-                    );
-                  })}
-                </svg>
-                <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, textAlign: "center" }}>
-                  <span style={{ fontSize: 11, color: "#555" }}>3D globe requires WebGL \u2022 Showing 2D map view</span>
-                </div>
               </div>
             )}
           </div>
@@ -1806,7 +1701,7 @@ function LocationsView({ product }) {
         </div>
       </div>
 
-      {/* Top locations list â full width below globe */}
+      {/* Top locations list — full width below globe */}
       <div style={{ marginTop: 16 }}>
         <h3 style={{ fontSize: 13, color: "#888", marginBottom: 8, fontWeight: 500, margin: "0 0 8px" }}>Top Locations</h3>
         {topLocations.length > 0 ? (
@@ -1841,7 +1736,7 @@ function LocationsView({ product }) {
   );
 }
 
-// âââ HEALTH âââ
+// ═══ HEALTH ═══
 function HealthView() {
   const [health, setHealth] = useState(null);
   const [history, setHistory] = useState(null);
@@ -1908,7 +1803,7 @@ function HealthView() {
   );
 }
 
-// âââ PIPELINE âââ
+// ═══ PIPELINE ═══
 function PipelineView({ days }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2099,8 +1994,8 @@ function PipelineCard({ label, value, color }) {
   );
 }
 
-// âââ EXPORT âââ
-// âââ AI ANALYST CHAT âââ
+// ═══ EXPORT ═══
+// ═══ AI ANALYST CHAT ═══
 function ChatView() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -2204,7 +2099,7 @@ function ChatView() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <div>
           <h2 style={S.sectionTitle}>AI Analyst</h2>
-          <p style={{ color: "#555", fontSize: 11, margin: 0 }}>Powered by Claude Opus â ask anything about your data</p>
+          <p style={{ color: "#555", fontSize: 11, margin: 0 }}>Powered by Claude Opus — ask anything about your data</p>
         </div>
         {messages.length > 0 && (
           <button onClick={() => setMessages([])} style={{ ...S.select, cursor: "pointer", fontSize: 11 }}>Clear Chat</button>
@@ -2284,7 +2179,7 @@ function ChatView() {
   );
 }
 
-// âââ EXPORT âââ
+// ═══ EXPORT ═══
 function ExportView({ product, days }) {
   const secret = typeof window !== "undefined" ? sessionStorage.getItem("admin_secret") : "";
   const base = `/api/analytics/export?secret=${encodeURIComponent(secret)}&product=${product}&days=${days}`;
@@ -2300,7 +2195,7 @@ function ExportView({ product, days }) {
   );
 }
 
-// âââ COMPONENTS âââ
+// ═══ COMPONENTS ═══
 function BarChart({ items, color, maxOverride, compact }) {
   const max = maxOverride || Math.max(...items.map(i => i.value), 1);
   if (compact) {
@@ -2343,7 +2238,7 @@ function Empty({ msg }) {
   return <div style={{ color: "#555", padding: 30, textAlign: "center", fontSize: 15 }}>{msg}</div>;
 }
 
-// âââ REFERRERS âââ
+// ═══ REFERRERS ═══
 function ReferrersView({ product, days }) {
   const [refData, setRefData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -2380,7 +2275,7 @@ function ReferrersView({ product, days }) {
           <div style={S.cardLabel}>Referred Traffic</div>
         </div>
         <div style={S.card}>
-          <div style={{ ...S.cardValue, color: "#9C27B0", fontSize: 24 }}>{domains.length > 0 ? domains[0].label : "â"}</div>
+          <div style={{ ...S.cardValue, color: "#9C27B0", fontSize: 24 }}>{domains.length > 0 ? domains[0].label : "—"}</div>
           <div style={S.cardLabel}>Top Source</div>
         </div>
       </div>
@@ -2467,8 +2362,8 @@ function ReferrersView({ product, days }) {
               );
             })}
             <div style={{ display: "flex", gap: 16, marginTop: 6, paddingLeft: 86 }}>
-              <span style={{ fontSize: 10, color: "#c5a55a" }}>â  Referred</span>
-              <span style={{ fontSize: 10, color: "#555" }}>â  Total</span>
+              <span style={{ fontSize: 10, color: "#c5a55a" }}>■ Referred</span>
+              <span style={{ fontSize: 10, color: "#555" }}>■ Total</span>
             </div>
           </div>
         </div>
@@ -2501,9 +2396,9 @@ function ReferrersView({ product, days }) {
                       title={row.referrerUrl || "Direct"}>
                       {row.referrerDomain}
                     </td>
-                    <td style={{ ...S.td, color: row.utmSource ? "#4CAF50" : "#444" }}>{row.utmSource || "â"}</td>
-                    <td style={{ ...S.td, color: row.utmMedium ? "#2196F3" : "#444" }}>{row.utmMedium || "â"}</td>
-                    <td style={{ ...S.td, color: row.utmCampaign ? "#FF9800" : "#444" }}>{row.utmCampaign || "â"}</td>
+                    <td style={{ ...S.td, color: row.utmSource ? "#4CAF50" : "#444" }}>{row.utmSource || "—"}</td>
+                    <td style={{ ...S.td, color: row.utmMedium ? "#2196F3" : "#444" }}>{row.utmMedium || "—"}</td>
+                    <td style={{ ...S.td, color: row.utmCampaign ? "#FF9800" : "#444" }}>{row.utmCampaign || "—"}</td>
                     <td style={S.td}>
                       <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 600,
                         background: row.completed ? "rgba(76,175,80,0.15)" : "rgba(255,152,0,0.15)",
@@ -2522,7 +2417,7 @@ function ReferrersView({ product, days }) {
   );
 }
 
-// âââ CLIENT LOOKUP âââ
+// ═══ CLIENT LOOKUP ═══
 function ClientsView() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
@@ -2578,7 +2473,7 @@ function ClientsView() {
           <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>{results.length} client{results.length > 1 ? "s" : ""} found</div>
           {results.map(client => (
             <div key={client.email} style={{ background: "#111", borderRadius: 10, border: "1px solid #222", overflow: "hidden" }}>
-              {/* Main row â stacks on mobile */}
+              {/* Main row — stacks on mobile */}
               <div style={{ padding: "14px 16px", cursor: "pointer" }}
                 onClick={() => setExpanded(expanded === client.email ? null : client.email)}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
@@ -2593,7 +2488,7 @@ function ClientsView() {
                       <div style={{ fontSize: 10, color: "#666" }}>REPORTS</div>
                     </div>
                     <div style={{ fontSize: 12, color: "#666" }}>
-                      {client.latestReportDate ? new Date(client.latestReportDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "â"}
+                      {client.latestReportDate ? new Date(client.latestReportDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                     </div>
                   </div>
                 </div>
@@ -2610,15 +2505,15 @@ function ClientsView() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginBottom: 12 }}>
                     <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
                       <div style={{ fontSize: 10, color: "#555" }}>TEMPLATE</div>
-                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.arousalTemplateType || "â"}</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.arousalTemplateType || "—"}</div>
                     </div>
                     <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
                       <div style={{ fontSize: 10, color: "#555" }}>NEUROPATHWAY</div>
-                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.neuropathway || "â"}</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.neuropathway || "—"}</div>
                     </div>
                     <div style={{ padding: "8px 10px", background: "#0a0a0a", borderRadius: 6 }}>
                       <div style={{ fontSize: 10, color: "#555" }}>ATTACHMENT</div>
-                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.attachmentStyle || "â"}</div>
+                      <div style={{ fontSize: 13, color: "#ccc", marginTop: 2 }}>{client.attachmentStyle || "—"}</div>
                     </div>
                   </div>
 
@@ -2631,12 +2526,12 @@ function ClientsView() {
                           <div>
                             <span style={{ fontSize: 12, color: "#888" }}>Report #{r.index}</span>
                             <span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>
-                              {r.generatedAt ? new Date(r.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "â"}
+                              {r.generatedAt ? new Date(r.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "—"}
                             </span>
                           </div>
                           {r.reportUrl && (
                             <a href={r.reportUrl} target="_blank" rel="noopener noreferrer"
-                              style={{ fontSize: 11, color: "#c5a55a", textDecoration: "none" }}>PDF â</a>
+                              style={{ fontSize: 11, color: "#c5a55a", textDecoration: "none" }}>PDF ↗</a>
                           )}
                         </div>
                       ))}
@@ -2658,7 +2553,7 @@ function ClientsView() {
   );
 }
 
-// âââ STYLES âââ
+// ═══ STYLES ═══
 const S = {
   wrap: { minHeight: "100vh", background: "#0a0a0a", color: "#e0e0e0", fontFamily: "'Montserrat', -apple-system, sans-serif", padding: "16px 20px" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 20, borderBottom: "1px solid #222", paddingBottom: 14 },
