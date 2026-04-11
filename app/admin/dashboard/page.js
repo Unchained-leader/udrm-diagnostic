@@ -1391,7 +1391,7 @@ function LocationsView({ product }) {
         // ── Starfield ──
         const defs = svg.append("defs");
 
-        // Inject twinkle keyframes once
+        // Inject keyframes once
         if (!document.getElementById("globe-twinkle-style")) {
           const style = document.createElement("style");
           style.id = "globe-twinkle-style";
@@ -1399,6 +1399,14 @@ function LocationsView({ product }) {
             @keyframes globe-twinkle {
               0%, 100% { opacity: var(--star-min); }
               50% { opacity: var(--star-max); }
+            }
+            @keyframes hashtag-pulse {
+              0%, 100% { opacity: 0.07; }
+              50% { opacity: 0.13; }
+            }
+            @keyframes hashtag-glow-pulse {
+              0%, 100% { opacity: 0.18; }
+              50% { opacity: 0.3; }
             }
           `;
           document.head.appendChild(style);
@@ -1431,6 +1439,37 @@ function LocationsView({ product }) {
             .style("--star-max", maxOpacity)
             .style("animation", `globe-twinkle ${duration}s ease-in-out ${delay}s infinite`);
         }
+
+        // ── #unchaintheworld hashtag layered behind globe ──
+        const hashtagGroup = svg.append("g").attr("pointer-events", "none");
+        const hashtagText = "#unchaintheworld";
+        const hashFontSize = Math.min(w * 0.09, 52);
+
+        // Glow filter
+        const glowFilter = defs.append("filter").attr("id", "hashtag-glow");
+        glowFilter.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
+        glowFilter.append("feComposite").attr("in", "SourceGraphic").attr("in2", "blur").attr("operator", "over");
+
+        // Layer 1 — large blurred glow behind
+        hashtagGroup.append("text")
+          .attr("x", w / 2).attr("y", h * 0.08)
+          .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+          .attr("font-size", hashFontSize * 1.15).attr("font-weight", 800)
+          .attr("fill", "#C5A55A").attr("letter-spacing", "2px")
+          .attr("font-family", "'Georgia', 'Times New Roman', serif")
+          .attr("filter", "url(#hashtag-glow)")
+          .style("animation", "hashtag-glow-pulse 6s ease-in-out infinite")
+          .text(hashtagText);
+
+        // Layer 2 — main text, subtle
+        hashtagGroup.append("text")
+          .attr("x", w / 2).attr("y", h * 0.08)
+          .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+          .attr("font-size", hashFontSize).attr("font-weight", 700)
+          .attr("fill", "#C5A55A").attr("letter-spacing", "3px")
+          .attr("font-family", "'Georgia', 'Times New Roman', serif")
+          .style("animation", "hashtag-pulse 6s ease-in-out infinite")
+          .text(hashtagText);
 
         // Atmosphere glow
         const grad = defs.append("radialGradient").attr("id", "lv-atmo");
