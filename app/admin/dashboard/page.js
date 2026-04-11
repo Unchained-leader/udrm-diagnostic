@@ -458,110 +458,105 @@ function MiniTrendsChart({ product, days }) {
 }
 
 // Mini globe for dashboard home (simplified, no interactions needed)
-function MiniGlobe({ product, height }) {
+// ---- D3 Globe Helper ----
+const loadD3Scripts = () => {
+  return new Promise((resolve, reject) => {
+    if (window.d3 && window.topojson) { resolve(); return; }
+    let loaded = 0;
+    const check = () => { loaded++; if (loaded === 2) { window.d3 && window.topojson ? resolve() : reject(new Error("D3 load failed")); } };
+    if (!window.topojson) {
+      const s1 = document.createElement("script");
+      s1.src = "https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js";
+      s1.onload = check; s1.onerror = () => reject(new Error("topojson load failed"));
+      document.head.appendChild(s1);
+    } else { loaded++; }
+    if (!window.d3) {
+      const s2 = document.createElement("script");
+      s2.src = "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js";
+      s2.onload = check; s2.onerror = () => reject(new Error("d3 load failed"));
+      document.head.appendChild(s2);
+    } else { loaded++; }
+    if (loaded === 2) resolve();
+  });
+};
+
+function MiniGlobe({ product, height = 280 }) {
   const containerRef = useRef(null);
-  const globeRef = useRef(null);
+  const animFrameRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
+    let cancelled = false;
     const init = async () => {
-      if (!window.Globe) return;
-      if (globeRef.current) { containerRef.current.innerHTML = ""; globeRef.current = null; }
-
-      const container = containerRef.current;
-      const width = container.clientWidth;
-
-      // Fetch country borders
-      let countries = { features: [] };
       try {
-        const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-        const worldTopo = await geoRes.json();
-        const topoFeature = (topology, obj) => {
-          const arcs = topology.arcs;
-          const decodeArc = (arcIdx) => {
-            const reverse = arcIdx < 0;
-            const arc = arcs[reverse ? ~arcIdx : arcIdx];
-            let x = 0, y = 0;
-            const coords = arc.map(([dx, dy]) => {
-              x += dx; y += dy;
-              return [
-                x * topology.transform.scale[0] + topology.transform.translate[0],
-                y * topology.transform.scale[1] + topology.transform.translate[1]
-              ];
-            });
-            if (reverse) coords.reverse();
-            return coords;
-          };
-          const decodeRing = (arcs) => {
-            let coords = [];
-            arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
-            return coords;
-          };
-          const decodeGeom = (geom) => {
-            if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
-            if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
-            return geom;
-          };
-          return { type: "FeatureCollection", features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) })) };
-        };
-        countries = topoFeature(worldTopo, worldTopo.objects.countries);
-      } catch (e) {}
+        await loadD3Scripts();
+        if (cancelled || !containerRef.current) return;
+        const d3 = window.d3, topojson = window.topojson;
+        const container = containerRef.current;
+        const w = Math.min(container.offsetWidth || 350, 400);
+        const h = Math.min(height, 400);
 
-      // Fetch location data
-      let points = [];
-      try {
+        // Fetch data
         const secret = sessionStorage.getItem("admin_secret") || "";
-        const res = await fetch(`/api/analytics?view=locations&secret=${encodeURIComponent(secret)}&days=90`);
-        const d = await res.json();
-        points = (d.locations || []).map(loc => ({
-          lat: parseFloat(loc.geo_lat), lng: parseFloat(loc.geo_lon),
-          size: Math.max(0.3, Math.min(2.5, Math.sqrt(parseInt(loc.count)) * 0.5)),
-          color: "#C5A55A",
-        }));
-      } catch (e) {}
+        const [topoRes, locRes] = await Promise.all([
+          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
+          fetch("/api/analytics?view=locations&secret=" + encodeURIComponent(secret) + "&days=90")
+        ]);
+        if (cancelled) return;
+        const topoData = await topoRes.json();
+        const locJson = await locRes.json();
+        const points = (locJson.locations || []).map(l => [parseFloat(l.geo_lon), parseFloat(l.geo_lat), parseInt(l.count) || 1]);
+        const countries = topojson.feature(topoData, topoData.objects.countries);
 
-      const globe = window.Globe()
-        .backgroundColor("rgba(0,0,0,0)")
-        .showGlobe(true)
-        .showAtmosphere(true)
-        .atmosphereColor("rgba(100,100,100,0.2)")
-        .atmosphereAltitude(0.1)
-        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
-        .width(width)
-        .height(height)
-        .polygonsData(countries.features)
-        .polygonCapColor(() => "rgba(15,15,15,0.95)")
-        .polygonSideColor(() => "rgba(30,30,30,0.6)")
-        .polygonStrokeColor(() => "rgba(197,165,90,0.3)")
-        .polygonAltitude(0.005)
-        .pointsData(points)
-        .pointLat("lat")
-        .pointLng("lng")
-        .pointColor("color")
-        .pointAltitude(d => d.size * 0.05)
-        .pointRadius(d => d.size * 0.4)
-        (container);
+        if (cancelled || !containerRef.current) return;
+        container.innerHTML = "";
 
-      globe.controls().autoRotate = true;
-      globe.controls().autoRotateSpeed = 0.4;
-      globe.controls().enableZoom = false;
-      globe.controls().enablePan = false;
-      globe.controls().enableRotate = false;
-      globeRef.current = globe;
+        const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
+        const projection = d3.geoOrthographic().scale(w / 2.4).translate([w / 2, h / 2]).clipAngle(90);
+        const path = d3.geoPath(projection);
+
+        // Atmosphere glow
+        const defs = svg.append("defs");
+        const grad = defs.append("radialGradient").attr("id", "mg-atmo");
+        grad.append("stop").attr("offset", "85%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.08);
+        grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
+        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.15).attr("fill", "url(#mg-atmo)");
+
+        // Globe sphere
+        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.3).attr("stroke-opacity", 0.4);
+
+        // Country paths
+        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 0.4);
+
+        // Data points
+        const pointCircles = svg.append("g").selectAll("circle").data(points).join("circle")
+          .attr("r", d => Math.max(1, Math.min(4, Math.sqrt(d[2]) * 0.6)))
+          .attr("fill", "#C5A55A").attr("opacity", 0.8);
+
+        const updatePoints = () => {
+          pointCircles.each(function(d) {
+            const rot = projection.rotate();
+            const dist = d3.geoDistance(d, [-rot[0], -rot[1]]);
+            const p = projection(d);
+            const visible = dist < Math.PI / 2 && p;
+            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("display", visible ? null : "none");
+          });
+        };
+
+        // Auto-rotate
+        let angle = 0;
+        const spin = () => {
+          angle = (angle + 0.3) % 360;
+          projection.rotate([angle, -15]);
+          countryPaths.attr("d", path);
+          updatePoints();
+          animFrameRef.current = requestAnimationFrame(spin);
+        };
+        animFrameRef.current = requestAnimationFrame(spin);
+      } catch (e) { console.warn("MiniGlobe init error:", e); }
     };
-
-    if (!window.Globe) {
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/globe.gl";
-      script.onload = () => setTimeout(init, 100);
-      document.head.appendChild(script);
-    } else {
-      init();
-    }
-
-    return () => { if (globeRef.current) { containerRef.current && (containerRef.current.innerHTML = ""); globeRef.current = null; } };
-  }, []);
+    init();
+    return () => { cancelled = true; if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); if (containerRef.current) containerRef.current.innerHTML = ""; };
+  }, [height]);
 
   return <div ref={containerRef} style={{ width: "100%", height }} />;
 }
@@ -1348,254 +1343,181 @@ function LocationsView({ product }) {
 
   // Load globe.gl and render
   useEffect(() => {
-    if (!locData || !globeContainerRef.current) return;
-
-    const initGlobe = async () => {
-      if (!window.Globe) return;
-
-      // Clear any existing globe
-      if (globeInstanceRef.current) {
-        globeContainerRef.current.innerHTML = "";
-        globeInstanceRef.current = null;
-      }
-
-      const container = globeContainerRef.current;
-      const width = container.clientWidth;
-      const height = Math.max(600, Math.min(width * 0.65, 800));
-
-      const points = (locData.locations || []).map(loc => ({
-        lat: parseFloat(loc.geo_lat),
-        lng: parseFloat(loc.geo_lon),
-        size: Math.max(0.3, Math.min(2.5, Math.sqrt(parseInt(loc.count)) * 0.5)),
-        count: parseInt(loc.count),
-        city: loc.geo_city || "Unknown",
-        region: loc.geo_region || "",
-        country: loc.geo_country || "Unknown",
-        color: "#C5A55A",
-      }));
-
-      // Fetch country borders GeoJSON (pre-converted, no topojson dependency needed)
-      const geoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-      const worldTopo = await geoRes.json();
-      // Inline topojson feature extraction (avoids dynamic import)
-      const topoFeature = (topology, obj) => {
-        const arcs = topology.arcs;
-        const decodeArc = (arcIdx) => {
-          const reverse = arcIdx < 0;
-          const arc = arcs[reverse ? ~arcIdx : arcIdx];
-          let x = 0, y = 0;
-          const coords = arc.map(([dx, dy]) => {
-            x += dx; y += dy;
-            return [
-              x * topology.transform.scale[0] + topology.transform.translate[0],
-              y * topology.transform.scale[1] + topology.transform.translate[1]
-            ];
-          });
-          if (reverse) coords.reverse();
-          return coords;
-        };
-        const decodeRing = (arcs) => {
-          let coords = [];
-          arcs.forEach(i => { const c = decodeArc(i); if (coords.length) c.shift(); coords = coords.concat(c); });
-          return coords;
-        };
-        const decodeGeom = (geom) => {
-          if (geom.type === "Polygon") return { type: "Polygon", coordinates: geom.arcs.map(decodeRing) };
-          if (geom.type === "MultiPolygon") return { type: "MultiPolygon", coordinates: geom.arcs.map(poly => poly.map(decodeRing)) };
-          return geom;
-        };
-        return {
-          type: "FeatureCollection",
-          features: obj.geometries.map(g => ({ type: "Feature", properties: g.properties || {}, geometry: decodeGeom(g) }))
-        };
-      };
-      const countries = topoFeature(worldTopo, worldTopo.objects.countries);
-
-      // Fetch US state boundaries
-      let usStates = { type: "FeatureCollection", features: [] };
+    let cancelled = false;
+    let animFrameId = null;
+    const init = async () => {
       try {
-        const statesRes = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
-        const statesTopo = await statesRes.json();
-        usStates = topoFeature(statesTopo, statesTopo.objects.states);
-      } catch (e) { console.warn("Could not load US states:", e); }
+        if (!locData || !globeContainerRef.current) return;
+        await loadD3Scripts();
+        if (cancelled) return;
+        const d3 = window.d3, topojson = window.topojson;
+        const container = globeContainerRef.current;
+        const cw = container.offsetWidth || 900;
+        const w = cw;
+        const h = Math.max(600, Math.min(cw * 0.65, 800));
 
-      // All 50 US state capitals + DC + key international cities
-      const majorCities = [
-        // US State Capitals
-        { name: "Montgomery", lat: 32.38, lng: -86.30 }, { name: "Juneau", lat: 58.30, lng: -134.42 },
-        { name: "Phoenix", lat: 33.45, lng: -112.07 }, { name: "Little Rock", lat: 34.75, lng: -92.29 },
-        { name: "Sacramento", lat: 38.58, lng: -121.49 }, { name: "Denver", lat: 39.74, lng: -104.98 },
-        { name: "Hartford", lat: 41.76, lng: -72.68 }, { name: "Dover", lat: 39.16, lng: -75.52 },
-        { name: "Tallahassee", lat: 30.44, lng: -84.28 }, { name: "Atlanta", lat: 33.75, lng: -84.39 },
-        { name: "Honolulu", lat: 21.31, lng: -157.86 }, { name: "Boise", lat: 43.62, lng: -116.20 },
-        { name: "Springfield", lat: 39.80, lng: -89.65 }, { name: "Indianapolis", lat: 39.77, lng: -86.16 },
-        { name: "Des Moines", lat: 41.59, lng: -93.62 }, { name: "Topeka", lat: 39.05, lng: -95.68 },
-        { name: "Frankfort", lat: 38.20, lng: -84.87 }, { name: "Baton Rouge", lat: 30.46, lng: -91.19 },
-        { name: "Augusta", lat: 44.31, lng: -69.78 }, { name: "Annapolis", lat: 38.97, lng: -76.49 },
-        { name: "Boston", lat: 42.36, lng: -71.06 }, { name: "Lansing", lat: 42.73, lng: -84.56 },
-        { name: "Saint Paul", lat: 44.94, lng: -93.09 }, { name: "Jackson", lat: 32.30, lng: -90.18 },
-        { name: "Jefferson City", lat: 38.58, lng: -92.17 }, { name: "Helena", lat: 46.60, lng: -112.04 },
-        { name: "Lincoln", lat: 40.81, lng: -96.70 }, { name: "Carson City", lat: 39.16, lng: -119.77 },
-        { name: "Concord", lat: 43.21, lng: -71.54 }, { name: "Trenton", lat: 40.22, lng: -74.76 },
-        { name: "Santa Fe", lat: 35.69, lng: -105.94 }, { name: "Albany", lat: 42.65, lng: -73.76 },
-        { name: "Raleigh", lat: 35.78, lng: -78.64 }, { name: "Bismarck", lat: 46.81, lng: -100.78 },
-        { name: "Columbus", lat: 39.96, lng: -82.99 }, { name: "Oklahoma City", lat: 35.47, lng: -97.52 },
-        { name: "Salem", lat: 44.94, lng: -123.03 }, { name: "Harrisburg", lat: 40.26, lng: -76.88 },
-        { name: "Providence", lat: 41.82, lng: -71.41 }, { name: "Columbia", lat: 34.00, lng: -81.03 },
-        { name: "Pierre", lat: 44.37, lng: -100.35 }, { name: "Nashville", lat: 36.17, lng: -86.78 },
-        { name: "Austin", lat: 30.27, lng: -97.74 }, { name: "Salt Lake City", lat: 40.76, lng: -111.89 },
-        { name: "Montpelier", lat: 44.26, lng: -72.58 }, { name: "Richmond", lat: 37.54, lng: -77.43 },
-        { name: "Olympia", lat: 47.04, lng: -122.89 }, { name: "Charleston", lat: 38.35, lng: -81.63 },
-        { name: "Madison", lat: 43.07, lng: -89.40 }, { name: "Cheyenne", lat: 41.14, lng: -104.82 },
-        { name: "Washington DC", lat: 38.91, lng: -77.04 },
-        // International cities
-        { name: "London", lat: 51.51, lng: -0.13 }, { name: "Paris", lat: 48.86, lng: 2.35 },
-        { name: "Tokyo", lat: 35.68, lng: 139.69 }, { name: "Sydney", lat: -33.87, lng: 151.21 },
-        { name: "São Paulo", lat: -23.55, lng: -46.63 }, { name: "Toronto", lat: 43.65, lng: -79.38 },
-        { name: "Berlin", lat: 52.52, lng: 13.41 }, { name: "Lagos", lat: 6.52, lng: 3.38 },
-        { name: "Dubai", lat: 25.20, lng: 55.27 }, { name: "Singapore", lat: 1.35, lng: 103.82 },
-        { name: "Mexico City", lat: 19.43, lng: -99.13 }, { name: "Mumbai", lat: 19.08, lng: 72.88 },
-      ];
+        // Fetch topology
+        const topoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+        if (cancelled) return;
+        const topoData = await topoRes.json();
+        const countries = topojson.feature(topoData, topoData.objects.countries);
 
-      // Add submission cities as labels too
-      const submissionLabels = points.filter(p => p.count >= 1).map(p => ({
-        name: p.city !== "Unknown" ? p.city : "",
-        lat: p.lat, lng: p.lng
-      })).filter(p => p.name);
+        // Prepare points
+        const points = (locData.locations || []).map(l => ({
+          coords: [parseFloat(l.geo_lon), parseFloat(l.geo_lat)],
+          count: parseInt(l.count) || 1,
+          city: l.geo_city || "Unknown",
+          region: l.geo_region || "",
+          country: l.geo_country || "Unknown",
+        }));
 
-      // Merge: major cities + submission cities, deduplicate by proximity
-      const allLabels = [...majorCities];
-      submissionLabels.forEach(sl => {
-        const tooClose = allLabels.some(ml => Math.abs(ml.lat - sl.lat) < 1 && Math.abs(ml.lng - sl.lng) < 1);
-        if (!tooClose) allLabels.push(sl);
-      });
-      allLabelsRef.current = allLabels;
+        if (cancelled || !globeContainerRef.current) return;
+        container.innerHTML = "";
 
-      const globe = window.Globe()
-        .backgroundColor("#000000")
-        .showGlobe(true)
-        .showAtmosphere(true)
-        .atmosphereColor("rgba(100,100,100,0.3)")
-        .atmosphereAltitude(0.12)
-        .globeImageUrl("//unpkg.com/three-globe/example/img/earth-dark.jpg")
-        .width(width)
-        .height(height)
-        // Country polygons with borders
-        .polygonsData([...countries.features, ...usStates.features])
-        .polygonCapColor((d) => {
-          // US states get slightly different shade so state lines are visible
-          const isUSState = usStates.features.includes(d);
-          return isUSState ? "rgba(20,20,20,0.7)" : "rgba(15,15,15,0.95)";
-        })
-        .polygonSideColor(() => "rgba(30,30,30,0.6)")
-        .polygonStrokeColor((d) => {
-          const isUSState = usStates.features.includes(d);
-          return isUSState ? "rgba(197,165,90,0.25)" : "rgba(197,165,90,0.35)";
-        })
-        .polygonAltitude((d) => {
-          const isUSState = usStates.features.includes(d);
-          return isUSState ? 0.006 : 0.005;
-        })
-        // City labels — size scales down as you zoom in
-        .labelsData(allLabels)
-        .labelLat("lat")
-        .labelLng("lng")
-        .labelText("name")
-        .labelSize(() => {
-          if (!globeInstanceRef.current) return 0.3;
-          const pov = globeInstanceRef.current.pointOfView();
-          const alt = pov ? pov.altitude : 2.5;
-          // Closer = smaller labels: ranges from 0.08 (zoomed in) to 0.5 (zoomed out)
-          return Math.max(0.08, Math.min(0.5, alt * 0.2));
-        })
-        .labelDotRadius(() => {
-          if (!globeInstanceRef.current) return 0.1;
-          const pov = globeInstanceRef.current.pointOfView();
-          const alt = pov ? pov.altitude : 2.5;
-          return Math.max(0.02, Math.min(0.12, alt * 0.05));
-        })
-        .labelColor(() => "rgba(197,165,90,0.55)")
-        .labelResolution(2)
-        .labelAltitude(0.007)
-        // Data points
-        .pointsData(points)
-        .pointLat("lat")
-        .pointLng("lng")
-        .pointColor("color")
-        .pointAltitude(d => d.size * 0.05)
-        .pointRadius(d => d.size * 0.4)
-        .pointLabel(d => {
-          const parts = [d.city, d.region, d.country].filter(Boolean).join(", ");
-          return `<div style="background:rgba(0,0,0,0.9);color:#C5A55A;padding:8px 12px;border-radius:6px;font-size:13px;border:1px solid #333;font-family:Montserrat,sans-serif;">
-            <div style="font-weight:600;margin-bottom:2px;">${parts}</div>
-            <div style="color:#ccc;font-size:11px;">${d.count} submission${d.count !== 1 ? "s" : ""}</div>
-          </div>`;
-        })
-        .onPointClick(d => {
-          setSelectedPoint({
-            city: d.city,
-            region: d.region,
-            country: d.country,
-            count: d.count,
-            lat: d.lat,
-            lng: d.lng,
+        const svg = d3.select(container).append("svg").attr("width", w).attr("height", h)
+          .style("background", "#0a0a0a").style("border-radius", "8px").style("border", "1px solid #222").style("display", "block");
+
+        const projection = d3.geoOrthographic().scale(Math.min(w, h) / 2.3).translate([w / 2, h / 2]).clipAngle(90);
+        const path = d3.geoPath(projection);
+
+        // Atmosphere glow
+        const defs = svg.append("defs");
+        const grad = defs.append("radialGradient").attr("id", "lv-atmo");
+        grad.append("stop").attr("offset", "80%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.06);
+        grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
+        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", "url(#lv-atmo)");
+
+        // Globe sphere
+        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.5).attr("stroke-opacity", 0.5);
+
+        // Graticule (grid lines)
+        const graticule = d3.geoGraticule10();
+        svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#333").attr("stroke-width", 0.2).attr("stroke-opacity", 0.4);
+
+        // Country paths
+        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#555").attr("stroke-width", 0.5);
+
+        // Graticule ref for updates
+        const graticulePath = svg.select("path[d]");
+
+        // Data points group
+        const pointGroup = svg.append("g");
+        const pointCircles = pointGroup.selectAll("circle").data(points).join("circle")
+          .attr("r", d => Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)))
+          .attr("fill", "#C5A55A").attr("opacity", 0.75).attr("cursor", "pointer");
+
+        // City labels group
+        const labelGroup = svg.append("g");
+
+        // Tooltip
+        const tooltip = d3.select(container).append("div")
+          .style("position", "absolute").style("background", "rgba(0,0,0,0.85)")
+          .style("color", "#fff").style("padding", "8px 12px").style("border-radius", "6px")
+          .style("font-size", "12px").style("pointer-events", "none").style("display", "none")
+          .style("z-index", "1000").style("border", "1px solid #C5A55A").style("line-height", "1.5");
+
+        const updatePositions = () => {
+          const rot = projection.rotate();
+          countryPaths.attr("d", path);
+          svg.selectAll("path[d*='M']").filter(function() { return this !== countryPaths.node(); }).attr("d", path);
+          // Re-render graticule
+          svg.select(".graticule-path").attr("d", path(graticule));
+
+          pointCircles.each(function(d) {
+            const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
+            const p = projection(d.coords);
+            const visible = dist < Math.PI / 2 && p;
+            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("display", visible ? null : "none");
           });
-        })
-        (container);
 
-      // Auto-rotate
-      globe.controls().autoRotate = true;
-      globe.controls().autoRotateSpeed = 0.5;
-      globe.controls().enableZoom = true;
+          if (showCities) {
+            labelGroup.selectAll("text").each(function(d) {
+              const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
+              const p = projection(d.coords);
+              const visible = dist < Math.PI / 2 && p;
+              d3.select(this).attr("x", p ? p[0] : 0).attr("y", p ? p[1] - 8 : 0).attr("display", visible ? null : "none");
+            });
+          }
+        };
 
-      // Re-render labels on zoom so size updates dynamically
-      globe.controls().addEventListener("change", () => {
-        globe.labelsData(globe.labelsData());
-      });
+        // Hover events
+        pointCircles
+          .on("mouseenter", function(event, d) {
+            d3.select(this).attr("opacity", 1).attr("stroke", "#fff").attr("stroke-width", 1);
+            let html = "<b>" + d.city + "</b>";
+            if (d.region) html += "<br/>" + d.region + (d.country && d.country !== d.region ? ", " + d.country : "");
+            else if (d.country) html += "<br/>" + d.country;
+            html += "<br/><span style='color:#C5A55A'>" + d.count + " submissions</span>";
+            const rect = container.getBoundingClientRect();
+            tooltip.html(html).style("display", "block")
+              .style("left", (event.clientX - rect.left + 12) + "px")
+              .style("top", (event.clientY - rect.top - 10) + "px");
+          })
+          .on("mousemove", function(event) {
+            const rect = container.getBoundingClientRect();
+            tooltip.style("left", (event.clientX - rect.left + 12) + "px").style("top", (event.clientY - rect.top - 10) + "px");
+          })
+          .on("mouseleave", function() {
+            d3.select(this).attr("opacity", 0.75).attr("stroke", "none");
+            tooltip.style("display", "none");
+          });
 
-      // Pause rotation on hover for easier navigation
-      container.addEventListener("mouseenter", () => { globe.controls().autoRotate = false; });
-      container.addEventListener("mouseleave", () => { globe.controls().autoRotate = true; });
+        // City labels
+        const updateLabels = () => {
+          labelGroup.selectAll("text").remove();
+          if (!showCities) return;
+          labelGroup.selectAll("text").data(points.filter(p => p.count >= 2)).join("text")
+            .attr("text-anchor", "middle").attr("font-size", "9px").attr("fill", "#C5A55A").attr("opacity", 0.7)
+            .attr("pointer-events", "none").text(d => d.city);
+          updatePositions();
+        };
+        updateLabels();
 
-      globeInstanceRef.current = globe;
+        // Drag to rotate
+        let currentRotation = [0, -15];
+        let isDragging = false;
+        let dragStartCoords = [0, 0];
+        let dragStartRotation = [0, 0];
+        projection.rotate(currentRotation);
+        updatePositions();
+
+        svg.call(d3.drag()
+          .on("start", function(event) { isDragging = true; dragStartCoords = [event.x, event.y]; dragStartRotation = [...currentRotation]; })
+          .on("drag", function(event) {
+            if (!isDragging) return;
+            const dx = event.x - dragStartCoords[0];
+            const dy = event.y - dragStartCoords[1];
+            currentRotation = [dragStartRotation[0] + dx * 0.4, Math.max(-60, Math.min(60, dragStartRotation[1] - dy * 0.4))];
+            projection.rotate(currentRotation);
+            updatePositions();
+          })
+          .on("end", () => { isDragging = false; })
+        );
+
+        // Auto-rotate
+        const spin = () => {
+          if (!isDragging) {
+            currentRotation[0] = (currentRotation[0] + 0.15) % 360;
+            projection.rotate(currentRotation);
+            updatePositions();
+          }
+          animFrameId = requestAnimationFrame(spin);
+        };
+        animFrameId = requestAnimationFrame(spin);
+
+        // Store cleanup ref
+        globeInstanceRef.current = { cleanup: () => { if (animFrameId) cancelAnimationFrame(animFrameId); } };
+      } catch (e) { console.warn("LocationsView globe error:", e); }
     };
-
-    if (!window.Globe) {
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/globe.gl";
-      script.onload = () => setTimeout(initGlobe, 100);
-      document.head.appendChild(script);
-    } else {
-      initGlobe();
-    }
-
+    init();
     return () => {
-      if (globeInstanceRef.current) {
-        globeContainerRef.current && (globeContainerRef.current.innerHTML = "");
-        globeInstanceRef.current = null;
-      }
+      cancelled = true;
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      if (globeInstanceRef.current && globeInstanceRef.current.cleanup) globeInstanceRef.current.cleanup();
+      globeInstanceRef.current = null;
+      if (globeContainerRef.current) globeContainerRef.current.innerHTML = "";
     };
-  }, [locData]);
-
-  // Toggle city labels on/off
-  useEffect(() => {
-    if (globeInstanceRef.current) {
-      globeInstanceRef.current.labelsData(showCities ? allLabelsRef.current : []);
-    }
-  }, [showCities]);
-
-  // Handle resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (globeInstanceRef.current && globeContainerRef.current) {
-        const w = globeContainerRef.current.clientWidth;
-        globeInstanceRef.current.width(w);
-        globeInstanceRef.current.height(Math.max(600, Math.min(w * 0.65, 800)));
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [locData, showCities]);
 
   const filterPresets = [
     { label: "7 Days", value: "7" },
