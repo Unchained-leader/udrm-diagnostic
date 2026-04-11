@@ -1559,7 +1559,7 @@ function LocationsView({ product }) {
         projection.rotate(currentRotation);
         updatePositions();
 
-        const clampZoom = (z) => Math.max(0.5, Math.min(8, z));
+        const clampZoom = (z) => Math.max(0.5, Math.min(40, z));
 
         // ── Mouse drag to rotate (desktop only — touch handled separately) ──
         let dragStartCoords = [0, 0];
@@ -1587,7 +1587,7 @@ function LocationsView({ product }) {
         const svgNode = svg.node();
         svgNode.addEventListener("wheel", function(event) {
           event.preventDefault();
-          const delta = -event.deltaY * 0.002;
+          const delta = -event.deltaY * 0.004;
           currentZoom = clampZoom(currentZoom * (1 + delta));
           projection.scale(baseScale * currentZoom);
           updatePositions();
