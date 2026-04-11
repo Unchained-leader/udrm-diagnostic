@@ -40,7 +40,7 @@ export default function Dashboard() {
         if (endDate) base += `&endDate=${endDate}`;
       } else if (days === 0) {
         // "Today" — from midnight today
-        const today = new Date().toISOString().split("T")[0];
+        const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
         base += `&startDate=${today}`;
       }
       if (source) base += `&source=${encodeURIComponent(source)}`;
@@ -151,7 +151,7 @@ export default function Dashboard() {
             if (v === "custom") {
               setDateMode("custom");
               if (!startDate) {
-                const today = new Date().toISOString().split("T")[0];
+                const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
                 setStartDate(today);
                 setEndDate(today);
               }
@@ -958,7 +958,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
         pdf.addImage(pageImgData, "JPEG", PAD, PAD, CONTENT_W, drawH);
       }
 
-      const date = new Date().toISOString().split("T")[0];
+      const date = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
       pdf.save(`Unchained_Research_Report_${date}.pdf`);
     } catch (e) {
       console.error("PDF export error:", e);
