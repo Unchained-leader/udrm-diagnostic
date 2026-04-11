@@ -582,12 +582,13 @@ function renderGlobe(container, { points, countries, usStates, w, h, uniqueId })
     statePaths.attr("d", path);
     svg.select(".graticule-path").attr("d", path(graticule));
 
-    const dotScale = 1 / Math.sqrt(currentZoom);
+    // Dots shrink gently with zoom but stay visible — floor of 2.5px
+    const dotScale = Math.max(0.5, 1 / Math.pow(currentZoom, 0.25));
     pointCircles.each(function(d) {
       const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
       const p = projection(d.coords);
       const visible = dist < Math.PI / 2 && p;
-      const r = Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)) * dotScale;
+      const r = Math.max(2.5, Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)) * dotScale);
       d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("r", r).attr("display", visible ? null : "none");
     });
   };
