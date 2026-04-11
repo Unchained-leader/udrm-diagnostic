@@ -1408,6 +1408,7 @@ function LocationsView({ product }) {
   const [customEnd, setCustomEnd] = useState("");
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showCities, setShowCities] = useState(true);
+  const [webglFailed, setWebglFailed] = useState(false);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
   const allLabelsRef = useRef([]);
@@ -1631,6 +1632,7 @@ function LocationsView({ product }) {
         globeInstanceRef.current = globe;
       } catch (e) {
         console.warn("Globe init failed:", e);
+        if (!cancelled) setWebglFailed(true);
       }
     };
 
@@ -1745,9 +1747,42 @@ function LocationsView({ product }) {
         <div style={{ width: "100%" }}>
           <div ref={globeContainerRef}
             style={{ width: "100%", background: "#000", borderRadius: 12, border: "1px solid #222", overflow: "hidden", minHeight: 600 }}>
-            {loading && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: "#555" }}>
+            {loading && !webglFailed && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 600, color: "#555" }}>
                 Loading globe...
+              </div>
+            )}
+            {webglFailed && locData && (
+              <div style={{ width: "100%", height: 600, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%)", position: "relative", overflow: "hidden" }}>
+                <svg viewBox="-200 -100 400 200" style={{ width: "95%", maxHeight: 500, opacity: 0.85 }} preserveAspectRatio="xMidYMid meet">
+                  {[-60, -30, 0, 30, 60].map(lat => (
+                    <line key={"lat"+lat} x1="-180" y1={-lat} x2="180" y2={-lat} stroke="rgba(197,165,90,0.08)" strokeWidth="0.3" />
+                  ))}
+                  {[-120, -60, 0, 60, 120].map(lng => (
+                    <line key={"lng"+lng} x1={lng} y1="-90" x2={lng} y2="90" stroke="rgba(197,165,90,0.08)" strokeWidth="0.3" />
+                  ))}
+                  <ellipse cx="-100" cy="-35" rx="30" ry="25" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  <ellipse cx="-70" cy="15" rx="18" ry="30" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  <ellipse cx="10" cy="-30" rx="40" ry="20" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  <ellipse cx="15" cy="10" rx="30" ry="25" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  <ellipse cx="80" cy="-15" rx="35" ry="30" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  <ellipse cx="140" cy="35" rx="20" ry="15" fill="none" stroke="rgba(197,165,90,0.2)" strokeWidth="0.5" />
+                  {(locData.locations || []).map((loc, i) => {
+                    const lng = parseFloat(loc.geo_lon);
+                    const lat = parseFloat(loc.geo_lat);
+                    const count = parseInt(loc.count);
+                    const r = Math.max(1, Math.min(5, Math.sqrt(count) * 0.8));
+                    return (
+                      <g key={i}>
+                        <circle cx={lng} cy={-lat} r={r} fill="#C5A55A" opacity={0.7} />
+                        <circle cx={lng} cy={-lat} r={r * 2} fill="#C5A55A" opacity={0.15} />
+                      </g>
+                    );
+                  })}
+                </svg>
+                <div style={{ position: "absolute", bottom: 12, left: 0, right: 0, textAlign: "center" }}>
+                  <span style={{ fontSize: 11, color: "#555" }}>3D globe requires WebGL \u2022 Showing 2D map view</span>
+                </div>
               </div>
             )}
           </div>
