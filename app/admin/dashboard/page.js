@@ -1355,11 +1355,15 @@ function LocationsView({ product }) {
         const w = cw;
         const h = Math.max(600, Math.min(cw * 0.65, 800));
 
-        // Fetch topology
-        const topoRes = await fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+        // Fetch topology — countries (50m for sharper borders) + US states
+        const [topoRes, statesRes] = await Promise.all([
+          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"),
+          fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"),
+        ]);
         if (cancelled) return;
-        const topoData = await topoRes.json();
+        const [topoData, statesData] = await Promise.all([topoRes.json(), statesRes.json()]);
         const countries = topojson.feature(topoData, topoData.objects.countries);
+        const usStates = topojson.feature(statesData, statesData.objects.states);
 
         // Prepare points
         const points = (locData.locations || []).map(l => ({
@@ -1396,10 +1400,10 @@ function LocationsView({ product }) {
         svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#333").attr("stroke-width", 0.2).attr("stroke-opacity", 0.4);
 
         // Country paths
-        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#555").attr("stroke-width", 0.5);
+        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "#111122").attr("stroke", "#555").attr("stroke-width", 0.5);
 
-        // Graticule ref for updates
-        const graticulePath = svg.select("path[d]");
+        // US state boundaries
+        const statePaths = svg.append("g").selectAll("path").data(usStates.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 0.3);
 
         // Data points group
         const pointGroup = svg.append("g");
@@ -1415,6 +1419,9 @@ function LocationsView({ product }) {
           .style("font-size", "12px").style("pointer-events", "none").style("display", "none")
           .style("z-index", "1000").style("border", "1px solid #C5A55A").style("line-height", "1.5");
 
+        // Tag the graticule path for targeted updates
+        svg.select("path[d]").classed("graticule-path", true);
+
         const updatePositions = () => {
           const rot = projection.rotate();
           const s = projection.scale();
@@ -1422,8 +1429,7 @@ function LocationsView({ product }) {
           globeSphere.attr("r", s);
           atmoCircle.attr("r", s * 1.18);
           countryPaths.attr("d", path);
-          svg.selectAll("path[d*='M']").filter(function() { return this !== countryPaths.node(); }).attr("d", path);
-          // Re-render graticule
+          statePaths.attr("d", path);
           svg.select(".graticule-path").attr("d", path(graticule));
 
           // Scale dots down as we zoom in so they don't overlap
