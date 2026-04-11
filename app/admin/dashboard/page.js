@@ -1388,22 +1388,22 @@ function LocationsView({ product }) {
         // Atmosphere glow
         const defs = svg.append("defs");
         const grad = defs.append("radialGradient").attr("id", "lv-atmo");
-        grad.append("stop").attr("offset", "80%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.06);
+        grad.append("stop").attr("offset", "75%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.12);
         grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
         const atmoCircle = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", "url(#lv-atmo)");
 
-        // Globe sphere
-        const globeSphere = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.5).attr("stroke-opacity", 0.5);
+        // Globe sphere — black ocean with gold rim
+        const globeSphere = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#0a0a0a").attr("stroke", "#C5A55A").attr("stroke-width", 0.8).attr("stroke-opacity", 0.6);
 
-        // Graticule (grid lines)
+        // Graticule (grid lines) — subtle gold
         const graticule = d3.geoGraticule10();
-        svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#333").attr("stroke-width", 0.2).attr("stroke-opacity", 0.4);
+        svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.15).attr("stroke-opacity", 0.12);
 
-        // Country paths
-        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "#111122").attr("stroke", "#555").attr("stroke-width", 0.5);
+        // Country paths — black land, gold borders
+        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "#111111").attr("stroke", "#C5A55A").attr("stroke-width", 0.4).attr("stroke-opacity", 0.5);
 
-        // US state boundaries
-        const statePaths = svg.append("g").selectAll("path").data(usStates.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 0.3);
+        // US state boundaries — gold, thinner
+        const statePaths = svg.append("g").selectAll("path").data(usStates.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.25).attr("stroke-opacity", 0.3);
 
         // Data points group
         const pointGroup = svg.append("g");
