@@ -4,6 +4,35 @@ import { parseRedis } from "../lib/utils";
 
 const CORS_HEADERS = corsHeaders("POST, GET, OPTIONS");
 
+// ── Eastern-Time helpers (America/New_York) ──────────────────────────
+const TZ = "America/New_York";
+
+function getTodayET() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+function getETOffset(dateStr) {
+  const ref = new Date(dateStr + "T12:00:00Z");
+  const fmt = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", hour12: false });
+  const etHour = parseInt(fmt.format(ref));
+  return etHour - 12;
+}
+
+function etStartOfDay(dateStr) {
+  const off = getETOffset(dateStr);
+  return new Date(new Date(dateStr + "T00:00:00.000Z").getTime() - off * 3600000).toISOString();
+}
+
+function etEndOfDay(dateStr) {
+  const off = getETOffset(dateStr);
+  return new Date(new Date(dateStr + "T23:59:59.999Z").getTime() - off * 3600000).toISOString();
+}
+
+function etNow() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: TZ }));
+}
+// ─────────────────────────────────────────────────────────────────────
+
 // Auto-migrate: add traffic_source column if missing (runs once per cold start)
 let _migrated = false;
 async function ensureSchema() {
@@ -78,8 +107,8 @@ export async function GET(request) {
     const days = parseInt(searchParams.get("days")) || 30;
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-    const since = startDate ? new Date(startDate).toISOString() : new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    const until = endDate ? new Date(endDate + "T23:59:59").toISOString() : new Date("2099-12-31T23:59:59").toISOString();
+    const since = startDate ? etStartOfDay(startDate) : etStartOfDay(new Date(etNow().getTime() - days * 86400000).toLocaleDateString("en-CA", { timeZone: TZ }));
+    const until = endDate ? etEndOfDay(endDate) : new Date("2099-12-31T23:59:59Z").toISOString();
     const sourceFilter = searchParams.get("source") || "";
     const sql = getDb();
 
@@ -122,10 +151,10 @@ export async function GET(request) {
 
       // Daily completions
       const daily = await sql`
-        SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as completions
+        SELECT DATE(created_at AT TIME ZONE 'America/New_York') as date, COUNT(DISTINCT session_id) as completions
         FROM analytics_events
         WHERE product = ${product} AND event_type = 'contact_capture_complete' AND created_at >= ${since} AND created_at <= ${until} AND (${sourceFilter} = '' OR session_id = ANY(${srcIds}))
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
         ORDER BY date
       `;
 
@@ -273,8 +302,10 @@ export async function GET(request) {
 
     } else if (view === "cohort") {
       // This week vs last week
-      const thisWeekStart = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const lastWeekStart = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+      const thisWeekStartDate = new Date(etNow().getTime() - 7 * 86400000).toLocaleDateString("en-CA", { timeZone: TZ });
+      const thisWeekStart = etStartOfDay(thisWeekStartDate);
+      const lastWeekStartDate = new Date(etNow().getTime() - 14 * 86400000).toLocaleDateString("en-CA", { timeZone: TZ });
+      const lastWeekStart = etStartOfDay(lastWeekStartDate);
 
       const thisWeek = await sql`
         SELECT event_type, COUNT(DISTINCT session_id) as users
@@ -473,20 +504,20 @@ export async function GET(request) {
 
       // Current period daily counts
       const current = await sql`
-        SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+        SELECT DATE(created_at AT TIME ZONE 'America/New_York') as date, COUNT(DISTINCT session_id) as count
         FROM analytics_events
         WHERE product = ${product} AND event_type = ${metric} AND created_at >= ${currentStart}
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
         ORDER BY date
       `;
 
       // Previous period daily counts
       const previous = await sql`
-        SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+        SELECT DATE(created_at AT TIME ZONE 'America/New_York') as date, COUNT(DISTINCT session_id) as count
         FROM analytics_events
         WHERE product = ${product} AND event_type = ${metric}
           AND created_at >= ${prevStart} AND created_at < ${currentStart}
-        GROUP BY DATE(created_at)
+        GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
         ORDER BY date
       `;
 
@@ -496,18 +527,18 @@ export async function GET(request) {
       const multiPrevious = {};
       for (const m of metrics) {
         multiCurrent[m] = await sql`
-          SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+          SELECT DATE(created_at AT TIME ZONE 'America/New_York') as date, COUNT(DISTINCT session_id) as count
           FROM analytics_events
           WHERE product = ${product} AND event_type = ${m} AND created_at >= ${currentStart}
-          GROUP BY DATE(created_at)
+          GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
           ORDER BY date
         `;
         multiPrevious[m] = await sql`
-          SELECT DATE(created_at) as date, COUNT(DISTINCT session_id) as count
+          SELECT DATE(created_at AT TIME ZONE 'America/New_York') as date, COUNT(DISTINCT session_id) as count
           FROM analytics_events
           WHERE product = ${product} AND event_type = ${m}
             AND created_at >= ${prevStart} AND created_at < ${currentStart}
-          GROUP BY DATE(created_at)
+          GROUP BY DATE(created_at AT TIME ZONE 'America/New_York')
           ORDER BY date
         `;
       }
