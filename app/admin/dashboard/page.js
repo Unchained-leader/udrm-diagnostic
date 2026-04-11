@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { BarChart as RBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart as RLineChart, Line, CartesianGrid } from "recharts";
 
 const API = "/api/analytics";
 const HEALTH_API = "/api/health";
@@ -2009,6 +2010,223 @@ function PipelineCard({ label, value, color }) {
 }
 
 // ═══ EXPORT ═══
+// ═══ AI ANALYST CHART + MARKDOWN ═══
+const CHART_COLORS = ["#DFC468", "#c5a55a", "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#f44336", "#00BCD4", "#E91E63", "#607D8B"];
+
+const chartTooltipStyle = {
+  contentStyle: { background: "#1a1a1a", border: "1px solid #333", borderRadius: 8, color: "#ccc", fontSize: 12 },
+  itemStyle: { color: "#ccc" },
+  labelStyle: { color: "#c5a55a", fontWeight: 600 },
+};
+
+function AnalystChart({ chart }) {
+  const { type, title, data, xLabel, yLabel } = chart;
+  if (!data || data.length === 0) return null;
+
+  const chartData = data.map(d => ({ name: d.label, value: d.value }));
+
+  return (
+    <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 12, padding: "16px 12px", margin: "10px 0" }}>
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#c5a55a", marginBottom: 12, letterSpacing: 0.5 }}>{title}</div>
+      {(type === "bar") && (
+        <ResponsiveContainer width="100%" height={Math.max(200, data.length * 36)}>
+          <RBarChart data={chartData} layout="horizontal" margin={{ top: 4, right: 12, left: 8, bottom: xLabel ? 24 : 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+            <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 10 }} axisLine={{ stroke: "#333" }} tickLine={false} angle={data.length > 6 ? -35 : 0} textAnchor={data.length > 6 ? "end" : "middle"} height={data.length > 6 ? 60 : 30} label={xLabel ? { value: xLabel, position: "insideBottom", offset: -4, fill: "#666", fontSize: 10 } : undefined} />
+            <YAxis tick={{ fill: "#888", fontSize: 10 }} axisLine={{ stroke: "#333" }} tickLine={false} label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", fill: "#666", fontSize: 10 } : undefined} />
+            <Tooltip {...chartTooltipStyle} cursor={{ fill: "rgba(197,165,90,0.08)" }} />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={40}>
+              {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Bar>
+          </RBarChart>
+        </ResponsiveContainer>
+      )}
+      {(type === "horizontal_bar") && (
+        <ResponsiveContainer width="100%" height={Math.max(200, data.length * 36)}>
+          <RBarChart data={chartData} layout="vertical" margin={{ top: 4, right: 20, left: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#222" horizontal={false} />
+            <XAxis type="number" tick={{ fill: "#888", fontSize: 10 }} axisLine={{ stroke: "#333" }} tickLine={false} />
+            <YAxis type="category" dataKey="name" tick={{ fill: "#aaa", fontSize: 11 }} axisLine={{ stroke: "#333" }} tickLine={false} width={120} />
+            <Tooltip {...chartTooltipStyle} cursor={{ fill: "rgba(197,165,90,0.08)" }} />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={28}>
+              {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Bar>
+          </RBarChart>
+        </ResponsiveContainer>
+      )}
+      {type === "pie" && (
+        <ResponsiveContainer width="100%" height={260}>
+          <PieChart>
+            <Pie data={chartData} cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={2} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ stroke: "#444" }} style={{ fontSize: 10, fill: "#ccc" }}>
+              {chartData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip {...chartTooltipStyle} />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+      {type === "line" && (
+        <ResponsiveContainer width="100%" height={220}>
+          <RLineChart data={chartData} margin={{ top: 4, right: 12, left: 8, bottom: xLabel ? 24 : 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+            <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 10 }} axisLine={{ stroke: "#333" }} tickLine={false} angle={data.length > 8 ? -35 : 0} textAnchor={data.length > 8 ? "end" : "middle"} height={data.length > 8 ? 50 : 30} label={xLabel ? { value: xLabel, position: "insideBottom", offset: -4, fill: "#666", fontSize: 10 } : undefined} />
+            <YAxis tick={{ fill: "#888", fontSize: 10 }} axisLine={{ stroke: "#333" }} tickLine={false} label={yLabel ? { value: yLabel, angle: -90, position: "insideLeft", fill: "#666", fontSize: 10 } : undefined} />
+            <Tooltip {...chartTooltipStyle} />
+            <Line type="monotone" dataKey="value" stroke="#DFC468" strokeWidth={2} dot={{ fill: "#DFC468", r: 3 }} activeDot={{ r: 5, fill: "#c5a55a" }} />
+          </RLineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+function renderMarkdown(text) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements = [];
+  let i = 0;
+
+  const inlineFormat = (str) => {
+    // Process bold, then italic
+    const parts = [];
+    let remaining = str;
+    let key = 0;
+    const regex = /\*\*(.+?)\*\*/g;
+    let match;
+    let lastIndex = 0;
+    while ((match = regex.exec(remaining)) !== null) {
+      if (match.index > lastIndex) parts.push(remaining.slice(lastIndex, match.index));
+      parts.push(<strong key={key++} style={{ color: "#e0e0e0", fontWeight: 700 }}>{match[1]}</strong>);
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < remaining.length) parts.push(remaining.slice(lastIndex));
+    return parts.length > 0 ? parts : str;
+  };
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) {
+      elements.push(<hr key={i} style={{ border: "none", borderTop: "1px solid #333", margin: "12px 0" }} />);
+      i++;
+      continue;
+    }
+
+    // Headers
+    if (line.startsWith("### ")) {
+      elements.push(<div key={i} style={{ fontSize: 14, fontWeight: 700, color: "#DFC468", marginTop: 14, marginBottom: 6, letterSpacing: 0.3 }}>{inlineFormat(line.slice(4))}</div>);
+      i++;
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      elements.push(<div key={i} style={{ fontSize: 15, fontWeight: 700, color: "#DFC468", marginTop: 16, marginBottom: 8, letterSpacing: 0.3 }}>{inlineFormat(line.slice(3))}</div>);
+      i++;
+      continue;
+    }
+
+    // Blockquote
+    if (line.startsWith("> ")) {
+      const quoteLines = [];
+      while (i < lines.length && lines[i].startsWith("> ")) {
+        quoteLines.push(lines[i].slice(2));
+        i++;
+      }
+      elements.push(
+        <div key={`bq-${i}`} style={{ borderLeft: "3px solid #c5a55a", paddingLeft: 12, margin: "10px 0", color: "#bbb", fontStyle: "italic", fontSize: 13, lineHeight: 1.6 }}>
+          {quoteLines.map((ql, qi) => <div key={qi}>{inlineFormat(ql)}</div>)}
+        </div>
+      );
+      continue;
+    }
+
+    // Table
+    if (line.includes("|") && line.trim().startsWith("|")) {
+      const tableRows = [];
+      while (i < lines.length && lines[i].includes("|") && lines[i].trim().startsWith("|")) {
+        tableRows.push(lines[i]);
+        i++;
+      }
+      // Filter out separator rows (|---|---|)
+      const dataRows = tableRows.filter(r => !/^\|[\s\-:|]+\|$/.test(r.trim()));
+      if (dataRows.length > 0) {
+        const parseRow = (r) => r.split("|").filter((_, ci, arr) => ci > 0 && ci < arr.length - 1).map(c => c.trim());
+        const headerCells = parseRow(dataRows[0]);
+        const bodyRows = dataRows.slice(1).map(parseRow);
+        elements.push(
+          <div key={`tbl-${i}`} style={{ overflowX: "auto", margin: "10px 0" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr>{headerCells.map((h, hi) => <th key={hi} style={{ textAlign: "left", padding: "6px 10px", borderBottom: "1px solid #444", color: "#c5a55a", fontSize: 10, textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 600 }}>{inlineFormat(h)}</th>)}</tr>
+              </thead>
+              <tbody>
+                {bodyRows.map((row, ri) => (
+                  <tr key={ri} style={{ background: ri % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                    {row.map((cell, ci) => <td key={ci} style={{ padding: "5px 10px", borderBottom: "1px solid #1a1a1a", color: "#ccc" }}>{inlineFormat(cell)}</td>)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      continue;
+    }
+
+    // Unordered list
+    if (/^[\-\*] /.test(line.trim())) {
+      const listItems = [];
+      while (i < lines.length && /^[\-\*] /.test(lines[i].trim())) {
+        listItems.push(lines[i].trim().slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} style={{ margin: "6px 0", paddingLeft: 20, listStyle: "none" }}>
+          {listItems.map((item, li) => (
+            <li key={li} style={{ padding: "2px 0", fontSize: 13, lineHeight: 1.6, color: "#ccc", position: "relative", paddingLeft: 14 }}>
+              <span style={{ position: "absolute", left: 0, color: "#c5a55a" }}>•</span>
+              {inlineFormat(item)}
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    }
+
+    // Numbered list
+    if (/^\d+\.\s/.test(line.trim())) {
+      const listItems = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i].trim())) {
+        listItems.push(lines[i].trim().replace(/^\d+\.\s/, ""));
+        i++;
+      }
+      elements.push(
+        <ol key={`ol-${i}`} style={{ margin: "6px 0", paddingLeft: 20, listStyle: "none", counterReset: "item" }}>
+          {listItems.map((item, li) => (
+            <li key={li} style={{ padding: "2px 0", fontSize: 13, lineHeight: 1.6, color: "#ccc", position: "relative", paddingLeft: 18 }}>
+              <span style={{ position: "absolute", left: 0, color: "#c5a55a", fontWeight: 600, fontSize: 12 }}>{li + 1}.</span>
+              {inlineFormat(item)}
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    // Empty line
+    if (line.trim() === "") {
+      elements.push(<div key={i} style={{ height: 6 }} />);
+      i++;
+      continue;
+    }
+
+    // Regular paragraph
+    elements.push(<div key={i} style={{ fontSize: 13, lineHeight: 1.7, color: "#ccc", margin: "3px 0" }}>{inlineFormat(line)}</div>);
+    i++;
+  }
+
+  return elements;
+}
+
 // ═══ AI ANALYST CHAT ═══
 function ChatView() {
   const [messages, setMessages] = useState([]);
@@ -2050,6 +2268,7 @@ function ChatView() {
         role: "assistant",
         content: data.response,
         csvDownload: data.csvDownload || null,
+        charts: data.charts || null,
         usage: data.usage || null,
       }]);
     } catch (e) {
@@ -2136,7 +2355,12 @@ function ChatView() {
           <div key={i}>
             <div style={msg.role === "user" ? chatStyles.userMsg : chatStyles.assistantMsg}>
               {msg.role === "assistant" ? (
-                <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+                <div>
+                  {msg.charts && msg.charts.map((chart, ci) => (
+                    <AnalystChart key={ci} chart={chart} />
+                  ))}
+                  {renderMarkdown(msg.content)}
+                </div>
               ) : (
                 msg.content
               )}

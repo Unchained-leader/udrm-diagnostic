@@ -153,8 +153,27 @@ You are a senior data analyst. When the admin asks a question:
 7. When showing trends, calculate period-over-period changes
 8. Be concise but thorough — this is a business dashboard, not a classroom
 
+## VISUAL CHART RULES
+- When your query results contain 3 or more comparable data points, ALWAYS use the render_chart tool to create a visual chart
+- Use "bar" charts for comparing categories (e.g., strategies, content themes, demographics, sources)
+- Use "horizontal_bar" when category labels are long (more than ~15 characters)
+- Use "pie" charts for showing composition/distribution where parts make up a whole (e.g., percentage breakdowns)
+- Use "line" charts for trends over time (daily, weekly, monthly data)
+- Keep chart data to 10 or fewer items for readability; group smaller values into "Other" if needed
+- Call render_chart BEFORE writing your text interpretation so the chart appears above your analysis
+- Always still include a brief text interpretation after the chart — the chart enhances, not replaces, your insight
+- You may use multiple charts for complex questions (e.g., a bar chart + a pie chart for different facets)
+
+## RESPONSE FORMATTING RULES
+- Use markdown formatting in ALL responses: headers (##, ###), **bold** for key numbers, bullet lists, and blockquotes (>) for insights
+- Structure responses with clear sections using ### headers
+- Highlight the most important numbers with **bold**
+- Use > blockquotes for key insights or takeaways
+- Use tables (| col | col |) only when showing detailed multi-column data — prefer charts for visual comparisons
+- Keep paragraphs short (2-3 sentences max)
+
 ## CRITICAL EFFICIENCY RULES
-- NEVER run more than 3 tool calls total for a single question
+- NEVER run more than 3 tool calls total for a single question (render_chart does NOT count toward this limit)
 - For CSV exports: 1 SQL query + 1 generate_csv call = 2 tool calls maximum
 - Combine multiple questions into a single SQL query using CTEs (WITH clauses) or subqueries
 - Do NOT run exploratory queries to "check the schema" — the full schema is above
@@ -180,6 +199,45 @@ const tools = [
         },
       },
       required: ["query"],
+    },
+  },
+  {
+    name: "render_chart",
+    description: "Render a visual chart in the chat response. Use this to display data visually when you have 3+ comparable data points. Call this BEFORE writing your text interpretation.",
+    input_schema: {
+      type: "object",
+      properties: {
+        type: {
+          type: "string",
+          enum: ["bar", "horizontal_bar", "pie", "line"],
+          description: "Chart type. Use 'bar' for category comparisons, 'horizontal_bar' for long labels, 'pie' for composition/distribution, 'line' for time trends.",
+        },
+        title: {
+          type: "string",
+          description: "Chart title displayed above the chart.",
+        },
+        data: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              label: { type: "string", description: "Category or time label" },
+              value: { type: "number", description: "Numeric value" },
+            },
+            required: ["label", "value"],
+          },
+          description: "Array of data points. Keep to 10 or fewer items.",
+        },
+        xLabel: {
+          type: "string",
+          description: "Optional X-axis label.",
+        },
+        yLabel: {
+          type: "string",
+          description: "Optional Y-axis label.",
+        },
+      },
+      required: ["type", "title", "data"],
     },
   },
   {
@@ -243,6 +301,12 @@ async function executeTool(toolName, toolInput) {
     }
   }
 
+  if (toolName === "render_chart") {
+    const { type, title, data, xLabel, yLabel } = toolInput;
+    console.log(`[AI Chat] Chart: ${type} — ${title} (${data.length} points)`);
+    return { rendered: true, type, title, data, xLabel, yLabel };
+  }
+
   if (toolName === "generate_csv") {
     const { headers, rows, filename } = toolInput;
     const escape = (val) => {
@@ -287,6 +351,7 @@ export async function POST(request) {
     }));
 
     let csvDownload = null;
+    let charts = [];
     let iterations = 0;
     const MAX_ITERATIONS = 6;
     let lastError = null;
@@ -313,6 +378,11 @@ export async function POST(request) {
         for (const block of response.content) {
           if (block.type === "tool_use") {
             const result = await executeTool(block.name, block.input);
+
+            // If chart was rendered, save it
+            if (block.name === "render_chart" && result.rendered) {
+              charts.push({ type: result.type, title: result.title, data: result.data, xLabel: result.xLabel, yLabel: result.yLabel });
+            }
 
             // If CSV was generated, save the download info
             if (block.name === "generate_csv" && result.dataUri) {
@@ -341,6 +411,7 @@ export async function POST(request) {
       return Response.json({
         response: textContent,
         csvDownload,
+        charts: charts.length > 0 ? charts : null,
         usage: {
           inputTokens: response.usage?.input_tokens,
           outputTokens: response.usage?.output_tokens,
@@ -351,6 +422,7 @@ export async function POST(request) {
     return Response.json({
       response: "I hit the maximum number of tool calls for this query. Try breaking your question into smaller parts.",
       csvDownload,
+      charts: charts.length > 0 ? charts : null,
     }, { headers: CORS_HEADERS });
 
   } catch (error) {
