@@ -1522,10 +1522,11 @@ function LocationsView({ product }) {
 
         const clampZoom = (z) => Math.max(0.5, Math.min(8, z));
 
-        // ── Mouse drag to rotate (desktop) ──
+        // ── Mouse drag to rotate (desktop only — touch handled separately) ──
         let dragStartCoords = [0, 0];
         let dragStartRotation = [0, 0];
         svg.call(d3.drag()
+          .filter(event => event.type === "mousedown")
           .on("start", function(event) {
             isDragging = true;
             dragStartCoords = [event.x, event.y];
@@ -1558,33 +1559,59 @@ function LocationsView({ product }) {
         let touchStartRotation = null;
         let pinchStartDist = null;
         let pinchStartZoom = null;
+        let lastTouchCount = 0;
 
         const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-        const getTouchCenter = (t1, t2) => [(t1.clientX + t2.clientX) / 2, (t1.clientY + t2.clientY) / 2];
+
+        const initDrag = (touch) => {
+          isDragging = true;
+          touchStartCoords = [touch.clientX, touch.clientY];
+          touchStartRotation = [...currentRotation];
+          pinchStartDist = null;
+        };
+
+        const initPinch = (t1, t2) => {
+          isDragging = false;
+          touchStartCoords = null;
+          pinchStartDist = getTouchDist(t1, t2);
+          pinchStartZoom = currentZoom;
+        };
 
         svgNode.addEventListener("touchstart", function(event) {
+          event.preventDefault();
           isEngaged = true;
+          lastTouchCount = event.touches.length;
           if (event.touches.length === 1) {
-            isDragging = true;
-            touchStartCoords = [event.touches[0].clientX, event.touches[0].clientY];
-            touchStartRotation = [...currentRotation];
-          } else if (event.touches.length === 2) {
-            isDragging = false;
-            pinchStartDist = getTouchDist(event.touches[0], event.touches[1]);
-            pinchStartZoom = currentZoom;
+            initDrag(event.touches[0]);
+          } else if (event.touches.length >= 2) {
+            initPinch(event.touches[0], event.touches[1]);
           }
-        }, { passive: true });
+        }, { passive: false });
 
         svgNode.addEventListener("touchmove", function(event) {
           event.preventDefault();
-          if (event.touches.length === 1 && touchStartCoords) {
+          const count = event.touches.length;
+
+          // Detect finger count change mid-gesture
+          if (count !== lastTouchCount) {
+            lastTouchCount = count;
+            if (count === 1) {
+              initDrag(event.touches[0]);
+              return;
+            } else if (count >= 2) {
+              initPinch(event.touches[0], event.touches[1]);
+              return;
+            }
+          }
+
+          if (count === 1 && touchStartCoords) {
             const dx = event.touches[0].clientX - touchStartCoords[0];
             const dy = event.touches[0].clientY - touchStartCoords[1];
             const sensitivity = 0.4 / currentZoom;
             currentRotation = [touchStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, touchStartRotation[1] - dy * sensitivity))];
             projection.rotate(currentRotation);
             updatePositions();
-          } else if (event.touches.length === 2 && pinchStartDist) {
+          } else if (count >= 2 && pinchStartDist) {
             const dist = getTouchDist(event.touches[0], event.touches[1]);
             currentZoom = clampZoom(pinchStartZoom * (dist / pinchStartDist));
             projection.scale(baseScale * currentZoom);
@@ -1593,23 +1620,22 @@ function LocationsView({ product }) {
         }, { passive: false });
 
         svgNode.addEventListener("touchend", function(event) {
-          if (event.touches.length === 0) {
+          const count = event.touches.length;
+          lastTouchCount = count;
+          if (count === 0) {
             isDragging = false;
             isEngaged = false;
             touchStartCoords = null;
             pinchStartDist = null;
-          } else if (event.touches.length === 1) {
-            // Went from pinch back to single finger — reset drag start
-            pinchStartDist = null;
-            isDragging = true;
-            touchStartCoords = [event.touches[0].clientX, event.touches[0].clientY];
-            touchStartRotation = [...currentRotation];
+          } else if (count === 1) {
+            initDrag(event.touches[0]);
           }
         }, { passive: true });
 
         svgNode.addEventListener("touchcancel", function() {
           isDragging = false;
           isEngaged = false;
+          lastTouchCount = 0;
           touchStartCoords = null;
           pinchStartDist = null;
         }, { passive: true });
