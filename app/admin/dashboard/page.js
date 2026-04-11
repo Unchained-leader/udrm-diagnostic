@@ -1409,7 +1409,6 @@ function LocationsView({ product }) {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showCities, setShowCities] = useState(true);
   const [webglFailed, setWebglFailed] = useState(false);
-  const [webglFailed, setWebglFailed] = useState(false);
   const globeContainerRef = useRef(null);
   const globeInstanceRef = useRef(null);
   const allLabelsRef = useRef([]);
