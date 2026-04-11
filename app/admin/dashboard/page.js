@@ -480,9 +480,324 @@ const loadD3Scripts = () => {
   });
 };
 
+// ═══ SHARED GLOBE RENDERER ═══
+// Used by both MiniGlobe (home tile) and LocationsView (locations tab).
+// Returns { cleanup } to cancel animation frame.
+function renderGlobe(container, { points, countries, usStates, w, h, uniqueId }) {
+  const d3 = window.d3;
+  container.innerHTML = "";
+
+  // Deep space background
+  Object.assign(container.style, { background: "radial-gradient(ellipse at center, #0d0d18 0%, #060610 40%, #020208 100%)", borderRadius: "8px", border: "1px solid #222" });
+
+  const svg = d3.select(container).append("svg").attr("width", w).attr("height", h)
+    .style("display", "block").style("border-radius", "8px");
+
+  const baseScale = Math.min(w, h) / 2.3;
+  const projection = d3.geoOrthographic().scale(baseScale).translate([w / 2, h / 2]).clipAngle(90);
+  const path = d3.geoPath(projection);
+  let currentZoom = 1;
+
+  // ── Starfield ──
+  const defs = svg.append("defs");
+
+  if (!document.getElementById("globe-twinkle-style")) {
+    const style = document.createElement("style");
+    style.id = "globe-twinkle-style";
+    style.textContent = `
+      @keyframes globe-twinkle {
+        0%, 100% { opacity: var(--star-min); }
+        50% { opacity: var(--star-max); }
+      }
+      @keyframes hashtag-pulse {
+        0%, 100% { opacity: 0.07; }
+        50% { opacity: 0.13; }
+      }
+      @keyframes hashtag-glow-pulse {
+        0%, 100% { opacity: 0.18; }
+        50% { opacity: 0.3; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const starGroup = svg.append("g");
+  const starCount = 200;
+  const globeR = projection.scale();
+  const cx = w / 2, cy = h / 2;
+  for (let i = 0; i < starCount; i++) {
+    let sx, sy;
+    do {
+      sx = Math.random() * w;
+      sy = Math.random() * h;
+    } while (Math.hypot(sx - cx, sy - cy) < globeR * 1.22);
+
+    const size = Math.random() < 0.08 ? (1.2 + Math.random() * 1.0) : (0.3 + Math.random() * 0.9);
+    const minOpacity = 0.1 + Math.random() * 0.2;
+    const maxOpacity = 0.5 + Math.random() * 0.5;
+    const duration = 2 + Math.random() * 4;
+    const delay = Math.random() * 5;
+    const color = Math.random() < 0.7 ? "#ffffff" :
+                  Math.random() < 0.5 ? "#C5A55A" : "#aabbff";
+
+    starGroup.append("circle")
+      .attr("cx", sx).attr("cy", sy).attr("r", size)
+      .attr("fill", color)
+      .style("--star-min", minOpacity)
+      .style("--star-max", maxOpacity)
+      .style("animation", `globe-twinkle ${duration}s ease-in-out ${delay}s infinite`);
+  }
+
+  // ── #unchaintheworld hashtag layered behind globe ──
+  const hashtagGroup = svg.append("g").attr("pointer-events", "none");
+  const hashtagText = "#unchaintheworld";
+  const hashFontSize = Math.min(w * 0.09, 52);
+
+  const glowFilter = defs.append("filter").attr("id", `hashtag-glow-${uniqueId}`);
+  glowFilter.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
+  glowFilter.append("feComposite").attr("in", "SourceGraphic").attr("in2", "blur").attr("operator", "over");
+
+  hashtagGroup.append("text")
+    .attr("x", w / 2).attr("y", h * 0.08)
+    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+    .attr("font-size", hashFontSize * 1.15).attr("font-weight", 800)
+    .attr("fill", "#C5A55A").attr("letter-spacing", "2px")
+    .attr("font-family", "'Georgia', 'Times New Roman', serif")
+    .attr("filter", `url(#hashtag-glow-${uniqueId})`)
+    .style("animation", "hashtag-glow-pulse 6s ease-in-out infinite")
+    .text(hashtagText);
+
+  hashtagGroup.append("text")
+    .attr("x", w / 2).attr("y", h * 0.08)
+    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+    .attr("font-size", hashFontSize).attr("font-weight", 700)
+    .attr("fill", "#C5A55A").attr("letter-spacing", "3px")
+    .attr("font-family", "'Georgia', 'Times New Roman', serif")
+    .style("animation", "hashtag-pulse 6s ease-in-out infinite")
+    .text(hashtagText);
+
+  // Atmosphere glow
+  const atmoGrad = defs.append("radialGradient").attr("id", `atmo-${uniqueId}`);
+  atmoGrad.append("stop").attr("offset", "75%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.12);
+  atmoGrad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
+  const atmoCircle = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", `url(#atmo-${uniqueId})`);
+
+  // Globe sphere — black ocean with gold rim
+  const globeSphere = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#0a0a0a").attr("stroke", "#C5A55A").attr("stroke-width", 0.8).attr("stroke-opacity", 0.6);
+
+  // Graticule (grid lines) — subtle gold
+  const graticule = d3.geoGraticule10();
+  svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.15).attr("stroke-opacity", 0.12);
+
+  // Country paths — black land, gold borders
+  const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "#111111").attr("stroke", "#C5A55A").attr("stroke-width", 0.4).attr("stroke-opacity", 0.5);
+
+  // US state boundaries — gold, thinner
+  const statePaths = svg.append("g").selectAll("path").data(usStates.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.25).attr("stroke-opacity", 0.3);
+
+  // Data points
+  const pointGroup = svg.append("g");
+  const pointCircles = pointGroup.selectAll("circle").data(points).join("circle")
+    .attr("r", d => Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)))
+    .attr("fill", "#C5A55A").attr("opacity", 0.75).attr("cursor", "pointer");
+
+  // Tooltip
+  const tooltip = d3.select(container).append("div")
+    .style("position", "absolute").style("background", "rgba(0,0,0,0.85)")
+    .style("color", "#fff").style("padding", "8px 12px").style("border-radius", "6px")
+    .style("font-size", "12px").style("pointer-events", "none").style("display", "none")
+    .style("z-index", "1000").style("border", "1px solid #C5A55A").style("line-height", "1.5");
+
+  svg.select("path[d]").classed("graticule-path", true);
+
+  const updatePositions = () => {
+    const rot = projection.rotate();
+    const s = projection.scale();
+    globeSphere.attr("r", s);
+    atmoCircle.attr("r", s * 1.18);
+    countryPaths.attr("d", path);
+    statePaths.attr("d", path);
+    svg.select(".graticule-path").attr("d", path(graticule));
+
+    const dotScale = 1 / Math.sqrt(currentZoom);
+    pointCircles.each(function(d) {
+      const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
+      const p = projection(d.coords);
+      const visible = dist < Math.PI / 2 && p;
+      const r = Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)) * dotScale;
+      d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("r", r).attr("display", visible ? null : "none");
+    });
+  };
+
+  // Hover events
+  pointCircles
+    .on("mouseenter", function(event, d) {
+      d3.select(this).attr("opacity", 1).attr("stroke", "#fff").attr("stroke-width", 1);
+      let html = "<b>" + d.city + "</b>";
+      if (d.region) html += "<br/>" + d.region + (d.country && d.country !== d.region ? ", " + d.country : "");
+      else if (d.country) html += "<br/>" + d.country;
+      html += "<br/><span style='color:#C5A55A'>" + d.count + " submissions</span>";
+      const rect = container.getBoundingClientRect();
+      tooltip.html(html).style("display", "block")
+        .style("left", (event.clientX - rect.left + 12) + "px")
+        .style("top", (event.clientY - rect.top - 10) + "px");
+    })
+    .on("mousemove", function(event) {
+      const rect = container.getBoundingClientRect();
+      tooltip.style("left", (event.clientX - rect.left + 12) + "px").style("top", (event.clientY - rect.top - 10) + "px");
+    })
+    .on("mouseleave", function() {
+      d3.select(this).attr("opacity", 0.75).attr("stroke", "none");
+      tooltip.style("display", "none");
+    });
+
+  // Interaction state
+  let currentRotation = [0, -15];
+  let isEngaged = false;
+  let isDragging = false;
+  projection.rotate(currentRotation);
+  updatePositions();
+
+  const clampZoom = (z) => Math.max(0.5, Math.min(40, z));
+
+  // ── Mouse drag to rotate (desktop only) ──
+  let dragStartCoords = [0, 0];
+  let dragStartRotation = [0, 0];
+  svg.call(d3.drag()
+    .filter(event => event.type === "mousedown")
+    .on("start", function(event) {
+      isDragging = true;
+      dragStartCoords = [event.x, event.y];
+      dragStartRotation = [...currentRotation];
+    })
+    .on("drag", function(event) {
+      if (!isDragging) return;
+      const dx = event.x - dragStartCoords[0];
+      const dy = event.y - dragStartCoords[1];
+      const sensitivity = 0.4 / currentZoom;
+      currentRotation = [dragStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, dragStartRotation[1] - dy * sensitivity))];
+      projection.rotate(currentRotation);
+      updatePositions();
+    })
+    .on("end", () => { isDragging = false; })
+  );
+
+  // ── Mouse wheel zoom (desktop) ──
+  const svgNode = svg.node();
+  svgNode.addEventListener("wheel", function(event) {
+    event.preventDefault();
+    const delta = -event.deltaY * 0.004;
+    currentZoom = clampZoom(currentZoom * (1 + delta));
+    projection.scale(baseScale * currentZoom);
+    updatePositions();
+  }, { passive: false });
+
+  // ── Touch: single-finger rotate + two-finger pinch zoom (mobile) ──
+  let touchStartCoords = null;
+  let touchStartRotation = null;
+  let pinchStartDist = null;
+  let pinchStartZoom = null;
+  let lastTouchCount = 0;
+
+  const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+  const initDrag = (touch) => {
+    isDragging = true;
+    touchStartCoords = [touch.clientX, touch.clientY];
+    touchStartRotation = [...currentRotation];
+    pinchStartDist = null;
+  };
+
+  const initPinch = (t1, t2) => {
+    isDragging = false;
+    touchStartCoords = null;
+    pinchStartDist = getTouchDist(t1, t2);
+    pinchStartZoom = currentZoom;
+  };
+
+  svgNode.addEventListener("touchstart", function(event) {
+    event.preventDefault();
+    isEngaged = true;
+    lastTouchCount = event.touches.length;
+    if (event.touches.length === 1) { initDrag(event.touches[0]); }
+    else if (event.touches.length >= 2) { initPinch(event.touches[0], event.touches[1]); }
+  }, { passive: false });
+
+  svgNode.addEventListener("touchmove", function(event) {
+    event.preventDefault();
+    const count = event.touches.length;
+
+    if (count !== lastTouchCount) {
+      lastTouchCount = count;
+      if (count === 1) { initDrag(event.touches[0]); return; }
+      else if (count >= 2) { initPinch(event.touches[0], event.touches[1]); return; }
+    }
+
+    if (count === 1 && touchStartCoords) {
+      const dx = event.touches[0].clientX - touchStartCoords[0];
+      const dy = event.touches[0].clientY - touchStartCoords[1];
+      const sensitivity = 0.4 / currentZoom;
+      currentRotation = [touchStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, touchStartRotation[1] - dy * sensitivity))];
+      projection.rotate(currentRotation);
+      updatePositions();
+    } else if (count >= 2 && pinchStartDist) {
+      const dist = getTouchDist(event.touches[0], event.touches[1]);
+      currentZoom = clampZoom(pinchStartZoom * (dist / pinchStartDist));
+      projection.scale(baseScale * currentZoom);
+      updatePositions();
+    }
+  }, { passive: false });
+
+  svgNode.addEventListener("touchend", function(event) {
+    const count = event.touches.length;
+    lastTouchCount = count;
+    if (count === 0) {
+      isDragging = false; isEngaged = false;
+      touchStartCoords = null; pinchStartDist = null;
+    } else if (count === 1) { initDrag(event.touches[0]); }
+  }, { passive: true });
+
+  svgNode.addEventListener("touchcancel", function() {
+    isDragging = false; isEngaged = false;
+    lastTouchCount = 0; touchStartCoords = null; pinchStartDist = null;
+  }, { passive: true });
+
+  // Pause spin on hover (desktop)
+  svgNode.addEventListener("mouseenter", () => { isEngaged = true; });
+  svgNode.addEventListener("mouseleave", () => { isEngaged = false; });
+
+  // Auto-rotate
+  let animFrameId = null;
+  const spin = () => {
+    if (!isEngaged && !isDragging && currentZoom <= 1) {
+      currentRotation[0] = (currentRotation[0] + 0.15) % 360;
+      projection.rotate(currentRotation);
+      updatePositions();
+    }
+    animFrameId = requestAnimationFrame(spin);
+  };
+  animFrameId = requestAnimationFrame(spin);
+
+  return { cleanup: () => { if (animFrameId) cancelAnimationFrame(animFrameId); } };
+}
+
+// Shared helper: fetch topology + US states data
+async function fetchGlobeTopology() {
+  const [topoRes, statesRes] = await Promise.all([
+    fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"),
+    fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"),
+  ]);
+  const topojson = window.topojson;
+  const [topoData, statesData] = await Promise.all([topoRes.json(), statesRes.json()]);
+  return {
+    countries: topojson.feature(topoData, topoData.objects.countries),
+    usStates: topojson.feature(statesData, statesData.objects.states),
+  };
+}
+
 function MiniGlobe({ product, height = 280 }) {
   const containerRef = useRef(null);
-  const animFrameRef = useRef(null);
+  const globeRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -490,75 +805,38 @@ function MiniGlobe({ product, height = 280 }) {
       try {
         await loadD3Scripts();
         if (cancelled || !containerRef.current) return;
-        const d3 = window.d3, topojson = window.topojson;
         const container = containerRef.current;
-        const w = Math.min(container.offsetWidth || 350, 400);
-        const h = Math.min(height, 400);
+        const w = container.offsetWidth || 400;
+        const h = height;
 
-        // Fetch data
         const secret = sessionStorage.getItem("admin_secret") || "";
-        const [topoRes, locRes] = await Promise.all([
-          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
-          fetch("/api/analytics?view=locations&secret=" + encodeURIComponent(secret) + "&days=90")
+        const [{ countries, usStates }, locJson] = await Promise.all([
+          fetchGlobeTopology(),
+          fetch("/api/analytics?view=locations&secret=" + encodeURIComponent(secret) + "&days=90").then(r => r.json()),
         ]);
-        if (cancelled) return;
-        const topoData = await topoRes.json();
-        const locJson = await locRes.json();
-        const points = (locJson.locations || []).map(l => [parseFloat(l.geo_lon), parseFloat(l.geo_lat), parseInt(l.count) || 1]);
-        const countries = topojson.feature(topoData, topoData.objects.countries);
-
         if (cancelled || !containerRef.current) return;
-        container.innerHTML = "";
 
-        const svg = d3.select(container).append("svg").attr("width", w).attr("height", h);
-        const projection = d3.geoOrthographic().scale(w / 2.4).translate([w / 2, h / 2]).clipAngle(90);
-        const path = d3.geoPath(projection);
+        const points = (locJson.locations || []).map(l => ({
+          coords: [parseFloat(l.geo_lon), parseFloat(l.geo_lat)],
+          count: parseInt(l.count) || 1,
+          city: l.geo_city || "Unknown",
+          region: l.geo_region || "",
+          country: l.geo_country || "Unknown",
+        }));
 
-        // Atmosphere glow
-        const defs = svg.append("defs");
-        const grad = defs.append("radialGradient").attr("id", "mg-atmo");
-        grad.append("stop").attr("offset", "85%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.08);
-        grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
-        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.15).attr("fill", "url(#mg-atmo)");
-
-        // Globe sphere
-        svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#1a1a2e").attr("stroke", "#C5A55A").attr("stroke-width", 0.3).attr("stroke-opacity", 0.4);
-
-        // Country paths
-        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#444").attr("stroke-width", 0.4);
-
-        // Data points
-        const pointCircles = svg.append("g").selectAll("circle").data(points).join("circle")
-          .attr("r", d => Math.max(1, Math.min(4, Math.sqrt(d[2]) * 0.6)))
-          .attr("fill", "#C5A55A").attr("opacity", 0.8);
-
-        const updatePoints = () => {
-          pointCircles.each(function(d) {
-            const rot = projection.rotate();
-            const dist = d3.geoDistance(d, [-rot[0], -rot[1]]);
-            const p = projection(d);
-            const visible = dist < Math.PI / 2 && p;
-            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("display", visible ? null : "none");
-          });
-        };
-
-        // Auto-rotate
-        let angle = 0;
-        const spin = () => {
-          angle = (angle + 0.3) % 360;
-          projection.rotate([angle, -15]);
-          countryPaths.attr("d", path);
-          updatePoints();
-          animFrameRef.current = requestAnimationFrame(spin);
-        };
-        animFrameRef.current = requestAnimationFrame(spin);
+        globeRef.current = renderGlobe(container, { points, countries, usStates, w, h, uniqueId: "mini" });
       } catch (e) { console.warn("MiniGlobe init error:", e); }
     };
     init();
-    return () => { cancelled = true; if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); if (containerRef.current) containerRef.current.innerHTML = ""; };
+    return () => {
+      cancelled = true;
+      if (globeRef.current) globeRef.current.cleanup();
+      globeRef.current = null;
+      if (containerRef.current) containerRef.current.innerHTML = "";
+    };
   }, [height]);
 
-  return <div ref={containerRef} style={{ width: "100%", height }} />;
+  return <div ref={containerRef} style={{ width: "100%", height, position: "relative" }} />;
 }
 
 // Mini health check for dashboard tile
@@ -1340,32 +1618,22 @@ function LocationsView({ product }) {
     if (timeFilter !== "custom") fetchLocations();
   }, [fetchLocations, timeFilter]);
 
-  // Load globe.gl and render
+  // Render globe using shared renderer
   useEffect(() => {
     let cancelled = false;
-    let animFrameId = null;
     const init = async () => {
       try {
         if (!locData || !globeContainerRef.current) return;
         await loadD3Scripts();
         if (cancelled) return;
-        const d3 = window.d3, topojson = window.topojson;
         const container = globeContainerRef.current;
         const cw = container.offsetWidth || 900;
         const w = cw;
         const h = Math.max(600, Math.min(cw * 0.65, 800));
 
-        // Fetch topology — countries (50m for sharper borders) + US states
-        const [topoRes, statesRes] = await Promise.all([
-          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"),
-          fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json"),
-        ]);
-        if (cancelled) return;
-        const [topoData, statesData] = await Promise.all([topoRes.json(), statesRes.json()]);
-        const countries = topojson.feature(topoData, topoData.objects.countries);
-        const usStates = topojson.feature(statesData, statesData.objects.states);
+        const { countries, usStates } = await fetchGlobeTopology();
+        if (cancelled || !globeContainerRef.current) return;
 
-        // Prepare points
         const points = (locData.locations || []).map(l => ({
           coords: [parseFloat(l.geo_lon), parseFloat(l.geo_lat)],
           count: parseInt(l.count) || 1,
@@ -1374,335 +1642,13 @@ function LocationsView({ product }) {
           country: l.geo_country || "Unknown",
         }));
 
-        if (cancelled || !globeContainerRef.current) return;
-        container.innerHTML = "";
-
-        // Deep space background on container (SVGs don't support CSS gradients natively)
-        Object.assign(container.style, { background: "radial-gradient(ellipse at center, #0d0d18 0%, #060610 40%, #020208 100%)", borderRadius: "8px", border: "1px solid #222" });
-
-        const svg = d3.select(container).append("svg").attr("width", w).attr("height", h)
-          .style("display", "block").style("border-radius", "8px");
-
-        const baseScale = Math.min(w, h) / 2.3;
-        const projection = d3.geoOrthographic().scale(baseScale).translate([w / 2, h / 2]).clipAngle(90);
-        const path = d3.geoPath(projection);
-        let currentZoom = 1;
-
-        // ── Starfield ──
-        const defs = svg.append("defs");
-
-        // Inject keyframes once
-        if (!document.getElementById("globe-twinkle-style")) {
-          const style = document.createElement("style");
-          style.id = "globe-twinkle-style";
-          style.textContent = `
-            @keyframes globe-twinkle {
-              0%, 100% { opacity: var(--star-min); }
-              50% { opacity: var(--star-max); }
-            }
-            @keyframes hashtag-pulse {
-              0%, 100% { opacity: 0.07; }
-              50% { opacity: 0.13; }
-            }
-            @keyframes hashtag-glow-pulse {
-              0%, 100% { opacity: 0.18; }
-              50% { opacity: 0.3; }
-            }
-          `;
-          document.head.appendChild(style);
-        }
-
-        const starGroup = svg.append("g");
-        const starCount = 200;
-        const globeR = projection.scale();
-        const cx = w / 2, cy = h / 2;
-        for (let i = 0; i < starCount; i++) {
-          // Place stars randomly but avoid the globe area
-          let sx, sy;
-          do {
-            sx = Math.random() * w;
-            sy = Math.random() * h;
-          } while (Math.hypot(sx - cx, sy - cy) < globeR * 1.22);
-
-          const size = Math.random() < 0.08 ? (1.2 + Math.random() * 1.0) : (0.3 + Math.random() * 0.9);
-          const minOpacity = 0.1 + Math.random() * 0.2;
-          const maxOpacity = 0.5 + Math.random() * 0.5;
-          const duration = 2 + Math.random() * 4;
-          const delay = Math.random() * 5;
-          const color = Math.random() < 0.7 ? "#ffffff" :
-                        Math.random() < 0.5 ? "#C5A55A" : "#aabbff";
-
-          starGroup.append("circle")
-            .attr("cx", sx).attr("cy", sy).attr("r", size)
-            .attr("fill", color)
-            .style("--star-min", minOpacity)
-            .style("--star-max", maxOpacity)
-            .style("animation", `globe-twinkle ${duration}s ease-in-out ${delay}s infinite`);
-        }
-
-        // ── #unchaintheworld hashtag layered behind globe ──
-        const hashtagGroup = svg.append("g").attr("pointer-events", "none");
-        const hashtagText = "#unchaintheworld";
-        const hashFontSize = Math.min(w * 0.09, 52);
-
-        // Glow filter
-        const glowFilter = defs.append("filter").attr("id", "hashtag-glow");
-        glowFilter.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
-        glowFilter.append("feComposite").attr("in", "SourceGraphic").attr("in2", "blur").attr("operator", "over");
-
-        // Layer 1 — large blurred glow behind
-        hashtagGroup.append("text")
-          .attr("x", w / 2).attr("y", h * 0.08)
-          .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-          .attr("font-size", hashFontSize * 1.15).attr("font-weight", 800)
-          .attr("fill", "#C5A55A").attr("letter-spacing", "2px")
-          .attr("font-family", "'Georgia', 'Times New Roman', serif")
-          .attr("filter", "url(#hashtag-glow)")
-          .style("animation", "hashtag-glow-pulse 6s ease-in-out infinite")
-          .text(hashtagText);
-
-        // Layer 2 — main text, subtle
-        hashtagGroup.append("text")
-          .attr("x", w / 2).attr("y", h * 0.08)
-          .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-          .attr("font-size", hashFontSize).attr("font-weight", 700)
-          .attr("fill", "#C5A55A").attr("letter-spacing", "3px")
-          .attr("font-family", "'Georgia', 'Times New Roman', serif")
-          .style("animation", "hashtag-pulse 6s ease-in-out infinite")
-          .text(hashtagText);
-
-        // Atmosphere glow
-        const grad = defs.append("radialGradient").attr("id", "lv-atmo");
-        grad.append("stop").attr("offset", "75%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0.12);
-        grad.append("stop").attr("offset", "100%").attr("stop-color", "#C5A55A").attr("stop-opacity", 0);
-        const atmoCircle = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale() * 1.18).attr("fill", "url(#lv-atmo)");
-
-        // Globe sphere — black ocean with gold rim
-        const globeSphere = svg.append("circle").attr("cx", w/2).attr("cy", h/2).attr("r", projection.scale()).attr("fill", "#0a0a0a").attr("stroke", "#C5A55A").attr("stroke-width", 0.8).attr("stroke-opacity", 0.6);
-
-        // Graticule (grid lines) — subtle gold
-        const graticule = d3.geoGraticule10();
-        svg.append("path").datum(graticule).attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.15).attr("stroke-opacity", 0.12);
-
-        // Country paths — black land, gold borders
-        const countryPaths = svg.append("g").selectAll("path").data(countries.features).join("path").attr("d", path).attr("fill", "#111111").attr("stroke", "#C5A55A").attr("stroke-width", 0.4).attr("stroke-opacity", 0.5);
-
-        // US state boundaries — gold, thinner
-        const statePaths = svg.append("g").selectAll("path").data(usStates.features).join("path").attr("d", path).attr("fill", "none").attr("stroke", "#C5A55A").attr("stroke-width", 0.25).attr("stroke-opacity", 0.3);
-
-        // Data points group
-        const pointGroup = svg.append("g");
-        const pointCircles = pointGroup.selectAll("circle").data(points).join("circle")
-          .attr("r", d => Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)))
-          .attr("fill", "#C5A55A").attr("opacity", 0.75).attr("cursor", "pointer");
-
-
-        // Tooltip
-        const tooltip = d3.select(container).append("div")
-          .style("position", "absolute").style("background", "rgba(0,0,0,0.85)")
-          .style("color", "#fff").style("padding", "8px 12px").style("border-radius", "6px")
-          .style("font-size", "12px").style("pointer-events", "none").style("display", "none")
-          .style("z-index", "1000").style("border", "1px solid #C5A55A").style("line-height", "1.5");
-
-        // Tag the graticule path for targeted updates
-        svg.select("path[d]").classed("graticule-path", true);
-
-        const updatePositions = () => {
-          const rot = projection.rotate();
-          const s = projection.scale();
-          // Update globe and atmosphere to match zoom
-          globeSphere.attr("r", s);
-          atmoCircle.attr("r", s * 1.18);
-          countryPaths.attr("d", path);
-          statePaths.attr("d", path);
-          svg.select(".graticule-path").attr("d", path(graticule));
-
-          // Scale dots down as we zoom in so they don't overlap
-          const dotScale = 1 / Math.sqrt(currentZoom);
-          pointCircles.each(function(d) {
-            const dist = d3.geoDistance(d.coords, [-rot[0], -rot[1]]);
-            const p = projection(d.coords);
-            const visible = dist < Math.PI / 2 && p;
-            const r = Math.max(1.5, Math.min(5, Math.sqrt(d.count) * 0.7)) * dotScale;
-            d3.select(this).attr("cx", p ? p[0] : 0).attr("cy", p ? p[1] : 0).attr("r", r).attr("display", visible ? null : "none");
-          });
-
-        };
-
-        // Hover events
-        pointCircles
-          .on("mouseenter", function(event, d) {
-            d3.select(this).attr("opacity", 1).attr("stroke", "#fff").attr("stroke-width", 1);
-            let html = "<b>" + d.city + "</b>";
-            if (d.region) html += "<br/>" + d.region + (d.country && d.country !== d.region ? ", " + d.country : "");
-            else if (d.country) html += "<br/>" + d.country;
-            html += "<br/><span style='color:#C5A55A'>" + d.count + " submissions</span>";
-            const rect = container.getBoundingClientRect();
-            tooltip.html(html).style("display", "block")
-              .style("left", (event.clientX - rect.left + 12) + "px")
-              .style("top", (event.clientY - rect.top - 10) + "px");
-          })
-          .on("mousemove", function(event) {
-            const rect = container.getBoundingClientRect();
-            tooltip.style("left", (event.clientX - rect.left + 12) + "px").style("top", (event.clientY - rect.top - 10) + "px");
-          })
-          .on("mouseleave", function() {
-            d3.select(this).attr("opacity", 0.75).attr("stroke", "none");
-            tooltip.style("display", "none");
-          });
-
-
-        // Interaction state
-        let currentRotation = [0, -15];
-        let isEngaged = false;
-        let isDragging = false;
-        projection.rotate(currentRotation);
-        updatePositions();
-
-        const clampZoom = (z) => Math.max(0.5, Math.min(40, z));
-
-        // ── Mouse drag to rotate (desktop only — touch handled separately) ──
-        let dragStartCoords = [0, 0];
-        let dragStartRotation = [0, 0];
-        svg.call(d3.drag()
-          .filter(event => event.type === "mousedown")
-          .on("start", function(event) {
-            isDragging = true;
-            dragStartCoords = [event.x, event.y];
-            dragStartRotation = [...currentRotation];
-          })
-          .on("drag", function(event) {
-            if (!isDragging) return;
-            const dx = event.x - dragStartCoords[0];
-            const dy = event.y - dragStartCoords[1];
-            const sensitivity = 0.4 / currentZoom;
-            currentRotation = [dragStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, dragStartRotation[1] - dy * sensitivity))];
-            projection.rotate(currentRotation);
-            updatePositions();
-          })
-          .on("end", () => { isDragging = false; })
-        );
-
-        // ── Mouse wheel zoom (desktop) ──
-        const svgNode = svg.node();
-        svgNode.addEventListener("wheel", function(event) {
-          event.preventDefault();
-          const delta = -event.deltaY * 0.004;
-          currentZoom = clampZoom(currentZoom * (1 + delta));
-          projection.scale(baseScale * currentZoom);
-          updatePositions();
-        }, { passive: false });
-
-        // ── Touch: single-finger rotate + two-finger pinch zoom (mobile) ──
-        let touchStartCoords = null;
-        let touchStartRotation = null;
-        let pinchStartDist = null;
-        let pinchStartZoom = null;
-        let lastTouchCount = 0;
-
-        const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-
-        const initDrag = (touch) => {
-          isDragging = true;
-          touchStartCoords = [touch.clientX, touch.clientY];
-          touchStartRotation = [...currentRotation];
-          pinchStartDist = null;
-        };
-
-        const initPinch = (t1, t2) => {
-          isDragging = false;
-          touchStartCoords = null;
-          pinchStartDist = getTouchDist(t1, t2);
-          pinchStartZoom = currentZoom;
-        };
-
-        svgNode.addEventListener("touchstart", function(event) {
-          event.preventDefault();
-          isEngaged = true;
-          lastTouchCount = event.touches.length;
-          if (event.touches.length === 1) {
-            initDrag(event.touches[0]);
-          } else if (event.touches.length >= 2) {
-            initPinch(event.touches[0], event.touches[1]);
-          }
-        }, { passive: false });
-
-        svgNode.addEventListener("touchmove", function(event) {
-          event.preventDefault();
-          const count = event.touches.length;
-
-          // Detect finger count change mid-gesture
-          if (count !== lastTouchCount) {
-            lastTouchCount = count;
-            if (count === 1) {
-              initDrag(event.touches[0]);
-              return;
-            } else if (count >= 2) {
-              initPinch(event.touches[0], event.touches[1]);
-              return;
-            }
-          }
-
-          if (count === 1 && touchStartCoords) {
-            const dx = event.touches[0].clientX - touchStartCoords[0];
-            const dy = event.touches[0].clientY - touchStartCoords[1];
-            const sensitivity = 0.4 / currentZoom;
-            currentRotation = [touchStartRotation[0] + dx * sensitivity, Math.max(-60, Math.min(60, touchStartRotation[1] - dy * sensitivity))];
-            projection.rotate(currentRotation);
-            updatePositions();
-          } else if (count >= 2 && pinchStartDist) {
-            const dist = getTouchDist(event.touches[0], event.touches[1]);
-            currentZoom = clampZoom(pinchStartZoom * (dist / pinchStartDist));
-            projection.scale(baseScale * currentZoom);
-            updatePositions();
-          }
-        }, { passive: false });
-
-        svgNode.addEventListener("touchend", function(event) {
-          const count = event.touches.length;
-          lastTouchCount = count;
-          if (count === 0) {
-            isDragging = false;
-            isEngaged = false;
-            touchStartCoords = null;
-            pinchStartDist = null;
-          } else if (count === 1) {
-            initDrag(event.touches[0]);
-          }
-        }, { passive: true });
-
-        svgNode.addEventListener("touchcancel", function() {
-          isDragging = false;
-          isEngaged = false;
-          lastTouchCount = 0;
-          touchStartCoords = null;
-          pinchStartDist = null;
-        }, { passive: true });
-
-        // Pause spin on hover (desktop)
-        svgNode.addEventListener("mouseenter", () => { isEngaged = true; });
-        svgNode.addEventListener("mouseleave", () => { isEngaged = false; });
-
-        // Auto-rotate
-        const spin = () => {
-          if (!isEngaged && !isDragging && currentZoom <= 1) {
-            currentRotation[0] = (currentRotation[0] + 0.15) % 360;
-            projection.rotate(currentRotation);
-            updatePositions();
-          }
-          animFrameId = requestAnimationFrame(spin);
-        };
-        animFrameId = requestAnimationFrame(spin);
-
-        // Store cleanup ref
-        globeInstanceRef.current = { cleanup: () => { if (animFrameId) cancelAnimationFrame(animFrameId); } };
+        globeInstanceRef.current = renderGlobe(container, { points, countries, usStates, w, h, uniqueId: "lv" });
       } catch (e) { console.warn("LocationsView globe error:", e); }
     };
     init();
     return () => {
       cancelled = true;
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      if (globeInstanceRef.current && globeInstanceRef.current.cleanup) globeInstanceRef.current.cleanup();
+      if (globeInstanceRef.current) globeInstanceRef.current.cleanup();
       globeInstanceRef.current = null;
       if (globeContainerRef.current) globeContainerRef.current.innerHTML = "";
     };
