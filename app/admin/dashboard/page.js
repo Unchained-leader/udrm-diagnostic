@@ -291,16 +291,15 @@ function DashboardHomeView({ data, summary, product, days, setTab }) {
   return (
     <div>
       {/* Globe — full width at top */}
-      <div style={{ ...tileStyle, cursor: "pointer", marginBottom: 16, padding: 0, overflow: "hidden" }}
-        onClick={() => setTab("locations")}>
-        <div style={{ ...tileTitle, padding: "16px 16px 0" }}>Global Submissions</div>
+      <div style={{ ...tileStyle, marginBottom: 16, padding: 0, overflow: "hidden" }}>
+        <div style={{ ...tileTitle, padding: "16px 16px 0", cursor: "pointer" }} onClick={() => setTab("locations")}>Global Submissions</div>
         <div style={{ height: 400, position: "relative" }}>
           <MiniGlobe product={product} height={400} />
           <div style={{ position: "absolute", bottom: 24, left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
             <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: "rgba(197,165,90,0.5)", textTransform: "uppercase", fontFamily: "Montserrat, sans-serif" }}>#UnchainTheWorld</span>
           </div>
         </div>
-        <div style={{ position: "absolute", bottom: 8, right: 12, fontSize: 10, color: "#555" }}>Click to expand →</div>
+        <div style={{ cursor: "pointer", padding: "6px 12px", textAlign: "right", fontSize: 10, color: "#555" }} onClick={() => setTab("locations")}>Click to expand →</div>
       </div>
 
       {/* Tile grid — 2 columns */}
@@ -509,14 +508,6 @@ function renderGlobe(container, { points, countries, usStates, w, h, uniqueId })
         0%, 100% { opacity: var(--star-min); }
         50% { opacity: var(--star-max); }
       }
-      @keyframes hashtag-pulse {
-        0%, 100% { opacity: 0.07; }
-        50% { opacity: 0.13; }
-      }
-      @keyframes hashtag-glow-pulse {
-        0%, 100% { opacity: 0.18; }
-        50% { opacity: 0.3; }
-      }
     `;
     document.head.appendChild(style);
   }
@@ -547,34 +538,6 @@ function renderGlobe(container, { points, countries, usStates, w, h, uniqueId })
       .style("--star-max", maxOpacity)
       .style("animation", `globe-twinkle ${duration}s ease-in-out ${delay}s infinite`);
   }
-
-  // ── #unchaintheworld hashtag layered behind globe ──
-  const hashtagGroup = svg.append("g").attr("pointer-events", "none");
-  const hashtagText = "#unchaintheworld";
-  const hashFontSize = Math.min(w * 0.09, 52);
-
-  const glowFilter = defs.append("filter").attr("id", `hashtag-glow-${uniqueId}`);
-  glowFilter.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
-  glowFilter.append("feComposite").attr("in", "SourceGraphic").attr("in2", "blur").attr("operator", "over");
-
-  hashtagGroup.append("text")
-    .attr("x", w / 2).attr("y", h * 0.08)
-    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-    .attr("font-size", hashFontSize * 1.15).attr("font-weight", 800)
-    .attr("fill", "#C5A55A").attr("letter-spacing", "2px")
-    .attr("font-family", "'Georgia', 'Times New Roman', serif")
-    .attr("filter", `url(#hashtag-glow-${uniqueId})`)
-    .style("animation", "hashtag-glow-pulse 6s ease-in-out infinite")
-    .text(hashtagText);
-
-  hashtagGroup.append("text")
-    .attr("x", w / 2).attr("y", h * 0.08)
-    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-    .attr("font-size", hashFontSize).attr("font-weight", 700)
-    .attr("fill", "#C5A55A").attr("letter-spacing", "3px")
-    .attr("font-family", "'Georgia', 'Times New Roman', serif")
-    .style("animation", "hashtag-pulse 6s ease-in-out infinite")
-    .text(hashtagText);
 
   // Atmosphere glow
   const atmoGrad = defs.append("radialGradient").attr("id", `atmo-${uniqueId}`);
