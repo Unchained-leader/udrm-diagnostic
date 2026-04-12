@@ -2453,7 +2453,7 @@ function BarChart({ items, color, maxOverride, compact }) {
         <div style={compactBg}><div style={{ height: "100%", width: `${(item.value / max) * 100}%`, background: color, borderRadius: 2 }} /></div>
         <div style={compactVal}>
           <span>{item.value}</span>
-          {showPct && <span style={{ color: "#666", fontWeight: 400 }}>({((item.value / total) * 100).toFixed(0)}%)</span>}
+          {showPct && <span style={{ color: "#4DA6FF", fontWeight: 400 }}>({((item.value / total) * 100).toFixed(0)}%)</span>}
         </div>
       </div>
     ));
@@ -2472,7 +2472,7 @@ function BarChart({ items, color, maxOverride, compact }) {
           <div style={S.barBg}><div style={{ ...S.bar, width: `${(item.value / max) * 100}%`, background: color }} /></div>
           <div style={{ ...S.barVal, width: "auto", minWidth: 35, display: "flex", gap: 4, justifyContent: "flex-end" }}>
             <span>{typeof item.value === "number" && item.value % 1 !== 0 ? item.value.toFixed(1) : item.value}</span>
-            {showPct && <span style={{ color: "#666", fontSize: 11, fontWeight: 400 }}>({((item.value / total) * 100).toFixed(1)}%)</span>}
+            {showPct && <span style={{ color: "#4DA6FF", fontSize: 11, fontWeight: 400 }}>({((item.value / total) * 100).toFixed(1)}%)</span>}
           </div>
         </div>
       ))}
