@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "udrm-data": {
+      "command": "node",
+      "args": ["mcp-servers/udrm-data/index.mjs"],
+      "env": {}
+    }
+  }
+}

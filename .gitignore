@@ -4,3 +4,6 @@ node_modules/
 .env.local
 .vercel
 .env*.local
+
+# Extracted quiz data (contains PII)
+data/
