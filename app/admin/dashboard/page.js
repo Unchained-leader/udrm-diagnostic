@@ -43,6 +43,10 @@ export default function Dashboard() {
         // "Today" — from midnight today
         const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
         base += `&startDate=${today}`;
+      } else if (days === 1) {
+        // "Yesterday" — only yesterday's data
+        const yesterday = new Date(Date.now() - 86400000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+        base += `&startDate=${yesterday}&endDate=${yesterday}`;
       }
       if (source) base += `&source=${encodeURIComponent(source)}`;
       if (tab === "dashboard") {
@@ -162,6 +166,7 @@ export default function Dashboard() {
             }
           }} style={S.select}>
             <option value={0}>Today</option>
+            <option value={1}>Yesterday</option>
             <option value={7}>7 days</option>
             <option value={30}>30 days</option>
             <option value={90}>90 days</option>
