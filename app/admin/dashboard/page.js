@@ -2436,6 +2436,8 @@ function ExportView({ product, days }) {
 // ═══ COMPONENTS ═══
 function BarChart({ items, color, maxOverride, compact }) {
   const max = maxOverride || Math.max(...items.map(i => i.value), 1);
+  const total = items.reduce((sum, i) => sum + i.value, 0);
+  const showPct = !maxOverride && total > 0; // skip percentages for score-based charts
   if (compact) {
     // Two-column compact layout for large datasets
     const mid = Math.ceil(items.length / 2);
@@ -2444,12 +2446,15 @@ function BarChart({ items, color, maxOverride, compact }) {
     const compactRow = { display: "flex", alignItems: "center", gap: 4, marginBottom: 2 };
     const compactLabel = { width: 110, fontSize: 9, color: "#aaa", textAlign: "right", flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
     const compactBg = { flex: 1, height: 12, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" };
-    const compactVal = { width: 28, fontSize: 10, fontWeight: 600, color: "#fff", textAlign: "right" };
+    const compactVal = { width: 60, fontSize: 10, fontWeight: 600, color: "#fff", textAlign: "right", display: "flex", justifyContent: "flex-end", gap: 3 };
     const renderCol = (col) => col.map((item, i) => (
       <div key={i} style={compactRow}>
         <div style={compactLabel}>{item.label}</div>
         <div style={compactBg}><div style={{ height: "100%", width: `${(item.value / max) * 100}%`, background: color, borderRadius: 2 }} /></div>
-        <div style={compactVal}>{item.value}</div>
+        <div style={compactVal}>
+          <span>{item.value}</span>
+          {showPct && <span style={{ color: "#666", fontWeight: 400 }}>({((item.value / total) * 100).toFixed(0)}%)</span>}
+        </div>
       </div>
     ));
     return (
@@ -2465,7 +2470,10 @@ function BarChart({ items, color, maxOverride, compact }) {
         <div key={i} style={S.barRow}>
           <div style={S.barLabel}>{item.label}</div>
           <div style={S.barBg}><div style={{ ...S.bar, width: `${(item.value / max) * 100}%`, background: color }} /></div>
-          <div style={S.barVal}>{typeof item.value === "number" && item.value % 1 !== 0 ? item.value.toFixed(1) : item.value}</div>
+          <div style={{ ...S.barVal, width: "auto", minWidth: 35, display: "flex", gap: 4, justifyContent: "flex-end" }}>
+            <span>{typeof item.value === "number" && item.value % 1 !== 0 ? item.value.toFixed(1) : item.value}</span>
+            {showPct && <span style={{ color: "#666", fontSize: 11, fontWeight: 400 }}>({((item.value / total) * 100).toFixed(1)}%)</span>}
+          </div>
         </div>
       ))}
     </div>
