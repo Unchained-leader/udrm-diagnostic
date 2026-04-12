@@ -1293,24 +1293,27 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
   const categories = [
     { title: "Gender", color: "#9C27B0", ids: ["male", "female"] },
     { title: "Age Range", color: "#673AB7", ids: ["age_18_24","age_25_34","age_35_44","age_45_54","age_55_64","age_65_74","age_75_84","age_85_plus"] },
-    { title: "Sexual Behaviors", color: "#f44336", ids: ["viewing_porn","scrolling_social","fantasy_daydream","compulsive_mb","sexting","physical_acting","massage_parlors"] },
-    { title: "Other Vices / Coping", color: "#E91E63", ids: ["vice_alcohol","vice_thc","vice_substances","vice_overeating","vice_gambling","vice_gaming","vice_spending","vice_social_media","vice_work","vice_nicotine","vice_none"] },
+    { title: "Sexual Behaviors", color: "#f44336", multi: true, ids: ["viewing_porn","scrolling_social","fantasy_daydream","compulsive_mb","sexting","physical_acting","massage_parlors"] },
+    { title: "Other Vices / Coping", color: "#E91E63", multi: true, ids: ["vice_alcohol","vice_thc","vice_substances","vice_overeating","vice_gambling","vice_gaming","vice_spending","vice_social_media","vice_work","vice_nicotine","vice_none"] },
     { title: "Frequency", color: "#FF5722", ids: ["daily","several_week","weekly","few_month","binge_purge"] },
-    { title: "Escalation Pattern", color: "#FF9800", ids: ["need_more_extreme","crossed_lines","added_behaviors","stayed_same"] },
-    { title: "Content Themes (Pornography Types)", color: "#c5a55a", compact: true, ids: ["val_desired","val_amateur","pow_dominance","pow_degradation","sur_someone_control","sur_dominated","tab_wrong","tab_secrecy","tab_incest","voy_watching","voy_partner","ten_emotional","nov_new","nov_search","nov_anime","conf_race","conf_samesex","conf_trans","conf_pain","conf_crossdressing","cat_lesbian","cat_milf","cat_youth","cat_group","cat_bodytype","cat_solo","cat_pov"] },
-    { title: "Emotional Function", color: "#00BCD4", ids: ["calm_stress","feel_less_alone","feel_powerful","numb_checkout","feel_wanted","escape_reality","manage_anger","feel_something","after_conflict","after_serving","distant_god","spiritual_growth"] },
-    { title: "Life Stress Areas", color: "#8BC34A", ids: ["life_romantic_abundance","life_romantic_lack","life_health_abundance","life_health_lack","life_financial_abundance","life_financial_lack","life_work_abundance","life_work_lack","life_god_abundance","life_god_lack"] },
+    { title: "Escalation Pattern", color: "#FF9800", multi: true, ids: ["need_more_extreme","crossed_lines","added_behaviors","stayed_same"] },
+    { title: "Content Themes (Pornography Types)", color: "#c5a55a", compact: true, multi: true, ids: ["val_desired","val_amateur","pow_dominance","pow_degradation","sur_someone_control","sur_dominated","tab_wrong","tab_secrecy","tab_incest","voy_watching","voy_partner","ten_emotional","nov_new","nov_search","nov_anime","conf_race","conf_samesex","conf_trans","conf_pain","conf_crossdressing","cat_lesbian","cat_milf","cat_youth","cat_group","cat_bodytype","cat_solo","cat_pov"] },
+    { title: "Emotional Function", color: "#00BCD4", multi: true, ids: ["calm_stress","feel_less_alone","feel_powerful","numb_checkout","feel_wanted","escape_reality","manage_anger","feel_something","after_conflict","after_serving","distant_god","spiritual_growth"] },
+    { title: "Life Stress Areas", color: "#8BC34A", multi: true, ids: ["life_romantic_abundance","life_romantic_lack","life_health_abundance","life_health_lack","life_financial_abundance","life_financial_lack","life_work_abundance","life_work_lack","life_god_abundance","life_god_lack"] },
     { title: "Age of First Exposure", color: "#f44336", ids: ["under_8","age_8_11","age_12_14","age_15_plus"] },
-    { title: "How First Exposure Happened", color: "#E91E63", ids: ["found_own","peer_showed","older_showed","abused","parent_collection","witnessed","dont_remember"] },
-    { title: "Home Environment", color: "#795548", ids: ["home_warm","home_cold","home_unpredictable","home_conflict","home_controlled","home_conditional","home_no_emotions"] },
-    { title: "Father Relationship", color: "#607D8B", ids: ["dad_close","dad_distant","dad_critical","dad_approval","dad_sexual"] },
-    { title: "Mother Relationship", color: "#9E9E9E", ids: ["mom_close","mom_enmeshed","mom_distant","mom_critical","mom_responsible"] },
-    { title: "Church / Faith Background", color: "#FF9800", ids: ["church_shameful","church_purity","church_thoughts_sin","church_good_kid","church_conditional"] },
-    { title: "Attachment Patterns", color: "#2196F3", ids: ["anx_leave","anx_reassurance","anx_conflict_end","avoid_pull_away","avoid_sexual_easy","avoid_withdraw","fear_crave_push","fear_both","fear_swing","sec_comfortable","sec_conflict_ok","sec_trust","god_disappointed","god_avoid","god_grace_cant_feel","god_like_father","god_performance"] },
-    { title: "Relational Patterns", color: "#3F51B5", ids: ["cod_needs","cod_responsible","cod_worth","enm_parent_emotions","enm_therapist","enm_boundaries","void_no_one","void_perform","void_never_told","lead_disqualified","lead_no_one_serves","lead_lose_position"] },
-    { title: "Strategies Tried", color: "#4CAF50", ids: ["strat_filters","strat_accountability","strat_prayer","strat_willpower","strat_therapy","strat_group","strat_rehab","strat_program","strat_confession","strat_books","strat_cold_turkey","strat_medication","strat_deliverance","strat_environment","strat_dating","strat_nothing"] },
+    { title: "How First Exposure Happened", color: "#E91E63", multi: true, ids: ["found_own","peer_showed","older_showed","abused","parent_collection","witnessed","dont_remember"] },
+    { title: "Home Environment", color: "#795548", multi: true, ids: ["home_warm","home_cold","home_unpredictable","home_conflict","home_controlled","home_conditional","home_no_emotions"] },
+    { title: "Father Relationship", color: "#607D8B", multi: true, ids: ["dad_close","dad_distant","dad_critical","dad_approval","dad_sexual"] },
+    { title: "Mother Relationship", color: "#9E9E9E", multi: true, ids: ["mom_close","mom_enmeshed","mom_distant","mom_critical","mom_responsible"] },
+    { title: "Church / Faith Background", color: "#FF9800", multi: true, ids: ["church_shameful","church_purity","church_thoughts_sin","church_good_kid","church_conditional"] },
+    { title: "Attachment Patterns", color: "#2196F3", multi: true, ids: ["anx_leave","anx_reassurance","anx_conflict_end","avoid_pull_away","avoid_sexual_easy","avoid_withdraw","fear_crave_push","fear_both","fear_swing","sec_comfortable","sec_conflict_ok","sec_trust","god_disappointed","god_avoid","god_grace_cant_feel","god_like_father","god_performance"] },
+    { title: "Relational Patterns", color: "#3F51B5", multi: true, ids: ["cod_needs","cod_responsible","cod_worth","enm_parent_emotions","enm_therapist","enm_boundaries","void_no_one","void_perform","void_never_told","lead_disqualified","lead_no_one_serves","lead_lose_position"] },
+    { title: "Strategies Tried", color: "#4CAF50", multi: true, ids: ["strat_filters","strat_accountability","strat_prayer","strat_willpower","strat_therapy","strat_group","strat_rehab","strat_program","strat_confession","strat_books","strat_cold_turkey","strat_medication","strat_deliverance","strat_environment","strat_dating","strat_nothing"] },
     { title: "Years Fighting", color: "#009688", ids: ["years_under2","years_2_5","years_5_10","years_10_20","years_20_plus"] },
   ];
+
+  // Total respondents = sum of single-select Gender category (everyone answers it)
+  const totalRespondents = (selectionCounts["male"] || 0) + (selectionCounts["female"] || 0);
 
   // Build a lookup from selection ID → count
   const selectionCounts = {};
@@ -1363,7 +1366,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
           return (
             <div key={ci} className="research-chart-section" style={{ marginTop: ci > 0 ? 20 : 0 }}>
               <h3 style={{ fontSize: 13, color: cat.color, fontWeight: 600, margin: "0 0 8px", letterSpacing: 0.5 }}>{cat.title}</h3>
-              <BarChart items={items} color={cat.color} compact={cat.compact} />
+              <BarChart items={items} color={cat.color} compact={cat.compact} percentBase={cat.multi && totalRespondents > 0 ? totalRespondents : undefined} />
             </div>
           );
         })}
@@ -2439,9 +2442,9 @@ function ExportView({ product, days }) {
 }
 
 // ═══ COMPONENTS ═══
-function BarChart({ items, color, maxOverride, compact }) {
+function BarChart({ items, color, maxOverride, compact, percentBase }) {
   const max = maxOverride || Math.max(...items.map(i => i.value), 1);
-  const total = items.reduce((sum, i) => sum + i.value, 0);
+  const total = percentBase || items.reduce((sum, i) => sum + i.value, 0);
   const showPct = !maxOverride && total > 0; // skip percentages for score-based charts
   if (compact) {
     // Two-column compact layout for large datasets
