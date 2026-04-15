@@ -1,0 +1,125 @@
+<!-- ═══════════════════════════════════════════════════════════════
+  UNCHAINED LEADER — Video Autoplay Unmute & Restart Overlay
+  Paste this entire snippet into your GHL landing page footer.
+  No jQuery required — vanilla JS only (~1KB vs ~91KB).
+  ═══════════════════════════════════════════════════════════════ -->
+
+<!-- Preload overlay images so they're ready before JS runs -->
+<link rel="preload" as="image" href="https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be569bdbced4809062.webp" />
+<link rel="preload" as="image" href="https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be16dd2261d37ccc5e.webp" />
+<link rel="preload" as="image" href="https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be9b131f682e22ed9f.webp" />
+
+<style>
+.video-sound-overlay {
+    width: 100%;
+    height: 100%;
+    background-image: url(https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be9b131f682e22ed9f.webp);
+    background-repeat: no-repeat;
+    position: absolute;
+    left: 0%;
+    right: 0%;
+    top: 0%;
+    bottom: 0%;
+    margin: auto;
+    background-size: 20%;
+    background-position: center;
+    z-index: 11;
+}
+.video-sound-overlay img {
+    width: 18%;
+    padding: 10px;
+    position: absolute;
+}
+.video-sound-overlay img {
+    margin-top: 5px;
+    margin-left: 10px;
+    animation: pulse 2s infinite;
+    animation-timing-function: ease-out;
+    left: 0% !important;
+}
+@keyframes pulse {
+    80% {
+        transform: scale(1.1);
+    }
+}
+.video-sound-overlay .play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -100px;
+    margin-top: -100px;
+}
+@media only screen and (max-width: 770px) and (min-width: 0px) {
+    .iframeBlocker {
+        display: block !important;
+    }
+    .unmute-button img {
+        width: 35%;
+    }
+}
+</style>
+
+<script>
+/**************************
+ * Video Autoplay Unmute & Restart
+ * Vanilla JS rewrite — no jQuery dependency
+ **************************/
+(function () {
+    var SOUND_IMG = 'https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be569bdbced4809062.webp';
+    var PLAY_IMG  = 'https://storage.googleapis.com/msgsndr/kFsvgsGt6TVxUSD3hNSM/media/64d132be16dd2261d37ccc5e.webp';
+
+    function createBlocker() {
+        var blocker = document.createElement('div');
+        blocker.setAttribute('data-title', 'fc-video-unmute fc-video-restart fc-video-remove-blocker');
+        blocker.className = 'iframeBlocker';
+
+        var overlay = document.createElement('div');
+        overlay.className = 'video-sound-overlay';
+
+        var unmuteBtn = document.createElement('div');
+        unmuteBtn.className = 'unmute-button';
+        var soundImg = document.createElement('img');
+        soundImg.src = SOUND_IMG;
+        soundImg.alt = 'Click To Turn On Sound';
+        unmuteBtn.appendChild(soundImg);
+
+        var playBtn = document.createElement('div');
+        playBtn.className = 'play-button';
+        var playImg = document.createElement('img');
+        playImg.src = PLAY_IMG;
+        playBtn.appendChild(playImg);
+
+        overlay.appendChild(unmuteBtn);
+        overlay.appendChild(playBtn);
+        blocker.appendChild(overlay);
+        return blocker;
+    }
+
+    function init() {
+        var wrappers = document.querySelectorAll('.fc-video-unmute-restart');
+        for (var i = 0; i < wrappers.length; i++) {
+            (function (wrapper) {
+                var blockerEl = createBlocker();
+                wrapper.appendChild(blockerEl);
+
+                blockerEl.addEventListener('click', function () {
+                    blockerEl.remove();
+                    var video = wrapper.querySelector('video');
+                    if (video) {
+                        video.currentTime = 0;
+                        video.muted = false;
+                        video.play();
+                    }
+                });
+            })(wrappers[i]);
+        }
+    }
+
+    // Handle GHL timing: if DOM already loaded, run immediately; otherwise wait
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
