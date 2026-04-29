@@ -19,7 +19,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const intervalRef = useRef(null);
 
@@ -95,7 +95,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (autoRefresh && authed) {
-      intervalRef.current = setInterval(fetchData, 60000);
+      intervalRef.current = setInterval(fetchData, 300000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [autoRefresh, authed, fetchData]);
