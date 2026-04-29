@@ -1820,7 +1820,7 @@ function HealthView() {
         </div>
       )}
 
-      {history && (
+      {history && Array.isArray(history.history) && (
         <>
           <h2 style={S.sectionTitle}>Uptime: {history.uptimePct}% ({history.totalChecks} checks)</h2>
           <div style={{ display: "flex", gap: 2, flexWrap: "wrap", marginTop: 8 }}>
