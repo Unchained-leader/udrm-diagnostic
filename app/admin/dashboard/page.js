@@ -429,15 +429,16 @@ function MiniTrendsChart({ product, days }) {
       if (!window.Chart || !canvasRef.current) return;
       if (chartRef.current) chartRef.current.destroy();
       const { multiCurrent } = trendData;
+      if (!multiCurrent) return;
       const metrics = ["quiz_start", "contact_capture_complete", "report_generated"];
       const labels = { quiz_start: "Starts", contact_capture_complete: "Completions", report_generated: "Reports" };
       const colors = { quiz_start: "#c5a55a", contact_capture_complete: "#4CAF50", report_generated: "#2196F3" };
       const allDates = new Set();
-      for (const m of metrics) (multiCurrent[m] || []).forEach(d => allDates.add(d.date.split("T")[0]));
+      for (const m of metrics) (multiCurrent[m] || []).forEach(d => { if (d?.date) allDates.add(String(d.date).split("T")[0]); });
       const dateLabels = [...allDates].sort();
       const shortLabels = dateLabels.map(d => { const dt = new Date(d + "T12:00:00"); return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }); });
       const datasets = metrics.map(m => {
-        const map = {}; (multiCurrent[m] || []).forEach(d => { map[d.date.split("T")[0]] = parseInt(d.count); });
+        const map = {}; (multiCurrent[m] || []).forEach(d => { if (d?.date) map[String(d.date).split("T")[0]] = parseInt(d.count); });
         return { label: labels[m], data: dateLabels.map(d => map[d] || 0), borderColor: colors[m], borderWidth: 2, tension: 0.3, fill: false, pointRadius: 2 };
       });
       chartRef.current = new window.Chart(canvasRef.current, {
@@ -952,6 +953,7 @@ function TrendsView({ product, days }) {
     if (chartRef.current) chartRef.current.destroy();
 
     const { multiCurrent, multiPrevious } = trendData;
+    if (!multiCurrent) return;
     const metrics = ["quiz_start", "contact_capture_complete", "report_generated"];
     const colors = {
       quiz_start: { current: "#c5a55a", prev: "rgba(197,165,90,0.3)" },
@@ -962,7 +964,7 @@ function TrendsView({ product, days }) {
     // Build date labels from current period
     const allDates = new Set();
     for (const m of metrics) {
-      (multiCurrent[m] || []).forEach(d => allDates.add(d.date.split("T")[0]));
+      (multiCurrent[m] || []).forEach(d => { if (d?.date) allDates.add(String(d.date).split("T")[0]); });
     }
     const dateLabels = [...allDates].sort();
     const shortLabels = dateLabels.map(d => {
@@ -973,7 +975,7 @@ function TrendsView({ product, days }) {
     const datasets = [];
     for (const m of metrics) {
       const currentMap = {};
-      (multiCurrent[m] || []).forEach(d => { currentMap[d.date.split("T")[0]] = parseInt(d.count); });
+      (multiCurrent[m] || []).forEach(d => { if (d?.date) currentMap[String(d.date).split("T")[0]] = parseInt(d.count); });
       datasets.push({
         label: metricLabels[m] + " (Current)",
         data: dateLabels.map(d => currentMap[d] || 0),
@@ -986,7 +988,7 @@ function TrendsView({ product, days }) {
       });
 
       if (showOverlay) {
-        const prevArr = multiPrevious[m] || [];
+        const prevArr = (multiPrevious && multiPrevious[m]) || [];
         // Align previous period to current period dates (by offset)
         const prevData = dateLabels.map((_, i) => {
           return i < prevArr.length ? parseInt(prevArr[i].count) : 0;
