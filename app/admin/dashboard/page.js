@@ -1054,8 +1054,9 @@ function TrendsView({ product, days }) {
 
 // ═══ RESEARCH ═══
 function ResearchView({ data, days, dateMode, startDate, endDate }) {
-  const { distributions, diagnostics, attachments, neuropathways, relational } = data;
   const researchRef = useRef(null);
+  if (!data) return <Empty msg="Loading research data..." />;
+  const { distributions, diagnostics, attachments, neuropathways, relational } = data;
 
   // Date range label
   const dateLabel = (() => {
@@ -2450,14 +2451,16 @@ function ExportView({ product, days }) {
 
 // ═══ COMPONENTS ═══
 function BarChart({ items, color, maxOverride, compact, percentBase }) {
-  const max = maxOverride || Math.max(...items.map(i => i.value), 1);
-  const total = percentBase || items.reduce((sum, i) => sum + i.value, 0);
+  const safeItems = Array.isArray(items) ? items : [];
+  if (safeItems.length === 0) return null;
+  const max = maxOverride || Math.max(...safeItems.map(i => i.value), 1);
+  const total = percentBase || safeItems.reduce((sum, i) => sum + i.value, 0);
   const showPct = !maxOverride && total > 0; // skip percentages for score-based charts
   if (compact) {
     // Two-column compact layout for large datasets
-    const mid = Math.ceil(items.length / 2);
-    const col1 = items.slice(0, mid);
-    const col2 = items.slice(mid);
+    const mid = Math.ceil(safeItems.length / 2);
+    const col1 = safeItems.slice(0, mid);
+    const col2 = safeItems.slice(mid);
     const compactRow = { display: "flex", alignItems: "center", gap: 4, marginBottom: 2 };
     const compactLabel = { width: 110, fontSize: 9, color: "#aaa", textAlign: "right", flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
     const compactBg = { flex: 1, height: 12, background: "#1a1a1a", borderRadius: 2, overflow: "hidden" };
@@ -2481,7 +2484,7 @@ function BarChart({ items, color, maxOverride, compact, percentBase }) {
   }
   return (
     <div style={{ marginTop: 8 }}>
-      {items.map((item, i) => (
+      {safeItems.map((item, i) => (
         <div key={i} style={S.barRow}>
           <div style={S.barLabel}>{item.label}</div>
           <div style={S.barBg}><div style={{ ...S.bar, width: `${(item.value / max) * 100}%`, background: color }} /></div>
