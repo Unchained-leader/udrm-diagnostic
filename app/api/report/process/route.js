@@ -391,7 +391,7 @@ async function analyzeConversation(messages, userName, demographics = {}, { emai
   const generationLabel = GENERATION_MAP[demographics.ageRange] || "Unknown";
 
   const response = await callWithBackoff(() => client.messages.create({
-    model: "claude-sonnet-4-20250514",  // Switch to "claude-opus-4-6" for higher quality (slower, 10x more expensive)
+    model: "claude-sonnet-4-6",  // Switch to "claude-opus-4-6" for higher quality (slower, 10x more expensive)
     max_tokens: 16384,
     messages: [{
       role: "user",
