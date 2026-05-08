@@ -2,6 +2,7 @@ import redis from "../../lib/redis";
 import { createDashboardToken, setTokenCookie } from "../../lib/auth";
 import bcrypt from "bcryptjs";
 import { ghlContactCreated } from "../../lib/ghl";
+import { zapierDiagnosticSubmitted } from "../../lib/zapier";
 import { corsHeaders, optionsResponse } from "../../lib/cors";
 import { normalizeEmail, parseRedis } from "../../lib/utils";
 
@@ -54,6 +55,13 @@ export async function POST(request) {
       userData.geo = geo;
       await redis.set(userKey, userData);
 
+      zapierDiagnosticSubmitted({
+        email: normalizedEmail,
+        name: userData.name || trimmedName,
+        phone: userData.phone || "",
+        ip: geo.ip || "",
+      }).catch((e) => console.error("Zapier webhook error:", e.message));
+
       const token = await createDashboardToken(normalizedEmail, userData.name || trimmedName);
 
       const response = new Response(JSON.stringify({ success: true, name: userData.name || trimmedName, token }), {
@@ -90,6 +98,13 @@ export async function POST(request) {
       utmMedium: utmMedium || "",
       utmCampaign: utmCampaign || "",
     }).catch((e) => console.error("GHL webhook error:", e.message));
+
+    zapierDiagnosticSubmitted({
+      email: normalizedEmail,
+      name: trimmedName,
+      phone: phone || "",
+      ip: geo.ip || "",
+    }).catch((e) => console.error("Zapier webhook error:", e.message));
 
     const token = await createDashboardToken(normalizedEmail, trimmedName);
 
