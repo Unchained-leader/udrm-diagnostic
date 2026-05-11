@@ -1559,6 +1559,9 @@
       const pin = document.getElementById("inputPin").value.trim();
       const pinConfirm = document.getElementById("inputPinConfirm").value.trim();
 
+      const aboutYouIds = (screenResponses["0"] || {}).selectedIds || [];
+      const gender = aboutYouIds.find(id => id === "male" || id === "female") || null;
+
       formError.textContent = "";
 
       if (!name) { formError.textContent = "Please enter your first name."; return; }
@@ -1576,7 +1579,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ email, name, phone, pin, trafficSource: referrerInfo.trafficSource, embedParentUrl: referrerInfo.embedParentUrl, referrerUrl: referrerInfo.referrerUrl, utmSource: referrerInfo.utmSource, utmMedium: referrerInfo.utmMedium, utmCampaign: referrerInfo.utmCampaign }),
+          body: JSON.stringify({ email, name, phone, pin, gender, trafficSource: referrerInfo.trafficSource, embedParentUrl: referrerInfo.embedParentUrl, referrerUrl: referrerInfo.referrerUrl, utmSource: referrerInfo.utmSource, utmMedium: referrerInfo.utmMedium, utmCampaign: referrerInfo.utmCampaign }),
         });
 
         const data = await res.json();
