@@ -11,7 +11,7 @@
  * Send diagnostic data to GHL via webhook.
  * GHL workflow handles: contact creation, tagging, notes, etc.
  */
-export async function sendToGHL({ event, email, name, phone, tags, diagnosticData, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
+export async function sendToGHL({ event, email, name, phone, gender, tags, diagnosticData, analysis, reportUrl, dashboardUrl, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   const webhookUrl = process.env.GHL_WEBHOOK_URL;
   if (!webhookUrl) {
     console.warn("GHL_WEBHOOK_URL not configured — skipping CRM sync");
@@ -27,6 +27,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       lastName: (name || "").split(" ").slice(1).join(" ") || "",
       phone: phone || "",
       name: name || "",
+      gender: gender || "",
       report_url: reportUrl || "",
       reportUrl: reportUrl || "",
       impersonation_access: dashboardUrl || "",
@@ -38,6 +39,7 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
       utm_campaign: utmCampaign || "",
     },
     tags: tags || [],
+    gender: gender || "",
     reportUrl: reportUrl || null,
     report_url: reportUrl || null,
     dashboardUrl: dashboardUrl || null,
@@ -103,12 +105,13 @@ export async function sendToGHL({ event, email, name, phone, tags, diagnosticDat
 /**
  * Convenience: Send contact creation event
  */
-export async function ghlContactCreated({ email, name, phone, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
+export async function ghlContactCreated({ email, name, phone, gender, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign }) {
   return sendToGHL({
     event: "contact_created",
     email,
     name,
     phone,
+    gender,
     tags: ["Diagnostic Started", "Root Genre Diagnostic"],
     trafficSource,
     embedParentUrl,

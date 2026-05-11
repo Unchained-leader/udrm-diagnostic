@@ -14,7 +14,7 @@ export async function OPTIONS() {
 
 export async function POST(request) {
   try {
-    const { email, name, phone, pin, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = await request.json();
+    const { email, name, phone, pin, gender, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = await request.json();
     const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
@@ -76,6 +76,7 @@ export async function POST(request) {
     const userData = {
       name: trimmedName,
       phone: phone || "",
+      gender: gender || "",
       createdAt: new Date().toISOString(),
       diagnosticComplete: true,
       diagnosticCompletedAt: new Date().toISOString(),
@@ -91,6 +92,7 @@ export async function POST(request) {
       email: normalizedEmail,
       name: trimmedName,
       phone: phone || "",
+      gender: gender || "",
       trafficSource: trafficSource || "",
       embedParentUrl: embedParentUrl || "",
       referrerUrl: referrerUrl || "",
