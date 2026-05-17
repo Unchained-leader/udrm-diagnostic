@@ -1952,10 +1952,10 @@ function PipelineView({ days }) {
         <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
           <div style={{ color: "#FF9800", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Rate Limit Events ({data.rateLimitEvents.length})</div>
           {data.rateLimitEvents.slice(0, 10).map((e, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
+            <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
               <span style={{ color: "#666", minWidth: 140 }}>{new Date(e.created_at).toLocaleString()}</span>
               <span style={{ color: "#999" }}>{e.email}</span>
-              <span style={{ color: "#FF9800" }}>{e.error_message}</span>
+              <span style={{ color: "#FF9800", flex: "1 1 200px", minWidth: 0, overflowWrap: "anywhere" }}>{e.error_message}</span>
             </div>
           ))}
         </div>
@@ -1966,10 +1966,10 @@ function PipelineView({ days }) {
         <div style={{ background: "#111", borderRadius: 8, padding: 16, marginBottom: 24, border: "1px solid #222" }}>
           <div style={{ color: "#f44336", fontSize: 12, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Failures ({data.failureEvents.length})</div>
           {data.failureEvents.slice(0, 10).map((e, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
+            <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12 }}>
               <span style={{ color: "#666", minWidth: 140 }}>{new Date(e.created_at).toLocaleString()}</span>
               <span style={{ color: "#999" }}>{e.email}</span>
-              <span style={{ color: "#f44336" }}>{e.error_message}</span>
+              <span style={{ color: "#f44336", flex: "1 1 200px", minWidth: 0, overflowWrap: "anywhere" }}>{e.error_message}</span>
             </div>
           ))}
         </div>
@@ -2003,9 +2003,9 @@ function PipelineView({ days }) {
                 const recoverySec = parseInt(r.recovery_seconds) || 0;
                 const recoveryLabel = recoverySec < 60 ? `${recoverySec}s` : recoverySec < 3600 ? `${Math.round(recoverySec / 60)}m` : `${(recoverySec / 3600).toFixed(1)}h`;
                 return (
-                  <div key={i} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12, alignItems: "center" }}>
+                  <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: 12, padding: "6px 0", borderBottom: "1px solid #1a1a1a", fontSize: 12, alignItems: "center" }}>
                     <span style={{ color: "#666", minWidth: 140 }}>{new Date(r.recovered_at).toLocaleString()}</span>
-                    <span style={{ color: "#999", flex: 1 }}>{r.email}</span>
+                    <span style={{ color: "#999", flex: "1 1 160px", minWidth: 0, overflowWrap: "anywhere" }}>{r.email}</span>
                     <span style={{ color: "#4CAF50", fontWeight: 600, fontSize: 11 }}>Recovered in {recoveryLabel}</span>
                   </div>
                 );

@@ -3,6 +3,11 @@ export const metadata = {
   description: "Understand what is really driving the behavior you can't shake",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
