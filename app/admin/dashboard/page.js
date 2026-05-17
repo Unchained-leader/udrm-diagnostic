@@ -874,9 +874,21 @@ function FunnelView({ data }) {
   funnel.forEach(f => { fMap[f.event_type] = parseInt(f.unique_sessions) || 0; });
   const maxVal = Math.max(...order.map(k => fMap[k] || 0), 1);
 
+  const s7 = fMap.section_7_complete || 0;
+  const formDone = fMap.contact_capture_complete || 0;
+  const s7ToFormPct = s7 > 0 ? ((formDone / s7) * 100).toFixed(1) : "—";
+  const s7ToFormColor = parseFloat(s7ToFormPct) >= 60 ? "#4CAF50" : parseFloat(s7ToFormPct) >= 40 ? "#FF9800" : "#f44336";
+
   return (
     <div>
       <h2 style={S.sectionTitle}>Conversion Funnel</h2>
+
+      <div style={{ background: "#141414", border: "1px solid #222", borderRadius: 10, padding: "14px 16px", marginBottom: 16, display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 12 }}>
+        <span style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>S7 → Email Submitted</span>
+        <span style={{ fontSize: 24, fontWeight: 700, color: s7ToFormColor }}>{s7ToFormPct}{typeof s7ToFormPct === "string" && s7ToFormPct !== "—" ? "%" : ""}</span>
+        <span style={{ fontSize: 12, color: "#666" }}>{formDone} of {s7} who finished the quiz submitted their email</span>
+      </div>
+
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         {order.map((key, i) => {
           const val = fMap[key] || 0;
