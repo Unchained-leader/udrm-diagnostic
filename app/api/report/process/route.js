@@ -57,7 +57,7 @@ async function sendPipelineAlert(alertKey, message) {
   } catch (e) { console.error("[Slack] Pipeline alert failed:", e.message); }
 }
 
-async function checkPipelineLimits(email) {
+async function checkPipelineLimits() {
   try {
     const sql = getDb();
 
@@ -70,12 +70,21 @@ async function checkPipelineLimits(email) {
       await sendPipelineAlert("email_limit", `:warning: *Email limit alert* <!channel>\nEmails sent today: ${emailsToday}/${emailLimit} (${Math.round(emailsToday / emailLimit * 100)}%)\nAction: Upgrade Resend plan`);
     }
 
-    // Check failures in last hour
-    const [failRow] = await sql`SELECT COUNT(*) as total FROM pipeline_metrics
+    // Threshold is in distinct affected users, not raw row count — a single user
+    // retrying 3× during a brief upstream blip should not page @channel.
+    const [failRow] = await sql`SELECT COUNT(DISTINCT email) as users, COUNT(*) as total FROM pipeline_metrics
       WHERE event_type = 'report_failed' AND created_at > NOW() - INTERVAL '1 hour'`;
-    const recentFailures = parseInt(failRow?.total || 0);
-    if (recentFailures >= 3) {
-      await sendPipelineAlert("failures", `:rotating_light: *Pipeline failure spike* <!channel>\n${recentFailures} report failures in the last hour\nLatest: ${email || "unknown"}\nCheck Vercel logs immediately`);
+    const affectedUsers = parseInt(failRow?.users || 0);
+    const totalFailures = parseInt(failRow?.total || 0);
+    if (affectedUsers >= 3) {
+      const [latestFail] = await sql`SELECT email, service, error_message FROM pipeline_metrics
+        WHERE event_type = 'report_failed' AND created_at > NOW() - INTERVAL '1 hour'
+        ORDER BY created_at DESC LIMIT 1`;
+      const breakdown = await sql`SELECT service, COUNT(*) as n FROM pipeline_metrics
+        WHERE event_type = 'report_failed' AND created_at > NOW() - INTERVAL '1 hour'
+        GROUP BY service ORDER BY n DESC`;
+      const byService = breakdown.map(r => `${r.service}=${r.n}`).join(", ") || "unknown";
+      await sendPipelineAlert("failures", `:rotating_light: *Pipeline failure spike* <!channel>\n${affectedUsers} users affected by report failures in the last hour (${totalFailures} total events: ${byService})\nLatest failure: ${latestFail?.email || "unknown"}${latestFail?.error_message ? ` — ${latestFail.error_message.slice(0, 200)}` : ""}\nCheck Vercel logs immediately`);
     }
   } catch (e) { console.error("[Metrics] Limit check failed (non-fatal):", e.message); }
 }
@@ -164,7 +173,7 @@ export async function POST(request) {
       tokensInput: usage.input_tokens, tokensOutput: usage.output_tokens,
       durationMs: analysisDuration, costCents: calcCostCents(usage.input_tokens, usage.output_tokens),
     });
-    checkPipelineLimits(normalizedEmail); // async, non-blocking
+    checkPipelineLimits(); // async, non-blocking
 
     // Sanitize all string values: strip em dashes + internal code identifiers
     function cleanStr(s) {
@@ -245,6 +254,7 @@ export async function POST(request) {
     } catch (emailErr) {
       console.error("[QStash] Email delivery error:", emailErr.message);
       logMetric({ service: "resend", eventType: "report_failed", email: normalizedEmail, errorMessage: emailErr.message });
+      checkPipelineLimits(); // async, non-blocking
       await redis.set(`mkt:status:${normalizedEmail}`, { step: "email_failed", message: "Report ready on dashboard. Email delivery failed.", completedAt: new Date().toISOString() }, { ex: 3600 }).catch(() => {});
     }
 
@@ -354,6 +364,7 @@ export async function POST(request) {
     return Response.json({ success: true, message: "Report processed" });
   } catch (error) {
     logMetric({ service: "anthropic", eventType: "report_failed", email: normalizedEmail, errorMessage: error.message });
+    checkPipelineLimits(); // async, non-blocking — fire the threshold check even when no success has happened
     console.error(`[QStash] Report processing failed for ${normalizedEmail}:`, error.message);
     console.error("[QStash] Error stack:", error.stack);
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "failed", message: "Report generation failed. Please try again.", error: error.message }, { ex: 3600 }).catch(() => {});
