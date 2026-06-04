@@ -5,6 +5,7 @@ import { ghlContactCreated } from "../../lib/ghl";
 import { zapierDiagnosticSubmitted } from "../../lib/zapier";
 import { corsHeaders, optionsResponse } from "../../lib/cors";
 import { normalizeEmail, parseRedis } from "../../lib/utils";
+import { getDb } from "../../lib/db";
 
 const CORS_HEADERS = corsHeaders("POST, OPTIONS");
 
@@ -12,9 +13,42 @@ export async function OPTIONS() {
   return optionsResponse("POST, OPTIONS");
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Durable identity capture — survives a Redis/cache outage.
+// The June 2026 outage lost ~300 finished quizzes because identity
+// (email/name) was only ever written to Redis; when Redis rejected
+// writes, registration threw before GHL/Zapier fired and nothing
+// durable recorded WHO the person was. This writes identity to
+// Postgres (which is independent of the cache) and, when the quiz
+// frontend supplies sessionId, links it to the anonymous answers
+// already in quiz_responses so a report can be regenerated later.
+// ═══════════════════════════════════════════════════════════════
+let _regTableReady = false;
+async function persistRegistration({ sessionId, email, name, phone, gender, trafficSource, geo }) {
+  const sql = getDb();
+  if (!_regTableReady) {
+    await sql`CREATE TABLE IF NOT EXISTS quiz_registrations (
+      id SERIAL PRIMARY KEY,
+      session_id VARCHAR(255),
+      email VARCHAR(255) NOT NULL,
+      name VARCHAR(255),
+      phone VARCHAR(64),
+      gender VARCHAR(32),
+      traffic_source VARCHAR(255),
+      geo_city VARCHAR(255), geo_region VARCHAR(255), geo_country VARCHAR(16), geo_ip VARCHAR(64),
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`;
+    _regTableReady = true;
+  }
+  await sql`INSERT INTO quiz_registrations
+    (session_id, email, name, phone, gender, traffic_source, geo_city, geo_region, geo_country, geo_ip)
+    VALUES (${sessionId || null}, ${email}, ${name || null}, ${phone || null}, ${gender || null},
+            ${trafficSource || null}, ${geo.city}, ${geo.region}, ${geo.country}, ${geo.ip})`;
+}
+
 export async function POST(request) {
   try {
-    const { email, name, phone, pin, gender, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = await request.json();
+    const { email, name, phone, pin, gender, sessionId, trafficSource, embedParentUrl, referrerUrl, utmSource, utmMedium, utmCampaign } = await request.json();
     const normalizedEmail = normalizeEmail(email);
     const trimmedName = (name || "").trim();
 
@@ -39,78 +73,58 @@ export async function POST(request) {
       return Response.json({ error: "PIN must be exactly 4 digits." }, { status: 400, headers: CORS_HEADERS });
     }
 
-    const userKey = `mkt:user:${normalizedEmail}`;
-    const existing = await redis.get(userKey);
     const hashedPin = await bcrypt.hash(String(pin), 10);
 
-    if (existing) {
-      // User exists — update with PIN if not already set, mark diagnostic complete
-      const userData = parseRedis(existing);
-      userData.diagnosticComplete = true;
-      userData.diagnosticCompletedAt = new Date().toISOString();
-      if (!userData.dashboardPin) {
-        userData.dashboardPin = hashedPin;
-      }
-      // Update geo data on each registration/completion
-      userData.geo = geo;
-      await redis.set(userKey, userData);
+    // ── DURABLE FIRST: capture identity to Postgres + CRM, independent of the cache. ──
+    // These run regardless of whether Redis is healthy, so an outage can never again
+    // lose who completed the quiz.
+    persistRegistration({ sessionId, email: normalizedEmail, name: trimmedName, phone, gender, trafficSource, geo })
+      .catch((e) => console.error("[Register] Postgres identity capture failed (non-fatal):", e.message));
 
-      zapierDiagnosticSubmitted({
-        email: normalizedEmail,
-        name: userData.name || trimmedName,
-        phone: userData.phone || "",
-        ip: geo.ip || "",
-      }).catch((e) => console.error("Zapier webhook error:", e.message));
-
-      const token = await createDashboardToken(normalizedEmail, userData.name || trimmedName);
-
-      const response = new Response(JSON.stringify({ success: true, name: userData.name || trimmedName, token }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...CORS_HEADERS },
-      });
-      setTokenCookie(response, token);
-      return response;
-    }
-
-    // New user — create account with PIN and diagnostic flag
-    const userData = {
-      name: trimmedName,
-      phone: phone || "",
-      gender: gender || "",
-      createdAt: new Date().toISOString(),
-      diagnosticComplete: true,
-      diagnosticCompletedAt: new Date().toISOString(),
-      dashboardPin: hashedPin,
-      geo,
-      trafficSource: trafficSource || "",
-      embedParentUrl: embedParentUrl || "",
-    };
-    await redis.set(userKey, userData);
-
-    // Send to GoHighLevel CRM
     ghlContactCreated({
-      email: normalizedEmail,
-      name: trimmedName,
-      phone: phone || "",
-      gender: gender || "",
-      trafficSource: trafficSource || "",
-      embedParentUrl: embedParentUrl || "",
-      referrerUrl: referrerUrl || "",
-      utmSource: utmSource || "",
-      utmMedium: utmMedium || "",
-      utmCampaign: utmCampaign || "",
+      email: normalizedEmail, name: trimmedName, phone: phone || "", gender: gender || "",
+      trafficSource: trafficSource || "", embedParentUrl: embedParentUrl || "",
+      referrerUrl: referrerUrl || "", utmSource: utmSource || "", utmMedium: utmMedium || "", utmCampaign: utmCampaign || "",
     }).catch((e) => console.error("GHL webhook error:", e.message));
 
     zapierDiagnosticSubmitted({
-      email: normalizedEmail,
-      name: trimmedName,
-      phone: phone || "",
-      ip: geo.ip || "",
+      email: normalizedEmail, name: trimmedName, phone: phone || "", ip: geo.ip || "",
     }).catch((e) => console.error("Zapier webhook error:", e.message));
 
-    const token = await createDashboardToken(normalizedEmail, trimmedName);
+    // ── BEST-EFFORT: cache write for the live dashboard. Non-fatal if Redis is down. ──
+    let resolvedName = trimmedName;
+    try {
+      const userKey = `mkt:user:${normalizedEmail}`;
+      const existing = await redis.get(userKey);
+      if (existing) {
+        const userData = parseRedis(existing);
+        userData.diagnosticComplete = true;
+        userData.diagnosticCompletedAt = new Date().toISOString();
+        if (!userData.dashboardPin) userData.dashboardPin = hashedPin;
+        userData.geo = geo;
+        await redis.set(userKey, userData);
+        resolvedName = userData.name || trimmedName;
+      } else {
+        await redis.set(userKey, {
+          name: trimmedName,
+          phone: phone || "",
+          gender: gender || "",
+          createdAt: new Date().toISOString(),
+          diagnosticComplete: true,
+          diagnosticCompletedAt: new Date().toISOString(),
+          dashboardPin: hashedPin,
+          geo,
+          trafficSource: trafficSource || "",
+          embedParentUrl: embedParentUrl || "",
+        });
+      }
+    } catch (e) {
+      console.error("[Register] Redis cache write failed (non-fatal — identity captured in Postgres + CRM):", e.message);
+    }
 
-    const response = new Response(JSON.stringify({ success: true, name: trimmedName, token }), {
+    // Token signing does not depend on Redis, so the user can still proceed.
+    const token = await createDashboardToken(normalizedEmail, resolvedName);
+    const response = new Response(JSON.stringify({ success: true, name: resolvedName, token }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...CORS_HEADERS },
     });

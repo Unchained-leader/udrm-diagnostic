@@ -95,7 +95,7 @@ export async function POST(request) {
           : newSummary;
 
       await Promise.all([
-        redis.set(summaryKey, trimmedSummary),
+        redis.set(summaryKey, trimmedSummary, { ex: 2592000 }),
         redis.set(historyKey, recentMessages),
       ]);
 
@@ -126,7 +126,7 @@ export async function POST(request) {
             : newSummary;
 
         await Promise.all([
-          redis.set(summaryKey, trimmedSummary),
+          redis.set(summaryKey, trimmedSummary, { ex: 2592000 }),
           redis.set(historyKey, []),
         ]);
       }
