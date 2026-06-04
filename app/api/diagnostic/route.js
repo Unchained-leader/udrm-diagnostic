@@ -46,10 +46,13 @@ export async function POST(request) {
       savedAt: new Date().toISOString(),
     };
 
-    // Save to Redis with mkt:diagnostic:{email} key
+    // Save to Redis with mkt:diagnostic:{email} key.
+    // 7-day TTL: in-flight quiz draft, deleted explicitly on successful report
+    // generation; this ceiling cleans up abandoned mid-quiz sessions.
     await redis.set(
       `mkt:diagnostic:${normalizedEmail}`,
-      JSON.stringify(diagnosticData)
+      JSON.stringify(diagnosticData),
+      { ex: 604800 }
     );
 
     // Also update user record to mark diagnostic as complete
