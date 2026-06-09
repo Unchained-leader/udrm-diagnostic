@@ -1,4 +1,5 @@
 import { getDb } from "../lib/db";
+import { PRODUCT_TAG } from "../lib/product";
 import { corsHeaders, optionsResponse } from "../lib/cors";
 import { parseRedis } from "../lib/utils";
 
@@ -72,14 +73,14 @@ export async function POST(request) {
     // Record the event
     await sql`
       INSERT INTO analytics_events (session_id, product, event_type, event_data, ip_address, geo_city, geo_region, geo_country, geo_lat, geo_lon)
-      VALUES (${sessionId}, ${product || "udrm"}, ${eventType}, ${JSON.stringify(eventData || {})}, ${geoIp}, ${geoCity}, ${geoRegion}, ${geoCountry}, ${geoLat}, ${geoLon})
+      VALUES (${sessionId}, ${product || PRODUCT_TAG}, ${eventType}, ${JSON.stringify(eventData || {})}, ${geoIp}, ${geoCity}, ${geoRegion}, ${geoCountry}, ${geoLat}, ${geoLon})
     `;
 
     // If this includes quiz response data, also save to quiz_responses
     if (selections || singleSelection) {
       await sql`
         INSERT INTO quiz_responses (session_id, email, product, section_num, question_id, selections, single_selection, text_response)
-        VALUES (${sessionId}, ${email || null}, ${product || "udrm"}, ${sectionNum || 0}, ${questionId || null}, ${selections || []}, ${singleSelection || null}, ${textResponse || null})
+        VALUES (${sessionId}, ${email || null}, ${product || PRODUCT_TAG}, ${sectionNum || 0}, ${questionId || null}, ${selections || []}, ${singleSelection || null}, ${textResponse || null})
       `;
     }
 
@@ -103,7 +104,7 @@ export async function GET(request) {
     await ensureSchema();
 
     const view = searchParams.get("view") || "funnel";
-    const product = searchParams.get("product") || "udrm";
+    const product = searchParams.get("product") || PRODUCT_TAG;
     const days = parseInt(searchParams.get("days")) || 30;
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");

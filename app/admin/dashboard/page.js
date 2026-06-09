@@ -149,6 +149,7 @@ export default function Dashboard() {
           </select>
           <select value={product} onChange={e => setProduct(e.target.value)} style={S.select}>
             <option value="udrm">UDRM Quiz</option>
+            <option value="90dtf">90DTF</option>
             <option value="all">All Products</option>
           </select>
           <select value={dateMode === "custom" ? "custom" : days} onChange={e => {

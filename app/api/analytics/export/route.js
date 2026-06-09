@@ -1,4 +1,5 @@
 import { getDb } from "../../lib/db";
+import { PRODUCT_TAG } from "../../lib/product";
 
 export async function GET(request) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request) {
     }
 
     const type = searchParams.get("type") || "diagnostics";
-    const product = searchParams.get("product") || "udrm";
+    const product = searchParams.get("product") || PRODUCT_TAG;
     const days = parseInt(searchParams.get("days")) || 90;
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
     const sql = getDb();

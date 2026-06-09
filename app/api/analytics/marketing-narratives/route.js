@@ -1,4 +1,5 @@
 import { getDb } from "../../lib/db";
+import { PRODUCT_TAG } from "../../lib/product";
 import redis from "../../lib/redis";
 
 /**
@@ -44,14 +45,14 @@ export async function GET(request) {
     // Get total count
     const [countRow] = await sql`
       SELECT COUNT(*) as total FROM completed_diagnostics
-      WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+      WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
     `;
     const total = parseInt(countRow.total);
 
     // Get paginated emails
     const rows = await sql`
       SELECT email FROM completed_diagnostics
-      WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+      WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
       ORDER BY created_at ASC
       LIMIT ${limit} OFFSET ${offset}
     `;

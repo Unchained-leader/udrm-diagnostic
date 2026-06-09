@@ -1,4 +1,5 @@
 import { getDb } from "../../lib/db";
+import { PRODUCT_TAG } from "../../lib/product";
 import { corsHeaders, optionsResponse } from "../../lib/cors";
 
 const CORS_HEADERS = corsHeaders("GET, OPTIONS");
@@ -23,15 +24,15 @@ export async function GET(request) {
     const dateLabel = yesterday.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
     // Quiz starts
-    const startsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'quiz_start' AND product = 'udrm' AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
+    const startsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'quiz_start' AND product = ${PRODUCT_TAG} AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
     const starts = parseInt(startsRes[0]?.c) || 0;
 
     // Completions (contact capture)
-    const completionsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'contact_capture_complete' AND product = 'udrm' AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
+    const completionsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'contact_capture_complete' AND product = ${PRODUCT_TAG} AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
     const completions = parseInt(completionsRes[0]?.c) || 0;
 
     // Reports generated
-    const reportsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'report_generated' AND product = 'udrm' AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
+    const reportsRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'report_generated' AND product = ${PRODUCT_TAG} AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
     const reports = parseInt(reportsRes[0]?.c) || 0;
 
     // Conversion rate
@@ -45,7 +46,7 @@ export async function GET(request) {
     ];
     const sectionCounts = [];
     for (const evt of sectionEvents) {
-      const res = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = ${evt} AND product = 'udrm' AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
+      const res = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = ${evt} AND product = ${PRODUCT_TAG} AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp`;
       sectionCounts.push({ event: evt, count: parseInt(res[0]?.c) || 0 });
     }
 
@@ -70,7 +71,7 @@ export async function GET(request) {
       const behaviorRes = await sql`
         SELECT unnest(selections) as sel, COUNT(*) as c
         FROM quiz_responses
-        WHERE section_num = 1 AND product = 'udrm'
+        WHERE section_num = 1 AND product = ${PRODUCT_TAG}
         AND created_at >= ${dayStart}::timestamp AND created_at <= ${dayEnd}::timestamp
         GROUP BY sel ORDER BY c DESC LIMIT 1`;
       if (behaviorRes.length > 0) {
@@ -91,8 +92,8 @@ export async function GET(request) {
       const from = new Date();
       from.setDate(from.getDate() - daysBack);
       const fromStr = from.toISOString();
-      const sRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'quiz_start' AND product = 'udrm' AND created_at >= ${fromStr}::timestamp`;
-      const cRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'contact_capture_complete' AND product = 'udrm' AND created_at >= ${fromStr}::timestamp`;
+      const sRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'quiz_start' AND product = ${PRODUCT_TAG} AND created_at >= ${fromStr}::timestamp`;
+      const cRes = await sql`SELECT COUNT(DISTINCT session_id) as c FROM analytics_events WHERE event_type = 'contact_capture_complete' AND product = ${PRODUCT_TAG} AND created_at >= ${fromStr}::timestamp`;
       const s = parseInt(sRes[0]?.c) || 0;
       const c = parseInt(cRes[0]?.c) || 0;
       const rate = s > 0 ? ((c / s) * 100).toFixed(1) : "0.0";
@@ -159,11 +160,11 @@ export async function GET(request) {
         + `${volumeTrend}\n\n`
         + `*7-Day Forecast (at current pace):* ~${forecastWeeklyStarts} starts, ~${forecastWeeklyCompletions} completions\n\n`
         + `───────────────────\n`
-        + `Full dashboard: https://unchainedleader.io/admin/dashboard`;
+        + `Full dashboard: ${process.env.NEXT_PUBLIC_APP_URL || "https://unchainedleader.io"}/admin/dashboard`;
     } else {
       message = `:bar_chart: *DAILY PERFORMANCE SUMMARY*\n${dateLabel}\n\nNo quiz activity in the last 3 days.\n\n`
         + `*30-Day Totals:* ${d30.starts} starts, ${d30.completions} completions, ${d30.rate}% conversion\n\n`
-        + `Dashboard: https://unchainedleader.io/admin/dashboard`;
+        + `Dashboard: ${process.env.NEXT_PUBLIC_APP_URL || "https://unchainedleader.io"}/admin/dashboard`;
     }
 
     // Send to Slack (NO @channel tag for daily summaries)

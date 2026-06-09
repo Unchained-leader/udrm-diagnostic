@@ -1,4 +1,5 @@
 import { getDb } from "../../lib/db";
+import { PRODUCT_TAG } from "../../lib/product";
 import redis from "../../lib/redis";
 import { corsHeaders, optionsResponse } from "../../lib/cors";
 
@@ -57,7 +58,7 @@ export async function GET(request) {
     if (include.includes("diagnostics")) {
       const [countRow] = await sql`
         SELECT COUNT(*) as total FROM completed_diagnostics
-        WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+        WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
       `;
       const total = parseInt(countRow.total);
 
@@ -70,7 +71,7 @@ export async function GET(request) {
           report_url, report_generated_at, quiz_started_at, quiz_completed_at,
           geo_city, geo_region, geo_country, traffic_source, created_at
         FROM completed_diagnostics
-        WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+        WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
         ORDER BY created_at ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -84,7 +85,7 @@ export async function GET(request) {
         SELECT id, session_id, email, product, section_num, question_id,
                selections, single_selection, text_response, created_at
         FROM quiz_responses
-        WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+        WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
         ORDER BY session_id, section_num, created_at ASC
       `;
       result.responses = { total: rows.length, rows };
@@ -96,7 +97,7 @@ export async function GET(request) {
         SELECT session_id, product, event_type, event_data,
                geo_city, geo_region, geo_country, created_at
         FROM analytics_events
-        WHERE product = 'udrm' AND created_at >= ${utcStart} AND created_at < ${utcEnd}
+        WHERE product = ${PRODUCT_TAG} AND created_at >= ${utcStart} AND created_at < ${utcEnd}
         ORDER BY created_at ASC
       `;
       result.events = { total: rows.length, rows };
