@@ -1270,6 +1270,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     // Church
     church_shameful: "Sex = Shameful", church_purity: "Purity Culture", church_thoughts_sin: "Thoughts = Sin",
     church_good_kid: "Had to Be Good", church_conditional: "Conditional Acceptance",
+    church_not_raised: "Not Raised in Church", church_positive: "Positive Influence", church_minimal: "Attended, Minor Role",
     // Attachment
     anx_leave: "Fear of Leaving", anx_reassurance: "Need Reassurance", anx_conflict_end: "Fear Conflict = End",
     avoid_pull_away: "Pull Away When Close", avoid_sexual_easy: "Sexual > Emotional", avoid_withdraw: "Withdraw Under Stress",
@@ -1324,7 +1325,7 @@ function ResearchView({ data, days, dateMode, startDate, endDate }) {
     { title: "Home Environment", color: "#795548", multi: sec5, ids: ["home_warm","home_cold","home_unpredictable","home_conflict","home_controlled","home_conditional","home_no_emotions"] },
     { title: "Father Relationship", color: "#607D8B", multi: sec5, ids: ["dad_close","dad_distant","dad_critical","dad_approval","dad_sexual"] },
     { title: "Mother Relationship", color: "#9E9E9E", multi: sec5, ids: ["mom_close","mom_enmeshed","mom_distant","mom_critical","mom_responsible"] },
-    { title: "Church / Faith Background", color: "#FF9800", multi: sec5, ids: ["church_shameful","church_purity","church_thoughts_sin","church_good_kid","church_conditional"] },
+    { title: "Church / Faith Background", color: "#FF9800", multi: sec5, ids: ["church_shameful","church_purity","church_thoughts_sin","church_good_kid","church_conditional","church_not_raised","church_positive","church_minimal"] },
     { title: "Attachment Patterns", color: "#2196F3", multi: sec5, ids: ["anx_leave","anx_reassurance","anx_conflict_end","avoid_pull_away","avoid_sexual_easy","avoid_withdraw","fear_crave_push","fear_both","fear_swing","sec_comfortable","sec_conflict_ok","sec_trust","god_disappointed","god_avoid","god_grace_cant_feel","god_like_father","god_performance"] },
     { title: "Relational Patterns", color: "#3F51B5", multi: sec5, ids: ["cod_needs","cod_responsible","cod_worth","enm_parent_emotions","enm_therapist","enm_boundaries","void_no_one","void_perform","void_never_told","lead_disqualified","lead_no_one_serves","lead_lose_position"] },
     { title: "Strategies Tried", color: "#4CAF50", multi: sec9, ids: ["strat_filters","strat_accountability","strat_prayer","strat_willpower","strat_therapy","strat_group","strat_rehab","strat_program","strat_confession","strat_books","strat_cold_turkey","strat_medication","strat_deliverance","strat_environment","strat_dating","strat_nothing"] },

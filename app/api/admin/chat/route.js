@@ -120,7 +120,7 @@ Section 6 (Upbringing):
 - Home: home_warm, home_cold, home_unpredictable, home_conflict, home_controlled, home_conditional, home_no_emotions
 - Father: dad_close, dad_distant, dad_critical, dad_approval, dad_sexual
 - Mother: mom_close, mom_enmeshed, mom_distant, mom_critical, mom_responsible
-- Church: church_shameful, church_purity, church_thoughts_sin, church_good_kid, church_conditional
+- Church: church_shameful, church_purity, church_thoughts_sin, church_good_kid, church_conditional, church_not_raised, church_positive, church_minimal
 
 Section 7 (Attachment):
 anx_leave, anx_reassurance, anx_conflict_end, avoid_pull_away, avoid_sexual_easy, avoid_withdraw, fear_crave_push, fear_both, fear_swing, sec_comfortable, sec_conflict_ok, sec_trust, god_disappointed, god_avoid, god_grace_cant_feel, god_like_father, god_performance

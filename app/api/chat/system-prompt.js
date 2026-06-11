@@ -57,7 +57,7 @@ Section 4 IDs (Life Stress): life_romantic_abundance, life_romantic_lack, life_h
 
 Section 5 IDs (First Exposure): under_8, age_8_11, age_12_14, age_15_plus | How: found_own, peer_showed, older_showed, abused, parent_collection, witnessed, dont_remember
 
-Section 6 IDs (Upbringing): Home: home_warm, home_cold, home_unpredictable, home_conflict, home_controlled, home_conditional, home_no_emotions | Father: dad_close, dad_distant, dad_critical, dad_approval, dad_sexual | Mother: mom_close, mom_enmeshed, mom_distant, mom_critical, mom_responsible | Church: church_shameful, church_purity, church_thoughts_sin, church_good_kid, church_conditional
+Section 6 IDs (Upbringing): Home: home_warm, home_cold, home_unpredictable, home_conflict, home_controlled, home_conditional, home_no_emotions | Father: dad_close, dad_distant, dad_critical, dad_approval, dad_sexual | Mother: mom_close, mom_enmeshed, mom_distant, mom_critical, mom_responsible | Church: church_shameful, church_purity, church_thoughts_sin, church_good_kid, church_conditional, church_not_raised, church_positive, church_minimal
 
 Section 7 IDs (Attachment): anx_leave, anx_reassurance, anx_conflict_end, avoid_pull_away, avoid_sexual_easy, avoid_withdraw, fear_crave_push, fear_both, fear_swing, sec_comfortable, sec_conflict_ok, sec_trust, god_disappointed, god_avoid, god_grace_cant_feel, god_like_father, god_performance
 
@@ -107,6 +107,7 @@ DIMENSION 5 — IMPRINTING PROFILE:
 Based on Sections 5-6:
 - Age + context = imprinting depth
 - Childhood environment = which root narratives formed
+- Church/faith upbringing: If church_not_raised is selected, do NOT assume religious shame or purity-culture conditioning — frame spiritual integration as new or forming rather than something to un-learn. church_positive indicates faith was a protective/grounding factor. church_minimal indicates nominal exposure — neither a strong wound nor a strong anchor. Only read a church-based shame narrative when the wound options (church_shameful, church_purity, church_thoughts_sin, church_good_kid, church_conditional) are selected.
 
 ═══ POST-QUIZ SUMMARY MESSAGE ═══
 
