@@ -217,8 +217,8 @@ export async function POST(request) {
       neuropathway: analysis.neuropathway,
       reportUrl: null, // Will be updated after PDF upload
     };
-    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
-    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis);
+    await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 7776000 });
+    await redis.set(`mkt:analysis:${normalizedEmail}`, analysis, { ex: 7776000 });
 
     // Append to report history
     const historyEntry = { ...reportMeta, analysis };
@@ -226,7 +226,7 @@ export async function POST(request) {
     let history = Array.isArray(existingHistory) ? existingHistory : [];
     history.push(historyEntry);
     if (history.length > 10) history = history.slice(-10);
-    await redis.set(`mkt:history:${normalizedEmail}`, history);
+    await redis.set(`mkt:history:${normalizedEmail}`, history, { ex: 7776000 });
 
     // Update status — results are now available in dashboard
     await redis.set(`mkt:status:${normalizedEmail}`, { step: "complete", message: "Your results are ready", completedAt: new Date().toISOString() }, { ex: 3600 });
@@ -271,11 +271,11 @@ export async function POST(request) {
 
       // Update Redis with PDF URL
       reportMeta.reportUrl = reportUrl;
-      await redis.set(`mkt:report:${normalizedEmail}`, reportMeta);
+      await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 7776000 });
       const updatedHistory = await redis.get(`mkt:history:${normalizedEmail}`);
       if (Array.isArray(updatedHistory) && updatedHistory.length > 0) {
         updatedHistory[updatedHistory.length - 1].reportUrl = reportUrl;
-        await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory);
+        await redis.set(`mkt:history:${normalizedEmail}`, updatedHistory, { ex: 7776000 });
       }
     } catch (pdfErr) {
       console.error("[QStash] PDF capture pipeline failed (dashboard data safe):", pdfErr.message);
