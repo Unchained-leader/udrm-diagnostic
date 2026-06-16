@@ -81,7 +81,7 @@ async function checkPipelineLimits(email) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Retry helper — exponential backoff with jitter for Claude 429s
+// Retry helper — exponential backoff with jitter for transient Claude 429/5xx errors
 // ═══════════════════════════════════════════════════════════════
 async function callWithBackoff(fn, { maxRetries = 4, label = "API", email } = {}) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
