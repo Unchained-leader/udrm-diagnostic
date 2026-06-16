@@ -49,7 +49,7 @@ export async function POST(request) {
     // Save to Redis with mkt:diagnostic:{email} key
     await redis.set(
       `mkt:diagnostic:${normalizedEmail}`,
-      JSON.stringify(diagnosticData)
+      JSON.stringify(diagnosticData), { ex: 604800 }
     );
 
     // Also update user record to mark diagnostic as complete
