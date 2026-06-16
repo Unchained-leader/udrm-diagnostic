@@ -48,7 +48,7 @@ async function sendPipelineAlert(alertKey, message) {
     const lockKey = `pipeline:alert:${alertKey}`;
     const existing = await redis.get(lockKey);
     if (existing) return; // Already alerted within TTL
-    await redis.set(lockKey, "1", { ex: 300 }); // 5 min dedup
+    await redis.set(lockKey, "1", { ex: 3600 }); // 1 hour dedup
     await fetch(process.env.SLACK_WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,7 +75,7 @@ async function checkPipelineLimits(email) {
       WHERE event_type = 'report_failed' AND created_at > NOW() - INTERVAL '1 hour'`;
     const recentFailures = parseInt(failRow?.total || 0);
     if (recentFailures >= 3) {
-      await sendPipelineAlert("failures", `:rotating_light: *Pipeline failure spike* <!channel>\n${recentFailures} report failures in the last hour\nLatest: ${email || "unknown"}\nCheck Vercel logs immediately`);
+      await sendPipelineAlert("failures", `:rotating_light: *Pipeline failure spike* <!channel>\n${recentFailures} report failures in the last hour\nSee the dashboard Recent Failures list for affected users\nCheck Vercel logs immediately`);
     }
   } catch (e) { console.error("[Metrics] Limit check failed (non-fatal):", e.message); }
 }
@@ -89,7 +89,7 @@ async function callWithBackoff(fn, { maxRetries = 4, label = "API", email } = {}
       return await fn();
     } catch (err) {
       const status = err?.status || err?.statusCode;
-      if (status === 429 && attempt < maxRetries) {
+      if ([429, 500, 503, 529].includes(status) && attempt < maxRetries) {
         const retryAfter = parseInt(err?.headers?.["retry-after"] || "0", 10);
         const backoff = Math.max(retryAfter * 1000, Math.pow(2, attempt) * 1000 + Math.random() * 1000);
         console.warn(`[${label}] 429 rate limited, attempt ${attempt + 1}/${maxRetries}, waiting ${Math.round(backoff / 1000)}s`);
