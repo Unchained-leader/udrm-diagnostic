@@ -600,6 +600,9 @@
     script.src = "https://208457.t.hyros.com/v1/lst/universal-script?ph=94e88c0df758aa6334d28cc01b34d0b4db62339cba482a48a46dc0edc598e6ef&tag=!clicked&ref_url=" + encodeURI(document.URL) ;
     head.appendChild(script);
   </script>
+
+  <!-- OpenAI Ads base pixel -->
+  <script>!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");oaiq("init",{pixelId:"77Xc7bK3ZXoM6SjitCS3bJ",debug:true});</script>
 </head>
 <body>
 
@@ -1599,6 +1602,11 @@
         // Meta pixel: Lead
         if (typeof fbq === "function") {
           fbq("track", "Lead");
+        }
+
+        // OpenAI pixel: Lead
+        if (typeof oaiq === "function") {
+          oaiq("measure", "lead_created", { type: "customer_action" });
         }
 
         // Save diagnostic data
