@@ -104,7 +104,8 @@ export async function POST(request) {
       return Response.json({ error: "No account found. Please register first." }, { status: 404, headers: CORS_HEADERS });
     }
 
-    const userName = name || user.name || "Brother";
+    const defaultName = (gender || "").toLowerCase() === "female" ? "Sister" : "Brother";
+    const userName = name || user.name || defaultName;
     const firstName = userName.split(" ")[0];
 
     // Get diagnostic messages
@@ -158,7 +159,8 @@ export async function POST(request) {
 export async function processReport({ email, name, gender, ageRange, geo }) {
   const normalizedEmail = normalizeEmail(email);
   const lockKey = `mkt:lock:${normalizedEmail}`;
-  const userName = name || "Brother";
+  const defaultName = (gender || "").toLowerCase() === "female" ? "Sister" : "Brother";
+  const userName = name || defaultName;
   const firstName = userName.split(" ")[0];
 
   try {
@@ -214,6 +216,7 @@ export async function processReport({ email, name, gender, ageRange, geo }) {
       arousalTemplateType: analysis.arousalTemplateType,
       attachmentStyle: analysis.attachmentStyle,
       neuropathway: analysis.neuropathway,
+      gender: gender || null,
       reportUrl: null,
     };
     await redis.set(`mkt:report:${normalizedEmail}`, reportMeta, { ex: 2592000 });
@@ -425,7 +428,7 @@ Age Range: ${demographics.ageRange ? demographics.ageRange.replace("age_", "").r
 IMPORTANT: Adapt ALL report language to match the person's gender and age. If female, use "woman," "her," "she," "wife/mother/daughter" framing instead of "man," "him," "he," "husband/father/son." Adjust life-stage references to match their age range (e.g. a man in his 20s has different concerns than a man in his 50s). If gender is "female," replace masculine kingdom language ("man of God," "kingdom man," "his assignment") with feminine equivalents ("woman of God," "kingdom woman," "her assignment"). The Marketing Bible defaults to male language because the primary audience is men, but the report must be personalized to whoever is taking it.
 
 GENERATIONAL CONTEXT:
-The user's age range (${demographics.ageRange || "not specified"}) places him in the ${generationLabel} cohort.
+The user's age range (${demographics.ageRange || "not specified"}) places them in the ${generationLabel} cohort.
 
 Each generation encountered sexual content in radically different ways and carries distinct shame architectures:
 - Silent Generation / Boomers: Hidden magazines, film, extreme taboo. Exposure typically in late adolescence or adulthood. Church framed all sexuality as moral failure. "Don't ask, don't tell" silence culture. Recovery framing centers on willpower and moral failure.
@@ -441,7 +444,7 @@ CONVERSATION:
 ${conversationText}
 
 CO-OCCURRING COPING BEHAVIORS (based on Section 1 vice_ selections):
-If the user selected any vice_ items, use these to help them see a critical truth: this was never a lust problem or a perversion problem. Just like it is not a substance problem, a food problem, or a gambling problem. Every unwanted behavior and desire is a symptom of the brain's creative attempt to medicate or escape root-level pain. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When a man tries to white-knuckle his primary behavior, the brain reroutes the same unresolved pain through other coping mechanisms. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is exactly why behavior-level solutions are dangerous, and why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
+If the user selected any vice_ items, use these to help them see a critical truth: this was never a lust problem or a perversion problem. Just like it is not a substance problem, a food problem, or a gambling problem. Every unwanted behavior and desire is a symptom of the brain's creative attempt to medicate or escape root-level pain. The brain does not care HOW it gets relief, it only cares THAT it gets relief. When someone tries to white-knuckle their primary behavior, the brain reroutes the same unresolved pain through other coping mechanisms. Alcohol, overeating, gambling, gaming, spending, overworking are not separate problems. They are the same root narrative expressing itself through different neurochemical pathways. This is exactly why behavior-level solutions are dangerous, and why root-level healing through the RNR process is essential. You cannot win a game of whack-a-mole with your nervous system.
 - vice_alcohol → Alcohol as nervous system regulation. Depressant that mimics the numbing the brain needs.
 - vice_thc → THC/marijuana as nervous system sedation. Dulls anxiety and emotional pain the same way the sexual behavior does, just through a different receptor system.
 - vice_substances → Other substance use as neurochemical override. Directly hijacks the same dopamine/serotonin pathways.
@@ -490,23 +493,23 @@ ATTACHMENT STYLES (based on Section 6):
 CRITICAL FORMATTING RULES:
 1. NEVER use em dashes (the long dash character) in any text. Use commas instead.
 2. NEVER include internal variable names, code identifiers, or selection IDs in any text. Do NOT write things like "tab_incest", "conf_wife_others", "cod_needs", "enm_parent_emotions", "god_disappointed", "void_no_one", "lead_disqualified", "val_desired", "pow_dominance", etc. These are internal system identifiers. The report is client-facing. Use plain English descriptions only. Write "incest-themed content" not "tab_incest". Write "fantasies involving your wife with others" not "conf_wife_others". Write "feeling disqualified from leadership" not "lead_disqualified".
-3. NEVER reference "selections" or "items selected" in diagnostic language. Write as if you know the man personally, not as if you are reading a data printout.
+3. NEVER reference "selections" or "items selected" in diagnostic language. Write as if you know the person personally, not as if you are reading a data printout.
 4. NEVER use emojis anywhere in the report. No emoji characters of any kind. This is a clinical diagnostic document, not a text message. Use words only.
-IMPORTANT: We are NOT a clinical practice. NEVER use the word "clinical" when describing our process, our approach, or what we offer. Use alternatives like "specialized," "guided," "professional," "trained," "structured," or "root-level." The word "clinical" is acceptable ONLY when referencing published research (e.g. "research shows") or when describing something the man may have tried (e.g. "clinical therapy"). It must NEVER describe what WE do.
+IMPORTANT: We are NOT a clinical practice. NEVER use the word "clinical" when describing our process, our approach, or what we offer. Use alternatives like "specialized," "guided," "professional," "trained," "structured," or "root-level." The word "clinical" is acceptable ONLY when referencing published research (e.g. "research shows") or when describing something the person may have tried (e.g. "clinical therapy"). It must NEVER describe what WE do.
 
 VOICE GUIDE — SCRIPTURE + SCIENCE INTEGRATION:
-You are writing this report as Mason Cain. Every insight should connect to kingdom purpose. Every Scripture reference should be grounded in neuroscience. The man reading this should feel simultaneously understood by science and seen by God. Never preach. Never lecture. Speak as a fellow traveler who has walked this road and found that faith and psychology are the same explanation viewed from two angles.
+You are writing this report as Mason Cain. Every insight should connect to kingdom purpose. Every Scripture reference should be grounded in neuroscience. The person reading this should feel simultaneously understood by science and seen by God. Never preach. Never lecture. Speak as a fellow traveler who has walked this road and found that faith and psychology are the same explanation viewed from two angles.
 
 VOICE PRINCIPLES:
 1. Lead with identity, not pathology. Not "your pattern indicates anxious attachment." Instead: "You were designed for deep connection, but your nervous system learned to distrust it before you had a choice. That is not a disorder. That is a misalignment between how God wired you and what your story taught you."
-2. Every research-backed insight points to a kingdom truth. Connect the neuropathway to purpose: "Your brain uses this behavior to manage pain. That pain management system kept you alive as a child. But it is now standing between you and the man God is calling you to become."
+2. Every research-backed insight points to a kingdom truth. Connect the neuropathway to purpose: "Your brain uses this behavior to manage pain. That pain management system kept you alive as a child. But it is now standing between you and the person God is calling you to become."
 3. Every Biblical truth is grounded in science. "Romans 12:2 says be transformed by the renewing of your mind. Neuroplasticity research confirms this is literally how the brain works. Paul was not being poetic. He was being precise."
-4. Use kingdom language that connects to masculine purpose. Calling, authority, leadership, legacy, assignment. Not soft devotional language.
+4. Use kingdom language that connects to purpose. Calling, authority, leadership, legacy, assignment.
 5. Name the contradiction between calling and cycle. "You know God has more in store for you. You can feel the assignment on your life. But every time this cycle runs, it erodes the confidence you need to fully step into it. The cycle is not just stealing your purity. It is stealing your authority."
-6. Frame each behavior as a counterfeit of something God designed him to have. The desire underneath is not wrong. It is misdirected. Misdirected desire does not need punishment. It needs restructuring.
-7. Frame the arousal template origin as an attack on destiny. The enemy does not waste ammunition on men with no assignment.
-8. Connect attachment style to capacity for intimacy with God. The same attachment style limiting his marriage is limiting his kingdom capacity.
-9. Frame relational patterns as the environment the cycle needs to survive. Isolation, overperformance, and boundary collapse keep him from the community God designed him to heal in.
+6. Frame each behavior as a counterfeit of something God designed the person to have. The desire underneath is not wrong. It is misdirected. Misdirected desire does not need punishment. It needs restructuring.
+7. Frame the arousal template origin as an attack on destiny. The enemy does not waste ammunition on people with no assignment.
+8. Connect attachment style to capacity for intimacy with God. The same attachment style limiting their marriage is limiting their kingdom capacity.
+9. Frame relational patterns as the environment the cycle needs to survive. Isolation, overperformance, and boundary collapse keep them from the community God designed them to heal in.
 10. The keyInsight and closingStatement must drive home TWO truths simultaneously: (1) The system of root narratives is staggeringly complex — hundreds of interlocking roots encoded across decades, each reinforcing the others. No one can even SEE the full system on their own, let alone untangle it. (2) BUT — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. Frame it like a maze: impossibly complex from the inside, simple when someone hands you the map. Freedom is not complicated — it has just been hidden behind complexity. Use the most direct kingdom language.
 
 Return ONLY valid JSON, no markdown:
@@ -522,20 +525,20 @@ Return ONLY valid JSON, no markdown:
 
   "lifeStressAnalysis": "3-4 sentences connecting the specific abundance/lack selections to the behavioral pattern. Show how each 'lack' area creates pressure the brain must manage, and how the behavior is the brain's attempt to medicate that real stress and pain. If financial lack is selected, weave in how financial pressure keeps the survival brain activated, making the cycle harder to interrupt. If multiple lack areas are present, show how they compound. Connect to why the RNR process addresses root stress, not surface behavior. Or null if no life_ items selected.",
 
-  "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The man has probably believed he is uniquely depraved. Counter that with truth about how the brain works AND who God says he is."}],
+  "confusingPatternsDecoded": [{"pattern": "pattern name in plain English (NOT internal IDs)", "explanation": "full decoder (3-5 sentences). Zero shame. Clear, direct explanation grounded in research. Speak directly to the shame these patterns produce and counter it with identity in Christ. The person has probably believed they are uniquely depraved. Counter that with truth about how the brain works AND who God says they are."}],
 
   "neuropathway": "Arousal|Numbing|Fantasy|Deprivation",
   "neuropathwayManages": "Pain|Anxiety|Shame|Terror",
-  "neuropathwayExplanation": "2-3 sentences: what the behavior is doing for the nervous system. Frame as a survival mechanism now blocking kingdom capacity. What kept him alive as a child is now keeping him small as a man.",
+  "neuropathwayExplanation": "2-3 sentences: what the behavior is doing for the nervous system. Frame as a survival mechanism now blocking kingdom capacity. What kept them alive as a child is now keeping them small.",
 
   "imprintingAge": "age range of first exposure",
   "imprintingContext": "how exposure happened in plain English",
-  "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting. Frame the origin as an attack on destiny. The enemy targeted the template early because he knew what the man was designed to become. Include a Scripture connection.",
+  "imprintingFusion": "2-3 sentences: what got fused with arousal during imprinting. Frame the origin as an attack on destiny. The enemy targeted the template early because he knew what this person was designed to become. Include a Scripture connection.",
 
   "attachmentStyle": "Anxious-Preoccupied|Dismissive-Avoidant|Fearful-Avoidant|Secure|Disorganized",
-  "attachmentFuels": "2-3 sentences: how this attachment style fuels the cycle AND limits his kingdom capacity. Connect human attachment to his capacity for intimacy with God.",
+  "attachmentFuels": "2-3 sentences: how this attachment style fuels the cycle AND limits their kingdom capacity. Connect human attachment to capacity for intimacy with God.",
 
-  "godAttachment": "2-3 sentences: how he relates to God through the same template as his human attachment. Include specific Scripture (Psalm 139, Romans 8:1, etc.). The barrier between him and the Father is the same barrier between him and freedom.",
+  "godAttachment": "2-3 sentences: how they relate to God through the same template as their human attachment. Include specific Scripture (Psalm 139, Romans 8:1, etc.). The barrier between them and the Father is the same barrier between them and freedom.",
   "purityCultureImpact": "2-3 sentences if church/purity culture items were selected, otherwise null. Frame as: even with the best of intentions, Biblical truth can get misinterpreted through communication. Religiosity that sometimes finds its way inside the church can unintentionally reinforce shame rather than dismantle it. Show how this dynamic may have fused shame with arousal. NEVER frame the church itself as the problem. The church is not the enemy. Misapplied religiosity is.",
 
   "generationalLens": "3-5 sentences connecting this person's generational cohort to their arousal template, shame architecture, and exposure timeline",
@@ -545,10 +548,10 @@ Return ONLY valid JSON, no markdown:
   "enmeshmentScore": "0-3 based on enm_ items",
   "relationalVoidScore": "0-3 based on void_ items",
   "leadershipBurdenScore": "0-3 based on lead_ items",
-  "codependencyExplanation": "2-3 sentences connecting to sexual behavior AND kingdom capacity. He gives himself away to everyone. The behavior is the one place he takes something for himself. Or null if score is 0.",
-  "enmeshmentExplanation": "2-3 sentences. His boundaries were violated before he knew what boundaries were. The behavior may be the only space that feels like his own. Or null.",
-  "relationalVoidExplanation": "2-3 sentences. He has no one who truly knows him. The behavior fills the void that isolation creates. Wounds created in relational absence require relational presence to heal. Ecclesiastes 4:12. Or null.",
-  "leadershipBurdenExplanation": "2-3 sentences. He carries everyone. No one carries him. The behavior is the one place his nervous system does not have to perform. God never designed him to lead from isolation. Or null.",
+  "codependencyExplanation": "2-3 sentences connecting to sexual behavior AND kingdom capacity. They give themselves away to everyone. The behavior is the one place they take something for themselves. Or null if score is 0.",
+  "enmeshmentExplanation": "2-3 sentences. Their boundaries were violated before they knew what boundaries were. The behavior may be the only space that feels like their own. Or null.",
+  "relationalVoidExplanation": "2-3 sentences. They have no one who truly knows them. The behavior fills the void that isolation creates. Wounds created in relational absence require relational presence to heal. Ecclesiastes 4:12. Or null.",
+  "leadershipBurdenExplanation": "2-3 sentences. They carry everyone. No one carries them. The behavior is the one place their nervous system does not have to perform. God never designed them to lead from isolation. Or null.",
 
   "escalationPresent": true or false,
   "escalationSeverity": "1-5 scale: 1=stable, 2=mild, 3=moderate, 4=significant, 5=severe",
@@ -565,13 +568,13 @@ Return ONLY valid JSON, no markdown:
   "scorecardSpiritualDisconnect": "1-5: based on god_ items. 1=connected, 5=severely disconnected",
   "scorecardRelationalBurden": "1-5: combined codependency+enmeshment+void+leadership score",
 
-  "strategiesTried": ["Array of strategy names the man selected in plain English"],
+  "strategiesTried": ["Array of strategy names the person selected in plain English"],
   "strategiesCount": "number of strategies selected",
   "yearsFighting": "from the duration question (e.g. '10 to 20', 'Over 20'). Do NOT include the word 'years' in this value.",
-  "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach HIS specific root narrative type. Be direct. Connect the failure to his Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure. CRITICAL FOR SPIRITUAL STRATEGIES (prayer, deliverance prayer, fasting, Bible study, church attendance): NEVER discredit or discount the power of God, prayer, or any spiritual practice. God CAN and DOES perform miracles. Scripture gives us countless examples. But Scripture also shows that God often forges and refines us THROUGH the fire, not by removing us from it (Isaiah 48:10, 1 Peter 1:7, James 1:2-4). Frame it this way: prayer and spiritual disciplines position the heart and invite God into the process. They are essential and powerful. But God also designed the brain with neurological pathways that respond to specific guided processes. Just as God heals through medicine and surgery, He also works through the process of restructuring root narratives. The strategy was not wrong. It was incomplete on its own, not because God lacks power, but because He often works THROUGH process, not around it. The refining fire is the process."}],
+  "strategyBreakdowns": [{"strategy": "Strategy name in plain English", "targeted": "what this strategy targeted (1 phrase)", "explanation": "2-3 sentences explaining why this specific strategy could not reach THEIR specific root narrative type. Be direct. Connect the failure to their Root Narrative Type name. Example for Shame Circuit: 'Filters block access but cannot reach a Shame Circuit root. Your brain was not stopped by the filter because the arousal was never about the content. It was about the transgression.' Use Scripture + Science voice. Frame each failure as a targeting problem, not a moral failure. CRITICAL FOR SPIRITUAL STRATEGIES (prayer, deliverance prayer, fasting, Bible study, church attendance): NEVER discredit or discount the power of God, prayer, or any spiritual practice. God CAN and DOES perform miracles. Scripture gives us countless examples. But Scripture also shows that God often forges and refines us THROUGH the fire, not by removing us from it (Isaiah 48:10, 1 Peter 1:7, James 1:2-4). Frame it this way: prayer and spiritual disciplines position the heart and invite God into the process. They are essential and powerful. But God also designed the brain with neurological pathways that respond to specific guided processes. Just as God heals through medicine and surgery, He also works through the process of restructuring root narratives. The strategy was not wrong. It was incomplete on its own, not because God lacks power, but because He often works THROUGH process, not around it. The refining fire is the process."}],
 
-  "keyInsight": "The single most powerful paragraph. 5-7 sentences. Start with the man's first name (${userName}), NOT 'Brother.' This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across his entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. The enemy built this system deliberately because of the assignment on his life. The complexity is evidence of how dangerous he is to the kingdom of darkness. No amount of willpower, accountability software, or even awareness can untangle a system this deep alone. BUT — and this is the part most men never hear — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. It is like a maze: impossibly complex from the inside, simple when someone hands you the map. Write directly to him as Mason would.",
-  "closingStatement": "4-5 sentences. Start with the man's first name (${userName}), NOT 'Brother.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
+  "keyInsight": "The single most powerful paragraph. 5-7 sentences. Start with the person's first name (${userName}), NOT 'Brother' or 'Sister.' This is NOT about one root narrative — this diagnostic has only scratched the surface of a system of HUNDREDS of interlocking root narratives encoded across their entire life. Each one reinforces the others. The behaviors, the shame loops, the relational patterns, the attachment wounds, the escalation — they are all nodes in an interconnected system that has been building since childhood. The enemy built this system deliberately because of the assignment on their life. The complexity is evidence of how dangerous they are to the kingdom of darkness. No amount of willpower, accountability software, or even awareness can untangle a system this deep alone. BUT — and this is the part most people never hear — the process of identifying, understanding, and healing these roots is remarkably simple when the path is laid out for you. The complexity is in the system, not in the solution. Root Narrative Restructuring makes the invisible visible and the overwhelming manageable. It is like a maze: impossibly complex from the inside, simple when someone hands you the map. Write directly to them as Mason would.",
+  "closingStatement": "4-5 sentences. Start with the person's first name (${userName}), NOT 'Brother' or 'Sister.' You are not disqualified. You are not damaged goods. What this diagnostic revealed is a fraction of what is operating beneath the surface — a system of root narratives so interconnected that it feels impossible to untangle. But here is what the enemy does not want you to know: the process of healing is not complicated. It is simple. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is neurological, spiritual, and relational — and it is closer than you think. The question is not whether it is possible. The question is whether you are ready to see the map."
 }`
     }],
   });
@@ -649,6 +652,8 @@ Return ONLY valid JSON, no markdown:
 async function generatePDF(analysis, firstName, layoutOpts = {}) {
   // Layout spacing multiplier: 1.0 = normal, 0.85 = tighter (used on QC retry)
   const SP = layoutOpts.spacingMultiplier || 1.0;
+  const isFemale = (layoutOpts.gender || "").toLowerCase() === "female";
+  const g = (male, female) => isFemale ? female : male;
 
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
@@ -1013,7 +1018,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       writeCard("SECONDARY TYPE", analysis.arousalTemplateSecondary, "Multiple patterns are present in your template.");
     }
 
-    writeGapWidening("You now have a name for the story that has been running beneath your cycle. Most men never get this far. Sit with that for a moment. The pages ahead are going to show you how deep this goes.");
+    writeGapWidening(`You now have a name for the story that has been running beneath your cycle. ${g("Most men", "Most women")} never get this far. Sit with that for a moment. The pages ahead are going to show you how deep this goes.`);
 
     // ════════════════════════════════════════
     // SECTION 2 — YOUR AROUSAL TEMPLATE ORIGIN
@@ -1035,7 +1040,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     const yearsRaw = String(analysis.patternYears || "many").replace(/\s*years?\s*$/i, "").trim();
     const yearsData = yearsRaw;
 
-    writeGapWidening(`You can now trace your pattern from its origin to your current cycle. That is more clarity than most men get in a lifetime. And it raises a question most men eventually ask: if this has been running beneath the surface for ${yearsData} years without me seeing it, what else is down there that I still cannot see?`);
+    writeGapWidening(`You can now trace your pattern from its origin to your current cycle. That is more clarity than ${g("most men", "most women")} get in a lifetime. And it raises a question ${g("most men", "most women")} eventually ask: if this has been running beneath the surface for ${yearsData} years without me seeing it, what else is down there that I still cannot see?`);
 
     // ════════════════════════════════════════
     // SECTION 3 — YOUR ADDICTION NEUROPATHWAY
@@ -1050,7 +1055,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       M, y, { width: CW, lineGap: 3 }
     );
     y = doc.y + 14;
-    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than most men realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
+    writeGapWidening(`Your brain is not choosing this behavior. It is running a survival program that was installed by experiences you did not choose and reinforced over ${yearsData} years. That is a longer runway than ${g("most men", "most women")} realize. And it explains why strategies aimed at the behavioral level have never been able to reach it.`);
 
     // Neuropathway Flow Diagram (Trigger → Pathway → Behavior)
     checkFit(120);
@@ -1447,7 +1452,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         y = doc.y + 12;
 
         _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
-          "There is a critical distinction that most men have never been taught, and it changes everything about how you fight this battle.",
+          `There is a critical distinction that ${g("most men have", "most women have")} never been taught, and it changes everything about how you fight this battle.`,
           M, y, { width: CW, lineGap: 4 }
         );
         y = doc.y + 10;
@@ -1465,7 +1470,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         y = doc.y + 10;
 
         _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica-Oblique").text(
-          "The sin nature is permanent. The behavioral cycle is not. Confusing the two is why so many men believe they are beyond help.",
+          `The sin nature is permanent. The behavioral cycle is not. Confusing the two is why so ${g("many men", "many women")} believe they are beyond help.`,
           M, y, { width: CW, lineGap: 4 }
         );
         y = doc.y + 16;
@@ -1477,7 +1482,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
         const spiritStratNames = spiritualStrats.map(s => sanitize(s).toLowerCase()).join(", ");
 
         _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica").text(
-          `You listed ${spiritStratNames} among your strategies. Let us be direct: God is powerful enough to deliver any man from any pattern in an instant. He has done it. Scripture is full of miracles. And if He chooses to do that for you, nothing in this report overrides that.`,
+          `You listed ${spiritStratNames} among your strategies. Let us be direct: God is powerful enough to deliver ${g("any man", "any woman")} from any pattern in an instant. He has done it. Scripture is full of miracles. And if He chooses to do that for you, nothing in this report overrides that.`,
           M, y, { width: CW, lineGap: 4 }
         );
         y = doc.y + 10;
@@ -1562,7 +1567,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     drawFlowNode("CURRENT CYCLE", analysis.escalationPresent ? "Escalating" : "Active", false);
 
     y += 16;
-    writeGapWidening("This is the full architecture of your cycle. Every connection. Every root. Every origin. Every reinforcing pattern.\n\nYou can see the prison now. Most men never do.\n\nBut seeing the prison does not open the door.");
+    writeGapWidening(`This is the full architecture of your cycle. Every connection. Every root. Every origin. Every reinforcing pattern.\n\nYou can see the prison now. ${g("Most men", "Most women")} never do.\n\nBut seeing the prison does not open the door.`);
 
     // ════════════════════════════════════════
     // SECTION 9 — THE KEY INSIGHT
@@ -1576,7 +1581,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
       _currentTextColor = GRAY; doc.fontSize(20).fillColor(GRAY).font("Helvetica").text(synthText, M, y, { width: CW, lineGap: 4 });
       y = doc.y + 16;
       _currentTextColor = WHITE; doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold").text(
-        "You can see the system now. Most men never get this far. But seeing the prison does not open the door.",
+        `You can see the system now. ${g("Most men", "Most women")} never get this far. But seeing the prison does not open the door.`,
         M, y, { width: CW, lineGap: 4, align: "center" }
       );
       y = doc.y + 24;
@@ -1588,7 +1593,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     // Force first name at start of key insight
     let keyInsightText = sanitize(analysis.keyInsight || "What this diagnostic revealed is only the surface of a system of hundreds of interlocking root narratives. The system is complex — but the process of healing is remarkably simple when the path is laid out for you.");
     // Strip any leading "Brother," or "Man," or generic opener and prepend first name
-    keyInsightText = keyInsightText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
+    keyInsightText = keyInsightText.replace(/^(Brother|Sister|Man|Woman|Friend|Sir|Ma'am),?\s*/i, "").trim();
     if (!keyInsightText.startsWith(firstName)) {
       keyInsightText = `${firstName}, ${keyInsightText.charAt(0).toLowerCase()}${keyInsightText.slice(1)}`;
     }
@@ -1606,7 +1611,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     y += 24;
 
     let closingText = sanitize(analysis.closingStatement || "You are not broken. You are not disqualified. The roots are complex, but the path through them is clear when someone who has walked it lays it out for you. Freedom is closer than you think.");
-    closingText = closingText.replace(/^(Brother|Man|Friend|Sir),?\s*/i, "").trim();
+    closingText = closingText.replace(/^(Brother|Sister|Man|Woman|Friend|Sir|Ma'am),?\s*/i, "").trim();
     if (!closingText.startsWith(firstName)) {
       closingText = `${firstName}, ${closingText.charAt(0).toLowerCase()}${closingText.slice(1)}`;
     }
@@ -1689,7 +1694,7 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     try {
       checkFit(30);
       doc.fontSize(14).fillColor([120, 120, 120]).font("Helvetica").text(
-        "Trusted by over 10,000 men across 33 countries. LegitScript-certified.",
+        `Trusted by over 10,000 ${g("men", "people")} across 33 countries. LegitScript-certified.`,
         M, y, { width: CW, align: "center" }
       );
       y = doc.y + 16;
@@ -1708,11 +1713,11 @@ async function generatePDF(analysis, firstName, layoutOpts = {}) {
     }
 
     // Option 2 — $27
-    const p2Body = "Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts.";
+    const p2Body = `Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. ${g("He", "Your coach")} will have your complete data in front of ${g("him", "them")} before the call starts.`;
     drawResourceCard(2, "OPTION 2", "$27", "Book a 30-Minute Clarity Call", p2Body, "https://unchained-leader.com/clarity-call");
 
     // Option 3 — FREE
-    const p3Body = "A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you.";
+    const p3Body = `A 7-day guided experience that dismantles the most common lies keeping ${g("Christian men", "Christian women")} stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for ${g("men", "women")} like you.`;
     drawResourceCard(3, "OPTION 3", "FREE", "7-Day Devotional: 7 Lies of the Divided Leader", p3Body, "https://unchained-leader.com/7-lies");
 
     // Option 4 — $27

@@ -202,6 +202,9 @@ export default function OverviewPage() {
     return () => observer.disconnect();
   }, [stickyDismissed, data]);
 
+  const isFemale = (data?.gender || "").toLowerCase() === "female";
+  const g = (male, female) => isFemale ? female : male;
+
   async function handleLogout() {
     await fetch("/api/dashboard/logout", { method: "POST" });
     router.push("/dashboard/login");
@@ -455,11 +458,11 @@ export default function OverviewPage() {
           </h3>
           <div style={{ fontSize: 17, lineHeight: 1.8, color: "#999" }}>
             <p style={{ marginBottom: 16 }}>What we are about to dive into may feel extremely heavy and I want to expose a lie that I bought for most of my life.</p>
-            <p style={{ marginBottom: 16 }}>I believed I was one of the few men with a mind as twisted as mine was.</p>
+            <p style={{ marginBottom: 16 }}>I believed I was one of the few {g("men", "people")} with a mind as twisted as mine was.</p>
             <p style={{ marginBottom: 16 }}>God exposed this lie for me in a powerful way, so I want to share that gift with you.</p>
             <p style={{ marginBottom: 16 }}>As I&apos;m writing this, over 500,000 have connected with Unchained Leader products in some form.</p>
             <p style={{ marginBottom: 16 }}>Over 10,000 have come through our core programs.</p>
-            <p style={{ marginBottom: 16 }}>Thousands of men are working towards conquering the very things this report is going to uncover for you, and I&apos;ve watched thousands of men break these exact chains.</p>
+            <p style={{ marginBottom: 16 }}>Thousands of {g("men", "people")} are working towards conquering the very things this report is going to uncover for you, and I&apos;ve watched thousands of {g("men", "people")} break these exact chains.</p>
             <p style={{ marginBottom: 16 }}>Even that, is a small portion of the millions of others who haven&apos;t taken steps towards freedom like you&apos;re doing today.</p>
             <p style={{ marginBottom: 16 }}>You are one of the majority who are battling these exact things, not the minority like I felt for most my life.</p>
             <p style={{ marginBottom: 16, color: GOLD, fontWeight: 600 }}>Lean into the light.</p>
@@ -659,7 +662,7 @@ export default function OverviewPage() {
             Here is what your diagnostic revealed: A root narrative of &ldquo;{a.rootNarrativeStatement || "a core wound"}&rdquo; formed in childhood, encoded into a {a.arousalTemplateType || "specific"} arousal template at age {a.imprintingAge || "unknown"}, running through the {a.neuropathway || "primary"} neuropathway, reinforced by {a.attachmentStyle || "your"} attachment, and defended against by {a.strategiesCount || "multiple"} strategies over {a.yearsFighting || "many"} years. None of those strategies failed because of you. They failed because they were aimed at a system they could not see.
           </p>
           <p style={{ fontSize: 19, lineHeight: 1.8, color: "#fff", margin: 0, textAlign: "center", fontWeight: 600 }}>
-            You can see the system now. Most men never get this far. But seeing the prison does not open the door.
+            You can see the system now. {g("Most men", "Most women")} never get this far. But seeing the prison does not open the door.
           </p>
         </div>
         </Reveal>
@@ -778,7 +781,7 @@ export default function OverviewPage() {
               link="https://unchained-leader.com/aof"
             />
             <div style={{ fontSize: 14, color: "#666", textAlign: "center", marginTop: 4 }}>
-              Trusted by over 10,000 men across 33 countries. LegitScript-certified.
+              Trusted by over 10,000 {g("men", "people")} across 33 countries. LegitScript-certified.
             </div>
           </ResultCard>
 
@@ -796,7 +799,7 @@ export default function OverviewPage() {
               label="OPTION 2"
               price="$27"
               title="Book a 30-Minute Clarity Call"
-              body="Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. He will have your complete data in front of him before the call starts."
+              body={`Your report identified patterns that go deeper than any PDF can resolve. On a 30-minute Clarity Call, a certified Unchained Leader coach who has walked this exact road will review your full diagnostic, show you the specific reason each strategy you have tried was aimed at the wrong target, and build a custom plan based on your specific root narrative and attachment style. ${g("He", "Your coach")} will have your complete data in front of ${g("him", "them")} before the call starts.`}
               link="https://unchained-leader.com/clarity-call"
             />
             <ResourceCard
@@ -804,7 +807,7 @@ export default function OverviewPage() {
               label="OPTION 3"
               price="FREE"
               title="7-Day Devotional: 7 Lies of the Divided Leader"
-              body="A 7-day guided experience that dismantles the most common lies keeping Christian men stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for men like you."
+              body={`A 7-day guided experience that dismantles the most common lies keeping ${g("Christian men", "Christian women")} stuck in the cycle. Each day fuses Scripture with neuroscience to reframe how you see your struggle, your identity, and your path to freedom. Built specifically for ${g("men", "women")} like you.`}
               link="https://unchained-leader.com/7-lies"
             />
             <ResourceCard

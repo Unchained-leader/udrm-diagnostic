@@ -85,6 +85,7 @@ export async function GET(request) {
     const responseData = {
       success: true,
       name: userData?.name || payload.name,
+      gender: reportData?.gender || null,
       analysis: analysisData,
       reportUrl: reportData?.reportUrl || null,
       generatedAt: reportData?.generatedAt || null,
